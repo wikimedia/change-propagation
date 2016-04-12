@@ -6,18 +6,18 @@
  */
 
 
-var P = require('bluebird');
-var kafka = P.promisifyAll(require('wmf-kafka-node'));
+var KafkaFactory = require('../lib/kafka_factory');
 var RuleManager = require('../lib/rule_manager');
 
 
 function Kafka(options) {
     this.log = options.log || function() {};
-    this.conf = {
+    this.ruleManager = new RuleManager(new KafkaFactory({
         uri: options.uri || 'localhost:2181',
         clientId: options.client_id || 'change-propagation'
-    };
-    this.ruleManager = new RuleManager(this);
+    }), {
+        log: this.log
+    });
 }
 
 
