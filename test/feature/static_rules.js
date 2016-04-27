@@ -325,5 +325,32 @@ describe('Basic rule management', function() {
         .finally(() => nock.cleanAll());
     });
 
+    it('Should emit valid messages to error topic', (done) => {
+        // No need to emit new messages, we will use on from previous test
+        return kafkaFactory.newConsumer(kafkaFactory.newClient(),
+            'change-prop.error',
+            'change-prop-test-error-consumer')
+        .then((errorConsumer) => {
+            errorConsumer.once('message', (message) => {
+              /* TODO: when the error topic schema settles
+                try {
+                    const ajv = new Ajv();
+                    const validate = ajv.compile(retrySchema);
+                    var valid = validate(JSON.parse(message.value));
+                    if (!valid) {
+                        done(new assert.AssertionError({
+                            message: ajv.errorsText(validate.errors)
+                        }));
+                    } else {
+                        done();
+                    }
+                } catch(e) {
+                    done(e);
+                }*/
+                done();
+            });
+        });
+    });
+
     after(() => changeProp.stop());
 });
