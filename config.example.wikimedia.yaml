@@ -1,0 +1,73 @@
+num_workers: 0
+logging:
+  name: changeprop
+  level: info
+services:
+  - name: changeprop
+    module: hyperswitch
+    conf:
+      port: 7273
+      spec:
+        x-sub-request-filters:
+          - type: default
+            name: http
+            options:
+              allow:
+                - pattern: /^https?:\/\//
+        title: The Change Propagation root
+        paths:
+          /sys/links:
+            x-modules:
+              - path: sys/backlinks.js
+                options:
+                  templates:
+                    apiURITemplate: 'https://{{message.meta.domain}}/w/api.php'
+          /sys/queue:
+            x-modules:
+              - path: sys/kafka.js
+                options:
+                  uri: 127.0.0.1:2181
+                  dc_name: test_dc
+                  templates:
+
+                    summary_rerender:
+                      topic: resource_change
+                      retry_limit: 2
+                      retry_delay: 500
+                      retry_on:
+                        status:
+                          - '5xx'
+                      match:
+                        meta:
+                          uri: '/^(https?):\/\/[a-zA-Z0-9\:\.]+\/api\/rest_v1\/page\/html\/([^/]+)/'
+                      match_not:
+                        meta:
+                          domain: '/wiktionary.org$/'
+                        tags:
+                          - restbase
+                      exec:
+                        method: get
+                        # Don't encode title since it should be already encoded
+                        uri: '{{match.meta.uri[1]}}://{{message.meta.domain}}/api/rest_v1/page/summary/{{match.meta.uri[2]}}'
+                        headers:
+                          cache-control: no-cache
+
+                    definition_rerender:
+                      topic: resource_change
+                      retry_limit: 2
+                      retry_delay: 500
+                      retry_on:
+                        status:
+                          - '5xx'
+                      match:
+                        meta:
+                          uri: '/^(https?):\/\/[a-zA-Z0-9\:\.]+\/api\/rest_v1\/page\/html\/([^/]+)/'
+                          domain: '/wiktionary.org$/'
+                      exec:
+                        method: get
+                        # Don't encode title since it should be already encoded
+                        uri: '{{match.meta.uri[1]}}://{{message.meta.domain}}/api/rest_v1/page/definition/{{match.meta.uri[2]}}'
+                        headers:
+                          cache-control: no-cache
+                        tags:
+                          - restbase
