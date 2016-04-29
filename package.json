@@ -40,7 +40,8 @@
     "hyperswitch": "^0.4.9",
     "service-runner": "^1.2.2",
     "wmf-kafka-node": "^0.1.1",
-    "json-stable-stringify": "^1.0.1"
+    "json-stable-stringify": "^1.0.1",
+    "htcp-purge": "^0.1.2"
   },
   "devDependencies": {
     "istanbul": "^0.4.3",

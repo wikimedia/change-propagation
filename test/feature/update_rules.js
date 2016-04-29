@@ -4,6 +4,8 @@ const ChangeProp = require('../utils/changeProp');
 const KafkaFactory = require('../../lib/kafka_factory');
 const nock = require('nock');
 const uuid = require('cassandra-uuid').TimeUuid;
+const dgram  = require('dgram');
+const assert = require('assert');
 
 describe('RESTBase update rules', function() {
     this.timeout(1000);
@@ -161,5 +163,52 @@ describe('RESTBase update rules', function() {
         });
     });
     
+    it('Should purge caches on resource_change coming from RESTBase', (done) => {
+        var udpServer = dgram.createSocket('udp4');
+        let closed = false;
+        udpServer.on("message", function(msg) {
+            try {
+                msg = msg.slice(22, 22 + msg.readInt16BE(20)).toString();
+                if (msg.indexOf('User%3APchelolo%2FTest') >= 0) {
+                    assert.deepEqual(msg,
+                        'http://en.wikipedia.beta.wmflabs.org/api/rest_v1/page/html/User%3APchelolo%2FTest/331536')
+                    udpServer.close();
+                    closed = true;
+                    done();
+                }
+            } catch (e) {
+                udpServer.close();
+                closed = true;
+                done(e);
+            }
+        });
+        udpServer.bind(4321);
+
+        return producer.sendAsync([{
+            topic: 'test_dc.resource_change',
+            messages: [
+                JSON.stringify({
+                    meta: {
+                        topic: 'resource_change',
+                        schema_uri: 'resource_change/1',
+                        uri: 'http://en.wikipedia.beta.wmflabs.org/api/rest_v1/page/html/User%3APchelolo%2FTest/331536',
+                        request_id: uuid.now(),
+                        id: uuid.now(),
+                        dt: new Date().toISOString(),
+                        domain: 'en.wikipedia.beta.wmflabs.org'
+                    },
+                    tags: [ 'restbase' ]
+                })
+            ]
+        }])
+        .delay(300)
+        .finally(() => {
+            if (!closed) {
+                udpServer.close();
+                done(new Error('Timeout!'));
+            }
+        });
+    });
+
     after(() => changeProp.stop());
 });
