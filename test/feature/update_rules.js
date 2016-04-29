@@ -93,5 +93,42 @@ describe('RESTBase update rules', function() {
         .finally(() => nock.cleanAll());
     });
 
+    it('Should not update definition endpoint for non-main namespace', (done) => {
+        const mwAPI = nock('https://en.wiktionary.org', {
+            reqheaders: {
+                'cache-control': 'no-cache'
+            }
+        })
+        .get('/api/rest_v1/page/definition/User%3APchelolo')
+        .reply(200, () => {
+            done(new Error('Update was made while it should not have'))
+        });
+
+        return producer.sendAsync([{
+            topic: 'test_dc.resource_change',
+            messages: [
+                JSON.stringify({
+                    meta: {
+                        topic: 'resource_change',
+                        schema_uri: 'resource_change/1',
+                        uri: 'https://en.wiktionary.org/api/rest_v1/page/html/User%3APchelolo',
+                        request_id: uuid.now(),
+                        id: uuid.now(),
+                        dt: new Date().toISOString(),
+                        domain: 'en.wiktionary.org'
+                    },
+                    tags: ['restbase']
+                })
+            ]
+        }])
+        .delay(300)
+        .finally(() => {
+            nock.cleanAll();
+            if (!mwAPI.isDone()) {
+                done();
+            }
+        });
+    });
+    
     after(() => changeProp.stop());
 });
