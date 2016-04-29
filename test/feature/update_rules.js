@@ -93,6 +93,37 @@ describe('RESTBase update rules', function() {
         .finally(() => nock.cleanAll());
     });
 
+    it('Should update mobile apps endpoint', () => {
+        const mwAPI = nock('https://en.wikipedia.org', {
+            reqheaders: {
+                'cache-control': 'no-cache'
+            }
+        })
+        .get('/api/rest_v1/page/mobile-sections/Main%20Page')
+        .reply(200, { });
+
+        return producer.sendAsync([{
+            topic: 'test_dc.resource_change',
+            messages: [
+                JSON.stringify({
+                    meta: {
+                        topic: 'resource_change',
+                        schema_uri: 'resource_change/1',
+                        uri: 'https://en.wikipedia.org/api/rest_v1/page/html/Main%20Page',
+                        request_id: uuid.now(),
+                        id: uuid.now(),
+                        dt: new Date().toISOString(),
+                        domain: 'en.wikipedia.org'
+                    },
+                    tags: ['restbase']
+                })
+            ]
+        }])
+        .delay(300)
+        .then(() => mwAPI.done())
+        .finally(() => nock.cleanAll());
+    });
+
     it('Should not update definition endpoint for non-main namespace', (done) => {
         const mwAPI = nock('https://en.wiktionary.org', {
             reqheaders: {
