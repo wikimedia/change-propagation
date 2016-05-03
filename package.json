@@ -1,6 +1,6 @@
 {
   "name": "change-propagation",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Listens to events from Kafka and delivers them",
   "main": "server.js",
   "repository": {
@@ -25,7 +25,8 @@
   ],
   "author": "Wikimedia Services Team <services@lists.wikimedia.org>",
   "contributors": [
-    "Marko Obrovac <mobrovac@wikimedia.org>"
+    "Marko Obrovac <mobrovac@wikimedia.org>",
+    "Petr Pchelko <ppchelko@wikimedia.org>"
   ],
   "license": "Apache-2.0",
   "bugs": {
@@ -36,9 +37,9 @@
     "bluebird": "^3.3.5",
     "cassandra-uuid": "^0.0.2",
     "extend": "^3.0.0",
-    "hyperswitch": "^0.4.8",
+    "hyperswitch": "^0.4.9",
     "service-runner": "^1.2.2",
-    "wmf-kafka-node": "^0.1.0",
+    "wmf-kafka-node": "^0.1.1",
     "json-stable-stringify": "^1.0.1"
   },
   "devDependencies": {
