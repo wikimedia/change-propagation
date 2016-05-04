@@ -28,3 +28,4 @@ check ( ) {
 check 2181 "Zookeeper"
 check 9092 "Kafka"
 dropTopics "test_dc"
+sleep 1

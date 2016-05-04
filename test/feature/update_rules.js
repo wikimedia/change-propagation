@@ -4,6 +4,7 @@ const ChangeProp = require('../utils/changeProp');
 const KafkaFactory = require('../../lib/kafka_factory');
 const nock = require('nock');
 const uuid = require('cassandra-uuid').TimeUuid;
+const common = require('../utils/common');
 const dgram  = require('dgram');
 const assert = require('assert');
 
@@ -25,10 +26,7 @@ describe('RESTBase update rules', function() {
         return kafkaFactory.newProducer(kafkaFactory.newClient())
         .then((newProducer) => {
             producer = newProducer;
-            return producer.createTopicsAsync([
-                'test_dc.resource_change',
-                'test_dc.change-prop.retry.resource_change'
-            ], false)
+            return producer.createTopicsAsync(common.ALL_TOPICS, false)
         })
         .then(() => changeProp.start());
     });

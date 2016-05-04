@@ -40,9 +40,10 @@ ChangeProp.prototype.stop = function() {
         })
         .then(function() {
             self._servers = undefined;
-        });
+        })
+        .delay(100);
     } else {
-        return P.resolve();
+        return P.delay(100);
     }
 };
 

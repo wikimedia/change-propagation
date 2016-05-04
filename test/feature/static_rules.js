@@ -3,11 +3,11 @@
 const ChangeProp = require('../utils/changeProp');
 const KafkaFactory = require('../../lib/kafka_factory');
 const nock = require('nock');
-const uuid = require('cassandra-uuid').TimeUuid;
 const preq = require('preq');
 const Ajv = require('ajv');
 const assert = require('assert');
 const yaml = require('js-yaml');
+const common = require('../utils/common');
 
 describe('Basic rule management', function() {
     this.timeout(1000);
@@ -28,18 +28,7 @@ describe('Basic rule management', function() {
         return kafkaFactory.newProducer(kafkaFactory.newClient())
         .then((newProducer) => {
             producer = newProducer;
-            return producer.createTopicsAsync([
-                'test_dc.simple_test_rule',
-                'test_dc.change-prop.retry.simple_test_rule',
-                'test_dc.kafka_producing_rule',
-                'test_dc.change-prop.retry.kafka_producing_rule',
-                'test_dc.mediawiki.revision_create',
-                'test_dc.change-prop.retry.mediawiki.revision_create',
-                'test_dc.change-prop.backlinks.continue',
-                'test_dc.change-prop.retry.change-prop.backlinks.continue',
-                'test_dc.resource_change',
-                'test_dc.change-prop.retry.resource_change'
-            ], false)
+            return producer.createTopicsAsync(common.ALL_TOPICS, false)
         })
         .then(() => changeProp.start())
         .then(() => preq.get({
@@ -48,26 +37,6 @@ describe('Basic rule management', function() {
         .then((res) => retrySchema = yaml.safeLoad(res.body));
     });
 
-    function eventWithProperties(topic, props) {
-        const event = {
-            meta: {
-                topic: topic,
-                schema_uri: 'schema/1',
-                uri: '/sample/uri',
-                request_id: uuid.now(),
-                id: uuid.now(),
-                dt: new Date().toISOString(),
-                domain: 'en.wikipedia.org'
-            }
-        };
-        Object.assign(event, props);
-        return event;
-    }
-
-    function eventWithMessage(message) {
-        return eventWithProperties('simple_test_rule', { message: message });
-    }
-    
     function arrayWithLinks(link, num) {
         const result = [];
         for(let idx = 0; idx < num; idx++) {
@@ -119,7 +88,7 @@ describe('Basic rule management', function() {
         return producer.sendAsync([{
             topic: 'test_dc.mediawiki.revision_create',
             messages: [
-                JSON.stringify(eventWithProperties('mediawiki.revision_create', { title: 'Main_Page' }))
+                JSON.stringify(common.eventWithProperties('mediawiki.revision_create', { title: 'Main_Page' }))
             ]
         }])
         .delay(300)
@@ -142,8 +111,8 @@ describe('Basic rule management', function() {
         return producer.sendAsync([{
             topic: 'test_dc.simple_test_rule',
             messages: [
-                JSON.stringify(eventWithMessage('this_will_not_match')),
-                JSON.stringify(eventWithMessage('test')) ]
+                JSON.stringify(common.eventWithMessage('this_will_not_match')),
+                JSON.stringify(common.eventWithMessage('test')) ]
         }])
         .delay(100)
         .then(() => service.done())
@@ -168,7 +137,7 @@ describe('Basic rule management', function() {
 
         return producer.sendAsync([{
             topic: 'test_dc.simple_test_rule',
-            messages: [ JSON.stringify(eventWithMessage('test')) ]
+            messages: [ JSON.stringify(common.eventWithMessage('test')) ]
         }])
         .delay(300)
         .then(() => service.done())
@@ -214,7 +183,7 @@ describe('Basic rule management', function() {
 
         return producer.sendAsync([{
             topic: 'test_dc.simple_test_rule',
-            messages: [ JSON.stringify(eventWithMessage('test')) ]
+            messages: [ JSON.stringify(common.eventWithMessage('test')) ]
         }])
         .delay(300)
         .then(() => service.done())
@@ -235,7 +204,7 @@ describe('Basic rule management', function() {
 
         return producer.sendAsync([{
             topic: 'test_dc.simple_test_rule',
-            messages: [ JSON.stringify(eventWithMessage('test')) ]
+            messages: [ JSON.stringify(common.eventWithMessage('test')) ]
         }])
         .delay(300)
         .then(() => service.done())
@@ -256,7 +225,7 @@ describe('Basic rule management', function() {
 
         return producer.sendAsync([{
             topic: 'test_dc.simple_test_rule',
-            messages: [ 'non-parsable-json', JSON.stringify(eventWithMessage('test')) ]
+            messages: [ 'non-parsable-json', JSON.stringify(common.eventWithMessage('test')) ]
         }])
         .delay(100)
         .then(() => service.done())
@@ -277,7 +246,7 @@ describe('Basic rule management', function() {
 
         return producer.sendAsync([{
             topic: 'test_dc.kafka_producing_rule',
-            messages: [ JSON.stringify(eventWithProperties('test_dc.kafka_producing_rule', {
+            messages: [ JSON.stringify(common.eventWithProperties('test_dc.kafka_producing_rule', {
                 produce_to_topic: 'simple_test_rule'
             })) ]
         }])
