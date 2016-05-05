@@ -9,7 +9,7 @@ const dgram  = require('dgram');
 const assert = require('assert');
 
 describe('RESTBase update rules', function() {
-    this.timeout(1000);
+    this.timeout(2000);
 
     const changeProp = new ChangeProp('config.example.wikimedia.yaml');
     const kafkaFactory = new KafkaFactory({

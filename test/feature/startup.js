@@ -6,6 +6,8 @@ const nock = require('nock');
 const common = require('../utils/common');
 
 describe('Startup', function () {
+    this.timeout(5000);
+
     const changeProp = new ChangeProp('config.test.yaml');
     const kafkaFactory = new KafkaFactory({
         uri: 'localhost:2181/', // TODO: find out from the config
@@ -26,9 +28,12 @@ describe('Startup', function () {
         let finished = false;
         nock('http://mock.com')
         .post('/').reply(() => {
-            finished = true;
-            changeProp.stop();
-            done(new Error('The event must not have been processed'));
+            return P.try(() => {
+                finished = true;
+                changeProp.stop()
+                .delay(1000)
+                .then(() => done(new Error('The event must not have been processed')));
+            });
         });
 
         // Produce a message to a test topic. As the topics were deleted before,
@@ -45,8 +50,9 @@ describe('Startup', function () {
         .delay(1000)
         .finally(() => {
             if (!finished) {
-                changeProp.stop();
-                done();
+                changeProp.stop()
+                .delay(1000)
+                .then(done);
             }
         });
     });

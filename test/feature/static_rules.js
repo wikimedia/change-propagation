@@ -10,7 +10,7 @@ const yaml = require('js-yaml');
 const common = require('../utils/common');
 
 describe('Basic rule management', function() {
-    this.timeout(1000);
+    this.timeout(2000);
 
     const changeProp = new ChangeProp('config.test.yaml');
     const kafkaFactory = new KafkaFactory({
