@@ -5,6 +5,8 @@ var fs        = require('fs');
 var yaml      = require('js-yaml');
 var P         = require('bluebird');
 
+const CHANGE_PROP_STOP_DELAY = process.env.CHANGE_PROP_STOP_DELAY || 500;
+
 var ChangeProp = function(configPath) {
     this._configPath = configPath;
     this._config = this._loadConfig();
@@ -42,9 +44,9 @@ ChangeProp.prototype.stop = function() {
         .then(function() {
             self._servers = undefined;
         })
-        .delay(1000);
+        .delay(CHANGE_PROP_STOP_DELAY);
     } else {
-        return P.delay(1000);
+        return P.delay(CHANGE_PROP_STOP_DELAY);
     }
 };
 
