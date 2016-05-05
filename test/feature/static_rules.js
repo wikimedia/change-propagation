@@ -23,7 +23,7 @@ describe('Basic rule management', function() {
 
     before(function() {
         // Setting up might tike some tome, so disable the timeout
-        this.timeout(0);
+        this.timeout(20000);
 
         return kafkaFactory.newProducer(kafkaFactory.newClient())
         .then((newProducer) => {
@@ -67,7 +67,7 @@ describe('Basic rule management', function() {
                 JSON.stringify(common.eventWithMessage('this_will_not_match')),
                 JSON.stringify(common.eventWithMessage('test')) ]
         }])
-        .delay(100)
+        .delay(common.REQUEST_CHECK_DELAY)
         .then(() => service.done())
         .finally(() => nock.cleanAll());
     });
@@ -92,7 +92,7 @@ describe('Basic rule management', function() {
             topic: 'test_dc.simple_test_rule',
             messages: [ JSON.stringify(common.eventWithMessage('test')) ]
         }])
-        .delay(300)
+        .delay(common.REQUEST_CHECK_DELAY)
         .then(() => service.done())
         .finally(() => nock.cleanAll());
     });
@@ -138,7 +138,7 @@ describe('Basic rule management', function() {
             topic: 'test_dc.simple_test_rule',
             messages: [ JSON.stringify(common.eventWithMessage('test')) ]
         }])
-        .delay(300)
+        .delay(common.REQUEST_CHECK_DELAY)
         .then(() => service.done())
         .finally(() => nock.cleanAll());
     });
@@ -159,7 +159,7 @@ describe('Basic rule management', function() {
             topic: 'test_dc.simple_test_rule',
             messages: [ JSON.stringify(common.eventWithMessage('test')) ]
         }])
-        .delay(300)
+        .delay(common.REQUEST_CHECK_DELAY)
         .then(() => service.done())
         .finally(() => nock.cleanAll());
     });
@@ -180,7 +180,7 @@ describe('Basic rule management', function() {
             topic: 'test_dc.simple_test_rule',
             messages: [ 'non-parsable-json', JSON.stringify(common.eventWithMessage('test')) ]
         }])
-        .delay(100)
+        .delay(common.REQUEST_CHECK_DELAY)
         .then(() => service.done())
         .finally(() => nock.cleanAll());
     });
@@ -203,7 +203,7 @@ describe('Basic rule management', function() {
                 produce_to_topic: 'simple_test_rule'
             })) ]
         }])
-        .delay(100)
+        .delay(common.REQUEST_CHECK_DELAY)
         .then(() => service.done())
         .finally(() => nock.cleanAll());
     });
@@ -250,7 +250,7 @@ describe('Basic rule management', function() {
                 JSON.stringify(common.eventWithProperties('mediawiki.revision_create', { title: 'Main_Page' }))
             ]
         }])
-        .delay(300)
+        .delay(common.REQUEST_CHECK_DELAY)
         .then(() => mwAPI.done())
         .finally(() => nock.cleanAll());
     });

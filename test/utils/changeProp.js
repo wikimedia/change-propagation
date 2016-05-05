@@ -5,7 +5,9 @@ var fs        = require('fs');
 var yaml      = require('js-yaml');
 var P         = require('bluebird');
 
-const CHANGE_PROP_STOP_DELAY = process.env.CHANGE_PROP_STOP_DELAY || 500;
+const CHANGE_PROP_STOP_DELAY = 500;
+
+let startupRetryLimit = 3;
 
 var ChangeProp = function(configPath) {
     this._configPath = configPath;
@@ -32,7 +34,15 @@ ChangeProp.prototype.start = function() {
         self._servers = servers;
         return true;
     })
-    .delay(200);
+    .delay(200)
+    .catch((e) => {
+        if (startupRetryLimit > 0 && /EADDRINUSE/.test(e.message)) {
+            console.log('Execution of the previous test might have not finished yet. Retry startup');
+            startupRetryLimit--;
+            return P.delay(1000).then(() => this.start());
+        }
+        throw e;
+    });
 };
 
 ChangeProp.prototype.stop = function() {

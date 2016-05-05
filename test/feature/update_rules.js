@@ -21,7 +21,7 @@ describe('RESTBase update rules', function() {
 
     before(function() {
         // Setting up might tike some tome, so disable the timeout
-        this.timeout(0);
+        this.timeout(20000);
 
         return kafkaFactory.newProducer(kafkaFactory.newClient())
         .then((newProducer) => {
@@ -58,7 +58,7 @@ describe('RESTBase update rules', function() {
                 })
             ]
         }])
-        .delay(300)
+        .delay(common.REQUEST_CHECK_DELAY)
         .then(() => mwAPI.done())
         .finally(() => nock.cleanAll());
     });
@@ -90,7 +90,7 @@ describe('RESTBase update rules', function() {
                 })
             ]
         }])
-        .delay(300)
+        .delay(common.REQUEST_CHECK_DELAY)
         .then(() => mwAPI.done())
         .finally(() => nock.cleanAll());
     });
@@ -122,7 +122,7 @@ describe('RESTBase update rules', function() {
                 })
             ]
         }])
-        .delay(300)
+        .delay(common.REQUEST_CHECK_DELAY)
         .then(() => mwAPI.done())
         .finally(() => nock.cleanAll());
     });
@@ -155,7 +155,7 @@ describe('RESTBase update rules', function() {
                 })
             ]
         }])
-        .delay(300)
+        .delay(common.REQUEST_CHECK_DELAY)
         .finally(() => {
             nock.cleanAll();
             if (!mwAPI.isDone()) {
@@ -202,7 +202,7 @@ describe('RESTBase update rules', function() {
                 })
             ]
         }])
-        .delay(300)
+        .delay(common.REQUEST_CHECK_DELAY)
         .finally(() => {
             if (!closed) {
                 udpServer.close();

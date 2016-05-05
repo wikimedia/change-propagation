@@ -27,13 +27,10 @@ describe('Startup', function () {
 
     it('Should start from latest offset if new rule is created', (done) => {
         let finished = false;
-        const service = nock('http://mock.com')
-        .post('/').reply(() => {
-            return P.try(() => {
-                finished = true;
-                changeProp.stop().then(() => done(new Error('The event must not have been processed')));
-            });
-        });
+        nock('http://mock.com').post('/').reply(() => P.try(() => {
+            finished = true;
+            changeProp.stop().then(() => done(new Error('The event must not have been processed')))
+        }));
 
         // Produce a message to a test topic. As the topics were deleted before,
         // the offset should not exist in zookeeper, so the first test will verify that

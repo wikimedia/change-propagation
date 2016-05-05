@@ -6,7 +6,7 @@ services:
   - name: changeprop
     module: hyperswitch
     conf:
-      port: 7273
+      port: 7272
       spec:
         x-sub-request-filters:
           - type: default
