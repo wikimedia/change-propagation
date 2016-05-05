@@ -6,8 +6,7 @@ node_js:
   - "5"
 
 env:
-  - KAFKA_HOME=../kafka CXX=g++-4.8
-  - CHANGE_PROP_STOP_DELAY=3000
+  - KAFKA_HOME=../kafka CXX=g++-4.8 CHANGE_PROP_STOP_DELAY=3000
 
 before_install:
 - wget http://www.us.apache.org/dist/kafka/0.8.2.2/kafka_2.10-0.8.2.2.tgz -O kafka.tgz
