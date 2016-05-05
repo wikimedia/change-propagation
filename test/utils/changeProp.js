@@ -41,9 +41,9 @@ ChangeProp.prototype.stop = function() {
         .then(function() {
             self._servers = undefined;
         })
-        .delay(100);
+        .delay(1000);
     } else {
-        return P.delay(100);
+        return P.delay(1000);
     }
 };
 

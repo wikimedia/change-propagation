@@ -4,6 +4,7 @@ const ChangeProp = require('../utils/changeProp');
 const KafkaFactory = require('../../lib/kafka_factory');
 const nock = require('nock');
 const common = require('../utils/common');
+const P = require('bluebird');
 
 describe('Startup', function () {
     this.timeout(5000);
@@ -30,9 +31,7 @@ describe('Startup', function () {
         .post('/').reply(() => {
             return P.try(() => {
                 finished = true;
-                changeProp.stop()
-                .delay(1000)
-                .then(() => done(new Error('The event must not have been processed')));
+                changeProp.stop().then(() => done(new Error('The event must not have been processed')));
             });
         });
 
@@ -50,9 +49,7 @@ describe('Startup', function () {
         .delay(1000)
         .finally(() => {
             if (!finished) {
-                changeProp.stop()
-                .delay(1000)
-                .then(done);
+                changeProp.stop().then(done);
             }
         });
     });
