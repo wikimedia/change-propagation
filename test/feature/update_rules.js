@@ -7,6 +7,7 @@ const uuid = require('cassandra-uuid').TimeUuid;
 const common = require('../utils/common');
 const dgram  = require('dgram');
 const assert = require('assert');
+const P = require('bluebird');
 
 describe('RESTBase update rules', function() {
     this.timeout(2000);
@@ -26,7 +27,11 @@ describe('RESTBase update rules', function() {
         return kafkaFactory.newProducer(kafkaFactory.newClient())
         .then((newProducer) => {
             producer = newProducer;
-            return producer.createTopicsAsync(common.ALL_TOPICS, false)
+            if (!common.topics_created) {
+                common.topics_created = true;
+                return producer.createTopicsAsync(common.ALL_TOPICS, false)
+            }
+            return P.resolve();
         })
         .then(() => changeProp.start());
     });

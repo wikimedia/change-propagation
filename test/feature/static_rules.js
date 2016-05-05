@@ -8,6 +8,7 @@ const Ajv = require('ajv');
 const assert = require('assert');
 const yaml = require('js-yaml');
 const common = require('../utils/common');
+const P = require('bluebird');
 
 describe('Basic rule management', function() {
     this.timeout(2000);
@@ -28,7 +29,11 @@ describe('Basic rule management', function() {
         return kafkaFactory.newProducer(kafkaFactory.newClient())
         .then((newProducer) => {
             producer = newProducer;
-            return producer.createTopicsAsync(common.ALL_TOPICS, false)
+            if (!common.topics_created) {
+                common.topics_created = true;
+                return producer.createTopicsAsync(common.ALL_TOPICS, false)
+            }
+            return P.resolve();
         })
         .then(() => changeProp.start())
         .then(() => preq.get({
