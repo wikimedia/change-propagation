@@ -29,7 +29,8 @@ ChangeProp.prototype.start = function() {
     .then(function(servers) {
         self._servers = servers;
         return true;
-    });
+    })
+    .delay(200);
 };
 
 ChangeProp.prototype.stop = function() {

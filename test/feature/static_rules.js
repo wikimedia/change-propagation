@@ -49,53 +49,6 @@ describe('Basic rule management', function() {
         return result;
     }
 
-    it('Should process backlinks', () => {
-        const mwAPI = nock('https://en.wikipedia.org')
-        .post('/w/api.php', {
-            format: 'json',
-            action: 'query',
-            list: 'backlinks',
-            bltitle: 'Main_Page',
-            blfilterredir: 'nonredirects',
-            bllimit: '500' })
-        .reply(200, {
-            batchcomplete: '',
-            continue: {
-                blcontinue: '1|2272',
-                continue: '-||'
-            },
-            query: {
-                backlinks: arrayWithLinks('Some_Page', 2)
-            }
-        })
-        .get('/api/rest_v1/page/html/Some_Page').times(2).reply(200)
-        .post('/w/api.php', {
-            format: 'json',
-            action: 'query',
-            list: 'backlinks',
-            bltitle: 'Main_Page',
-            blfilterredir: 'nonredirects',
-            bllimit: '500',
-            blcontinue: '1|2272'
-        })
-        .reply(200, {
-            batchcomplete: '',
-            query: {
-                backlinks: arrayWithLinks('Some_Page', 1)
-            }
-        })
-        .get('/api/rest_v1/page/html/Some_Page').reply(200);
-        return producer.sendAsync([{
-            topic: 'test_dc.mediawiki.revision_create',
-            messages: [
-                JSON.stringify(common.eventWithProperties('mediawiki.revision_create', { title: 'Main_Page' }))
-            ]
-        }])
-        .delay(300)
-        .then(() => mwAPI.done())
-        .finally(() => nock.cleanAll());
-    });
-
     it('Should call simple executor', () => {
         const service = nock('http://mock.com', {
             reqheaders: {
@@ -148,7 +101,7 @@ describe('Basic rule management', function() {
         // No need to emit new messages, we will use on from previous test
         return kafkaFactory.newConsumer(kafkaFactory.newClient(),
             'change-prop.retry.simple_test_rule',
-            'change-prop-test-consumer')
+            'change-prop-test-consumer-valid-retry', 0)
         .then((retryConsumer) => {
             retryConsumer.once('message', (message) => {
                 try {
@@ -252,6 +205,53 @@ describe('Basic rule management', function() {
         }])
         .delay(100)
         .then(() => service.done())
+        .finally(() => nock.cleanAll());
+    });
+
+    it('Should process backlinks', () => {
+        const mwAPI = nock('https://en.wikipedia.org')
+        .post('/w/api.php', {
+            format: 'json',
+            action: 'query',
+            list: 'backlinks',
+            bltitle: 'Main_Page',
+            blfilterredir: 'nonredirects',
+            bllimit: '500' })
+        .reply(200, {
+            batchcomplete: '',
+            continue: {
+                blcontinue: '1|2272',
+                continue: '-||'
+            },
+            query: {
+                backlinks: arrayWithLinks('Some_Page', 2)
+            }
+        })
+        .get('/api/rest_v1/page/html/Some_Page').times(2).reply(200)
+        .post('/w/api.php', {
+            format: 'json',
+            action: 'query',
+            list: 'backlinks',
+            bltitle: 'Main_Page',
+            blfilterredir: 'nonredirects',
+            bllimit: '500',
+            blcontinue: '1|2272'
+        })
+        .reply(200, {
+            batchcomplete: '',
+            query: {
+                backlinks: arrayWithLinks('Some_Page', 1)
+            }
+        })
+        .get('/api/rest_v1/page/html/Some_Page').reply(200);
+        return producer.sendAsync([{
+            topic: 'test_dc.mediawiki.revision_create',
+            messages: [
+                JSON.stringify(common.eventWithProperties('mediawiki.revision_create', { title: 'Main_Page' }))
+            ]
+        }])
+        .delay(300)
+        .then(() => mwAPI.done())
         .finally(() => nock.cleanAll());
     });
 

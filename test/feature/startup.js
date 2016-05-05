@@ -27,7 +27,7 @@ describe('Startup', function () {
 
     it('Should start from latest offset if new rule is created', (done) => {
         let finished = false;
-        nock('http://mock.com')
+        const service = nock('http://mock.com')
         .post('/').reply(() => {
             return P.try(() => {
                 finished = true;
@@ -51,6 +51,7 @@ describe('Startup', function () {
             if (!finished) {
                 changeProp.stop().then(done);
             }
+            nock.cleanAll()
         });
     });
 });
