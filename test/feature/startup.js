@@ -31,9 +31,18 @@ describe('Startup', function () {
 
     it('Should start from latest offset if new rule is created', (done) => {
         let finished = false;
-        nock('http://mock.com').post('/').reply(() => P.try(() => {
-            finished = true;
-            changeProp.stop().then(() => done(new Error('The event must not have been processed')))
+        nock('http://mock.com').post('/').reply(() => {
+            console.log('CALLED');
+            return {
+                status: 200
+            }
+        })
+        .post('/').reply(() => P.try(() => {
+            if (!finished) {
+                finished = true;
+                changeProp.stop().then(() =>
+                    done(new Error('The event must not have been processed')))
+            }
         }));
 
         // Produce a message to a test topic. As the topics were deleted before,
@@ -42,6 +51,7 @@ describe('Startup', function () {
         return producer.sendAsync([{
             topic: 'test_dc.simple_test_rule',
             messages: [
+                JSON.stringify(common.eventWithMessage('test')),
                 JSON.stringify(common.eventWithMessage('test'))
             ]
         }])
