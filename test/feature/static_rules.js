@@ -103,10 +103,24 @@ describe('Basic rule management', function() {
     });
 
     it('Should emit valid retry message', (done) => {
-        // No need to emit new messages, we will use on from previous test
+        const service = nock('http://mock.com', {
+            reqheaders: {
+                test_header_name: 'test_header_value',
+                'content-type': 'application/json'
+            }
+        })
+        .post('/', {
+            'test_field_name': 'test_field_value',
+            'derived_field': 'test'
+        }).reply(500, {})
+        .post('/', {
+            'test_field_name': 'test_field_value',
+            'derived_field': 'test'
+        }).reply(200, {});
+        
         return kafkaFactory.newConsumer(kafkaFactory.newClient(),
             'change-prop.retry.simple_test_rule',
-            'change-prop-test-consumer-valid-retry', 0)
+            'change-prop-test-consumer-valid-retry')
         .then((retryConsumer) => {
             retryConsumer.once('message', (message) => {
                 try {
@@ -124,6 +138,10 @@ describe('Basic rule management', function() {
                     done(e);
                 }
             });
+            return producer.sendAsync([{
+                topic: 'test_dc.simple_test_rule',
+                messages: [ JSON.stringify(common.eventWithMessage('test')) ]
+            }]);
         });
     });
 
