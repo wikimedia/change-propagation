@@ -327,7 +327,7 @@ describe('Basic rule management', function() {
 
     it('Should emit valid messages to error topic', (done) => {
         // No need to emit new messages, we will use on from previous test
-        return kafkaFactory.newConsumer(kafkaFactory.newClient(),
+        kafkaFactory.newConsumer(kafkaFactory.newClient(),
             'change-prop.error',
             'change-prop-test-error-consumer')
         .then((errorConsumer) => {
@@ -349,6 +349,12 @@ describe('Basic rule management', function() {
                 }*/
                 done();
             });
+        })
+        .then(() => {
+            return producer.sendAsync([{
+                topic: 'test_dc.mediawiki.revision_create',
+                messages: [ 'not_a_json_message' ]
+            }]);
         });
     });
 
