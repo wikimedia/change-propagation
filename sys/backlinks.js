@@ -3,6 +3,7 @@
 const extend = require('extend');
 const HyperSwitch = require('hyperswitch');
 const Template = HyperSwitch.Template;
+const utils = require('../lib/utils');
 
 const CONTINUE_TOPIC_NAME = 'change-prop.backlinks.continue';
 
@@ -60,7 +61,8 @@ class BackLinksProcessor {
                             uri: originalEvent.meta.uri,
                             request_id: originalEvent.meta.request_id,
                             domain: originalEvent.meta.domain,
-                            dt: originalEvent.meta.dt
+                            dt: originalEvent.meta.dt,
+                            triggered_by: utils.triggeredBy(originalEvent)
                         },
                         original_event: originalEvent,
                         continue: res.body.continue.blcontinue
@@ -83,7 +85,8 @@ class BackLinksProcessor {
                         uri: `https://${originalEvent.meta.domain}/wiki/${item.title}`,
                         request_id: originalEvent.meta.request_id,
                         domain: originalEvent.meta.domain,
-                        dt: originalEvent.meta.dt
+                        dt: originalEvent.meta.dt,
+                        triggered_by: utils.triggeredBy(originalEvent)
                     },
                     tags: [ 'change-prop', 'backlinks' ]
                 };

@@ -39,7 +39,8 @@ describe('RESTBase update rules', function() {
     it('Should update summary endpoint', () => {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
-                'cache-control': 'no-cache'
+                'cache-control': 'no-cache',
+                'x-triggered-by': 'resource_change:https://en.wikipedia.org/api/rest_v1/page/html/Main%20Page'
             }
         })
         .get('/api/rest_v1/page/summary/Main%20Page')
@@ -71,7 +72,8 @@ describe('RESTBase update rules', function() {
     it('Should update definition endpoint', () => {
         const mwAPI = nock('https://en.wiktionary.org', {
             reqheaders: {
-                'cache-control': 'no-cache'
+                'cache-control': 'no-cache',
+                'x-triggered-by': 'resource_change:https://en.wiktionary.org/api/rest_v1/page/html/Main%20Page'
             }
         })
         .get('/api/rest_v1/page/definition/Main%20Page')
@@ -103,11 +105,13 @@ describe('RESTBase update rules', function() {
     it('Should update mobile apps endpoint', () => {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
-                'cache-control': 'no-cache'
+                'cache-control': 'no-cache',
+                'x-triggered-by': 'resource_change:https://en.wikipedia.org/api/rest_v1/page/html/Main%20Page'
             }
         })
         .get('/api/rest_v1/page/mobile-sections/Main%20Page')
         .query({ redirect: false })
+
         .reply(200, { });
 
         return producer.sendAsync([{

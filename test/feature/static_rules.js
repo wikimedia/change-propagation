@@ -59,7 +59,8 @@ describe('Basic rule management', function() {
             reqheaders: {
                 test_header_name: 'test_header_value',
                 'content-type': 'application/json',
-                'x-request-id': common.SAMPLE_REQUEST_ID
+                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'x-triggered-by': 'simple_test_rule:/sample/uri'
             }
         })
         .post('/', {
@@ -91,11 +92,15 @@ describe('Basic rule management', function() {
         .post('/', {
             'test_field_name': 'test_field_value',
             'derived_field': 'test'
-        }).reply(500, {})
+        })
+        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri')
+        .reply(500, {})
         .post('/', {
             'test_field_name': 'test_field_value',
             'derived_field': 'test'
-        }).reply(200, {});
+        })
+        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri;change-prop.retry.simple_test_rule:/sample/uri')
+        .reply(200, {});
 
         return producer.sendAsync([{
             topic: 'test_dc.simple_test_rule',
@@ -117,11 +122,13 @@ describe('Basic rule management', function() {
         .post('/', {
             'test_field_name': 'test_field_value',
             'derived_field': 'test'
-        }).reply(500, {})
+        })
+        .reply(500, {})
         .post('/', {
             'test_field_name': 'test_field_value',
             'derived_field': 'test'
-        }).reply(200, {});
+        })
+        .reply(200, {});
         
         return kafkaFactory.newConsumer(kafkaFactory.newClient(),
             'change-prop.retry.simple_test_rule',
@@ -131,11 +138,14 @@ describe('Basic rule management', function() {
                 try {
                     const ajv = new Ajv();
                     const validate = ajv.compile(retrySchema);
-                    var valid = validate(JSON.parse(message.value));
+                    const msg = JSON.parse(message.value);
+                    const valid = validate(msg);
                     if (!valid) {
                         done(new assert.AssertionError({
                             message: ajv.errorsText(validate.errors)
                         }));
+                    } else if (msg.meta.triggered_by !== 'simple_test_rule:/sample/uri') {
+                            done(new Error('TriggeredBy should be equal to simple_test_rule:/sample/uri'));
                     } else {
                         done();
                     }
@@ -155,13 +165,27 @@ describe('Basic rule management', function() {
             reqheaders: {
                 test_header_name: 'test_header_value',
                 'content-type': 'application/json',
-                'x-request-id': common.SAMPLE_REQUEST_ID
+                'x-request-id': common.SAMPLE_REQUEST_ID,
             }
         })
         .post('/', {
             'test_field_name': 'test_field_value',
             'derived_field': 'test'
-        }).times(3).reply(500, {});
+        })
+        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri')
+        .reply(500, {})
+        .post('/', {
+            'test_field_name': 'test_field_value',
+            'derived_field': 'test'
+        })
+        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri;change-prop.retry.simple_test_rule:/sample/uri')
+        .reply(500, {})
+        .post('/', {
+            'test_field_name': 'test_field_value',
+            'derived_field': 'test'
+        })
+        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri;change-prop.retry.simple_test_rule:/sample/uri;change-prop.retry.simple_test_rule:/sample/uri')
+        .reply(500, {});
 
         return producer.sendAsync([{
             topic: 'test_dc.simple_test_rule',
@@ -177,13 +201,16 @@ describe('Basic rule management', function() {
             reqheaders: {
                 test_header_name: 'test_header_value',
                 'content-type': 'application/json',
-                'x-request-id': common.SAMPLE_REQUEST_ID
+                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'x-triggered-by': 'simple_test_rule:/sample/uri'
             }
         })
         .post('/', {
             'test_field_name': 'test_field_value',
             'derived_field': 'test'
-        }).reply(404, {});
+        })
+        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri')
+        .reply(404, {});
 
         return producer.sendAsync([{
             topic: 'test_dc.simple_test_rule',
@@ -199,13 +226,16 @@ describe('Basic rule management', function() {
             reqheaders: {
                 test_header_name: 'test_header_value',
                 'content-type': 'application/json',
-                'x-request-id': common.SAMPLE_REQUEST_ID
+                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'x-triggered-by': 'simple_test_rule:/sample/uri'
             }
         })
         .post('/', {
             'test_field_name': 'test_field_value',
             'derived_field': 'test'
-        }).reply(200, {});
+        })
+        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri')
+        .reply(200, {});
 
         return producer.sendAsync([{
             topic: 'test_dc.simple_test_rule',
@@ -227,7 +257,9 @@ describe('Basic rule management', function() {
         .post('/', {
             'test_field_name': 'test_field_value',
             'derived_field': 'test'
-        }).times(2).reply({});
+        })
+        .matchHeader('x-triggered-by', 'test_dc.kafka_producing_rule:/sample/uri;simple_test_rule:/sample/uri')
+        .times(2).reply({});
 
         return producer.sendAsync([{
             topic: 'test_dc.kafka_producing_rule',
@@ -259,7 +291,10 @@ describe('Basic rule management', function() {
                 backlinks: arrayWithLinks('Some_Page', 2)
             }
         })
-        .get('/api/rest_v1/page/html/Some_Page').times(2).reply(200)
+        .get('/api/rest_v1/page/html/Some_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri;resource_change:https://en.wikipedia.org/wiki/Some_Page')
+        .times(2)
+        .reply(200)
         .post('/w/api.php', {
             format: 'json',
             action: 'query',
@@ -275,7 +310,10 @@ describe('Basic rule management', function() {
                 backlinks: arrayWithLinks('Some_Page', 1)
             }
         })
-        .get('/api/rest_v1/page/html/Some_Page').reply(200);
+        .get('/api/rest_v1/page/html/Some_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri;resource_change:https://en.wikipedia.org/wiki/Some_Page')
+        .reply(200);
+
         return producer.sendAsync([{
             topic: 'test_dc.mediawiki.revision_create',
             messages: [

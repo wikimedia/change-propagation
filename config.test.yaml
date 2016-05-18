@@ -88,9 +88,11 @@ services:
                               topic: '{{message.produce_to_topic}}'
                               uri: '{{message.meta.uri}}'
                               request_id: '{{message.meta.request_id}}'
+                              triggered_by: '{{message.meta.topic}}:{{message.meta.uri}}'
                             message: 'test'
                           - meta:
                               topic: '{{message.produce_to_topic}}'
                               uri: '{{message.meta.uri}}'
                               request_id: '{{message.meta.request_id}}'
+                              triggered_by: '{{message.meta.topic}}:{{message.meta.uri}}'
                             message: 'test'
