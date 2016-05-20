@@ -37,7 +37,7 @@ describe('Basic rule management', function() {
         })
         .then(() => changeProp.start())
         .then(() => preq.get({
-                uri: 'https://raw.githubusercontent.com/wikimedia/mediawiki-event-schemas/master/jsonschema/retry/1.yaml'
+                uri: 'https://raw.githubusercontent.com/wikimedia/mediawiki-event-schemas/master/jsonschema/change-prop/retry/1.yaml'
         }))
         .then((res) => retrySchema = yaml.safeLoad(res.body));
     });
@@ -99,7 +99,7 @@ describe('Basic rule management', function() {
             'test_field_name': 'test_field_value',
             'derived_field': 'test'
         })
-        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri;change-prop.retry.simple_test_rule:/sample/uri')
+        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri,change-prop.retry.simple_test_rule:/sample/uri')
         .reply(200, {});
 
         return producer.sendAsync([{
@@ -144,7 +144,7 @@ describe('Basic rule management', function() {
                         done(new assert.AssertionError({
                             message: ajv.errorsText(validate.errors)
                         }));
-                    } else if (msg.meta.triggered_by !== 'simple_test_rule:/sample/uri') {
+                    } else if (msg.triggered_by !== 'simple_test_rule:/sample/uri') {
                             done(new Error('TriggeredBy should be equal to simple_test_rule:/sample/uri'));
                     } else {
                         done();
@@ -178,13 +178,13 @@ describe('Basic rule management', function() {
             'test_field_name': 'test_field_value',
             'derived_field': 'test'
         })
-        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri;change-prop.retry.simple_test_rule:/sample/uri')
+        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri,change-prop.retry.simple_test_rule:/sample/uri')
         .reply(500, {})
         .post('/', {
             'test_field_name': 'test_field_value',
             'derived_field': 'test'
         })
-        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri;change-prop.retry.simple_test_rule:/sample/uri;change-prop.retry.simple_test_rule:/sample/uri')
+        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri,change-prop.retry.simple_test_rule:/sample/uri,change-prop.retry.simple_test_rule:/sample/uri')
         .reply(500, {});
 
         return producer.sendAsync([{
@@ -258,7 +258,7 @@ describe('Basic rule management', function() {
             'test_field_name': 'test_field_value',
             'derived_field': 'test'
         })
-        .matchHeader('x-triggered-by', 'test_dc.kafka_producing_rule:/sample/uri;simple_test_rule:/sample/uri')
+        .matchHeader('x-triggered-by', 'test_dc.kafka_producing_rule:/sample/uri,simple_test_rule:/sample/uri')
         .times(2).reply({});
 
         return producer.sendAsync([{
@@ -292,7 +292,7 @@ describe('Basic rule management', function() {
             }
         })
         .get('/api/rest_v1/page/html/Some_Page')
-        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri;resource_change:https://en.wikipedia.org/wiki/Some_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Some_Page')
         .times(2)
         .reply(200)
         .post('/w/api.php', {
@@ -311,7 +311,7 @@ describe('Basic rule management', function() {
             }
         })
         .get('/api/rest_v1/page/html/Some_Page')
-        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri;resource_change:https://en.wikipedia.org/wiki/Some_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Some_Page')
         .reply(200);
 
         return producer.sendAsync([{
