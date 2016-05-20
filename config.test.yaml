@@ -70,11 +70,11 @@ services:
                       topic: resource_change
                       match:
                         meta:
-                          uri: '/https:\/\/[^\/]+\/wiki\/(.+)/'
+                          uri: '/https:\/\/[^\/]+\/wiki\/(:<title>.+)/'
                         tags: [ 'change-prop', 'backlinks' ]
                       exec:
                         method: get
-                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{match.meta.uri[1]}'
+                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{{match.meta.uri.title}}'
                         headers:
                           cache-control: no-cache
 

@@ -162,6 +162,16 @@ describe('Rule', function() {
             assert.deepEqual(exp.meta.uri, /\/fake\/([^\/]+)/.exec(msg.meta.uri));
         });
 
+        it('expansion with named groups', function() {
+            var r = new Rule('rule', {
+                topic: 'nono',
+                exec: {uri: 'a/{match.meta.uri.element}/c'},
+                match: { meta: { uri: "/\\/fake\\/(:<element>[^\\/]+)/" }, number: 1 }
+            });
+            var exp = r.expand(msg);
+            assert.deepEqual(exp.meta.uri, { element: 'uri' });
+        });
+
     });
 
 });

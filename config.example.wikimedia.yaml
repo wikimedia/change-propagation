@@ -49,7 +49,7 @@ services:
                           - '5xx'
                       match:
                         meta:
-                          uri: '/^(https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/([^/]+)$/'
+                          uri: '/^(:<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(:<title>[^/]+)$/'
                         tags:
                           - restbase
                       match_not:
@@ -58,7 +58,7 @@ services:
                       exec:
                         method: get
                         # Don't encode title since it should be already encoded
-                        uri: '{{match.meta.uri[1]}}://{{message.meta.domain}}/api/rest_v1/page/summary/{{match.meta.uri[2]}}'
+                        uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/summary/{{match.meta.uri.title}}'
                         query:
                           redirect: false
                         headers:
@@ -75,14 +75,14 @@ services:
                         meta:
                           # These URIs are coming from RESTBase, so we know that article titles will be normalized
                           # and main namespace articles will not have : (uri-encoded, so %3a or %3A)
-                          uri: '/^(https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/((?:(?!%3a|%3A).)+)$/'
+                          uri: '/^(:<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(:<title>(?:(?!%3a|%3A).)+)$/'
                           domain: '/^en.wiktionary.org$/'
                         tags:
                           - restbase
                       exec:
                         method: get
                         # Don't encode title since it should be already encoded
-                        uri: '{{match.meta.uri[1]}}://{{message.meta.domain}}/api/rest_v1/page/definition/{{match.meta.uri[2]}}'
+                        uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/definition/{{match.meta.uri.title}}'
                         query:
                           redirect: false
                         headers:
@@ -97,10 +97,10 @@ services:
                           - '5xx'
                       match:
                         meta:
-                          uri: '/^(https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/([^/]+)$/'
+                          uri: '/^(:<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(:<title>[^/]+)$/'
                       exec:
                         method: get
-                        uri: '{{match.meta.uri[1]}}://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{{match.meta.uri[2]}}'
+                        uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{{match.meta.uri.title}}'
                         query:
                           redirect: false
                         headers:
@@ -110,7 +110,7 @@ services:
                       topic: resource_change
                       match:
                         meta:
-                          uri: '/^https?:\/\/[^\/]+\/api\/rest_v1\/(.+)$/'
+                          uri: '/^https?:\/\/[^\/]+\/api\/rest_v1\/(:<title>.+)$/'
                         tags:
                           - restbase
                       exec:
@@ -118,4 +118,4 @@ services:
                         uri: '/sys/purge/'
                         body:
                           - meta:
-                              uri: '//{{message.meta.domain}}/api/rest_v1/{{match.meta.uri[1]}}'
+                              uri: '//{{message.meta.domain}}/api/rest_v1/{{match.meta.uri.title}}'
