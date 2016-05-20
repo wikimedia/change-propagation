@@ -8,6 +8,62 @@
 A [RESTBase](https://github.com/wikimedia/restbase) queuing module for
 [Apache Kafka](http://kafka.apache.org/)
 
+The purpose of the change propagation service is executing actions based on events. The service
+listens to kafka topics, and executes handlers for events according to configurable rules. Currently,
+a rule could issue HTTP requests, produce new messages, or make an HTCP purge request. The list of
+supported actions is easily expandable by creating new modules with internal HTTP endpoints and
+calling them from the rules.
+
+## Features
+
+- Config-based rules for message processing. For more information about rules configuration
+see [Configuration](##Rule configuration) section.
+- Automatic limited retries
+- Global rule execution concurrency limiting
+- Metrics and logging support
+
+## Rule Configuration
+
+A `Rule` is a semantically meaningful piece of service functionality. For example,
+'Rerender RESTBase if the page was changed', or 'Update summary if RESTBase render was changed'
+are both rules. To specify the rules, you need to add a property to the `kafka` module config
+[template property](https://github.com/wikimedia/change-propagation/blob/master/config.example.yaml#L48).
+Each rule is executed by a single worker, but internal load-balancing mechanism tries to distribute
+rules to workers equally.
+
+The rule can contain the following properties:
+- **topic** A name of the topic to subscribe to.
+- **match** An optional predicate for a message. The rule is executed only if all of the `match`
+properties were satisfied by the message. Properties could be nested objects, constants
+or a regex. Regex could contain capture groups and captured values will later be accessible
+in the `exec` part of the rule.
+- **match_not** An optional predicate which must not match for a rule to be executed. It doesn't capture values
+and doesn't make them accessible to the `exec` part of the rule.
+- **exec** An array of HTTP request templates, that will be executed sequentially if the rule matched.
+The template follows [request templating syntax](https://github.com/wikimedia/swagger-router#request-templating).
+The template is evaluated with a `context` that has `message` global property with an original message,
+and `match` property with values extracted by the match.
+
+Here's an example of the rule, which would match all `resource_change` messages, emitted by `RESTBase`,
+and purge varnish caches for the resources by issuing an HTTP request to a special internal module, that would
+convert it to HTCP purge and make an HTCP request:
+```yaml
+    purge_varnish:
+      topic: resource_change
+      match:
+        meta:
+          uri: '/^https?:\/\/[^\/]+\/api\/rest_v1\/(.+)$/'
+        tags:
+          - restbase
+      exec:
+        method: post
+        uri: '/sys/purge/'
+        body:
+          - meta:
+              uri: '//{{message.meta.domain}}/api/rest_v1/{{match.meta.uri[1]}}'
+
+```
+
 
 ## Testing
 
@@ -33,4 +89,29 @@ echo 'delete.topic.enable=true' >> KAFKA_HOME/config/server.properties
 Before starting the development version of change propagation or running
 test you need to start Zookeeper and Kafka with `start-kafka` npm script.
 To stop Kafka and Zookeeper tun `stop-kafka` npm script.
+
+## Running locally
+
+To run the service locally, you need to have to have kafka and zookeeper installed
+and run. Example of installation and configuration can be found in the [Testing](##Testing)
+section of this readme. After kafka is installed, configured, and run with `npm run start-kafka`
+command, copy the example config and run the service:
+```bash
+cp config.example.yaml config.yaml
+npm start
+```
+
+Also, before using the service you need to ensure that all topics used in your config
+exist in kafka. Topics should be prefixed with a datacenter name (default is `default`). Also,
+each topic must have a retry topic. So, if you are using a topic named `test_topic`, the follwing
+topics must exist in kafka:
+```
+ - 'default.test_topic'
+ - 'default.change-prop.retry.test_topic'
+```
+
+## Bug Reporting
+The service is maintained by the [Wikimedia Services Team](https://www.mediawiki.org/wiki/Wikimedia_Services).
+For bug reporting use [EventBus project on Phabricator](https://phabricator.wikimedia.org/tag/eventbus/)
+or [#wikimedia-services](https://kiwiirc.com/client/irc.freenode.net:+6697/#teleirc) IRC channel on freenode.
 
