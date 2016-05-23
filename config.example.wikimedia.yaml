@@ -49,7 +49,7 @@ services:
                           - '5xx'
                       match:
                         meta:
-                          uri: '/^(:<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(:<title>[^/]+)$/'
+                          uri: '/^(?<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>[^/]+)$/'
                         tags:
                           - restbase
                       match_not:
@@ -75,7 +75,7 @@ services:
                         meta:
                           # These URIs are coming from RESTBase, so we know that article titles will be normalized
                           # and main namespace articles will not have : (uri-encoded, so %3a or %3A)
-                          uri: '/^(:<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(:<title>(?:(?!%3a|%3A).)+)$/'
+                          uri: '/^(?<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>(?:(?!%3a|%3A).)+)$/'
                           domain: '/^en.wiktionary.org$/'
                         tags:
                           - restbase
@@ -97,7 +97,7 @@ services:
                           - '5xx'
                       match:
                         meta:
-                          uri: '/^(:<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(:<title>[^/]+)$/'
+                          uri: '/^(?<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>[^/]+)$/'
                       exec:
                         method: get
                         uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{{match.meta.uri.title}}'
@@ -110,7 +110,7 @@ services:
                       topic: resource_change
                       match:
                         meta:
-                          uri: '/^https?:\/\/[^\/]+\/api\/rest_v1\/(:<title>.+)$/'
+                          uri: '/^https?:\/\/[^\/]+\/api\/rest_v1\/(?<title>.+)$/'
                         tags:
                           - restbase
                       exec:

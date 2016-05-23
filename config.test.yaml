@@ -70,7 +70,7 @@ services:
                       topic: resource_change
                       match:
                         meta:
-                          uri: '/https:\/\/[^\/]+\/wiki\/(:<title>.+)/'
+                          uri: '/https:\/\/[^\/]+\/wiki\/(?<title>.+)/'
                         tags: [ 'change-prop', 'backlinks' ]
                       exec:
                         method: get

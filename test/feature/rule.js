@@ -166,7 +166,7 @@ describe('Rule', function() {
             var r = new Rule('rule', {
                 topic: 'nono',
                 exec: {uri: 'a/{match.meta.uri.element}/c'},
-                match: { meta: { uri: "/\\/fake\\/(:<element>[^\\/]+)/" }, number: 1 }
+                match: { meta: { uri: "/\\/fake\\/(?<element>[^\\/]+)/" }, number: 1 }
             });
             var exp = r.expand(msg);
             assert.deepEqual(exp.meta.uri, { element: 'uri' });
