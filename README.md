@@ -36,7 +36,9 @@ The rule can contain the following properties:
 - **match** An optional predicate for a message. The rule is executed only if all of the `match`
 properties were satisfied by the message. Properties could be nested objects, constants
 or a regex. Regex could contain capture groups and captured values will later be accessible
-in the `exec` part of the rule.
+in the `exec` part of the rule. Capture groups could be named, using the `(?<name>group)` syntax, then
+the captured value would be accessible under `match.property_name.capture_name` within the `exec` part.
+Named and unnamed captures can not be mixed together.
 - **match_not** An optional predicate which must not match for a rule to be executed. It doesn't capture values
 and doesn't make them accessible to the `exec` part of the rule.
 - **exec** An array of HTTP request templates, that will be executed sequentially if the rule matched.
@@ -52,7 +54,7 @@ convert it to HTCP purge and make an HTCP request:
       topic: resource_change
       match:
         meta:
-          uri: '/^https?:\/\/[^\/]+\/api\/rest_v1\/(.+)$/'
+          uri: '/^https?:\/\/[^\/]+\/api\/rest_v1\/(?<rest>.+)$/'
         tags:
           - restbase
       exec:
@@ -60,7 +62,7 @@ convert it to HTCP purge and make an HTCP request:
         uri: '/sys/purge/'
         body:
           - meta:
-              uri: '//{{message.meta.domain}}/api/rest_v1/{{match.meta.uri[1]}}'
+              uri: '//{{message.meta.domain}}/api/rest_v1/{{match.meta.uri.rest}}'
 
 ```
 
