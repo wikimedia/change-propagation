@@ -7,7 +7,7 @@ const common = require('../utils/common');
 const P = require('bluebird');
 
 describe('Startup', function () {
-    this.timeout(5000);
+    this.timeout(10000);
 
     const changeProp = new ChangeProp('config.test.yaml');
     const kafkaFactory = new KafkaFactory({
@@ -23,7 +23,9 @@ describe('Startup', function () {
             producer = newProducer;
             if (!common.topics_created) {
                 common.topics_created = true;
-                return producer.createTopicsAsync(common.ALL_TOPICS, false)
+                return P.each(common.ALL_TOPICS, (topic) => {
+                    return producer.createTopicsAsync([ topic ], false);
+                });
             }
             return P.resolve();
         });

@@ -32,7 +32,9 @@ describe('Basic rule management', function() {
             producer = newProducer;
             if (!common.topics_created) {
                 common.topics_created = true;
-                return producer.createTopicsAsync(common.ALL_TOPICS, false)
+                return P.each(common.ALL_TOPICS, (topic) => {
+                    return producer.createTopicsAsync([ topic ], false);
+                });
             }
             return P.resolve();
         })

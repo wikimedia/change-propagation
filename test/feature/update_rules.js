@@ -29,7 +29,9 @@ describe('RESTBase update rules', function() {
             producer = newProducer;
             if (!common.topics_created) {
                 common.topics_created = true;
-                return producer.createTopicsAsync(common.ALL_TOPICS, false)
+                return P.each(common.ALL_TOPICS, (topic) => {
+                    return producer.createTopicsAsync([ topic ], false);
+                });
             }
             return P.resolve();
         })
@@ -40,7 +42,8 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': 'resource_change:https://en.wikipedia.org/api/rest_v1/page/html/Main%20Page'
+                'x-triggered-by': 'resource_change:https://en.wikipedia.org/api/rest_v1/page/html/Main%20Page',
+                'x-request-id': common.SAMPLE_REQUEST_ID,
             }
         })
         .get('/api/rest_v1/page/summary/Main%20Page')
@@ -55,7 +58,7 @@ describe('RESTBase update rules', function() {
                         topic: 'resource_change',
                         schema_uri: 'resource_change/1',
                         uri: 'https://en.wikipedia.org/api/rest_v1/page/html/Main%20Page',
-                        request_id: uuid.now(),
+                        request_id: common.SAMPLE_REQUEST_ID,
                         id: uuid.now(),
                         dt: new Date().toISOString(),
                         domain: 'en.wikipedia.org'
@@ -73,7 +76,8 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wiktionary.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': 'resource_change:https://en.wiktionary.org/api/rest_v1/page/html/Main%20Page'
+                'x-triggered-by': 'resource_change:https://en.wiktionary.org/api/rest_v1/page/html/Main%20Page',
+                'x-request-id': common.SAMPLE_REQUEST_ID,
             }
         })
         .get('/api/rest_v1/page/definition/Main%20Page')
@@ -88,7 +92,7 @@ describe('RESTBase update rules', function() {
                         topic: 'resource_change',
                         schema_uri: 'resource_change/1',
                         uri: 'https://en.wiktionary.org/api/rest_v1/page/html/Main%20Page',
-                        request_id: uuid.now(),
+                        request_id: common.SAMPLE_REQUEST_ID,
                         id: uuid.now(),
                         dt: new Date().toISOString(),
                         domain: 'en.wiktionary.org'
@@ -106,7 +110,8 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': 'resource_change:https://en.wikipedia.org/api/rest_v1/page/html/Main%20Page'
+                'x-triggered-by': 'resource_change:https://en.wikipedia.org/api/rest_v1/page/html/Main%20Page',
+                'x-request-id': common.SAMPLE_REQUEST_ID,
             }
         })
         .get('/api/rest_v1/page/mobile-sections/Main%20Page')
@@ -121,7 +126,7 @@ describe('RESTBase update rules', function() {
                         topic: 'resource_change',
                         schema_uri: 'resource_change/1',
                         uri: 'https://en.wikipedia.org/api/rest_v1/page/html/Main%20Page',
-                        request_id: uuid.now(),
+                        request_id: common.SAMPLE_REQUEST_ID,
                         id: uuid.now(),
                         dt: new Date().toISOString(),
                         domain: 'en.wikipedia.org'
@@ -138,7 +143,8 @@ describe('RESTBase update rules', function() {
     it('Should not update definition endpoint for non-main namespace', (done) => {
         const mwAPI = nock('https://en.wiktionary.org', {
             reqheaders: {
-                'cache-control': 'no-cache'
+                'cache-control': 'no-cache',
+                'x-request-id': common.SAMPLE_REQUEST_ID,
             }
         })
         .get('/api/rest_v1/page/definition/User%3APchelolo')
@@ -154,7 +160,7 @@ describe('RESTBase update rules', function() {
                         topic: 'resource_change',
                         schema_uri: 'resource_change/1',
                         uri: 'https://en.wiktionary.org/api/rest_v1/page/html/User%3APchelolo',
-                        request_id: uuid.now(),
+                        request_id: common.SAMPLE_REQUEST_ID,
                         id: uuid.now(),
                         dt: new Date().toISOString(),
                         domain: 'en.wiktionary.org'
@@ -171,7 +177,190 @@ describe('RESTBase update rules', function() {
             }
         });
     });
-    
+
+    it('Should update RESTBase on resource_change from MW', () => {
+        const mwAPI = nock('https://en.wikipedia.org', {
+            reqheaders: {
+                'cache-control': 'no-cache',
+                'x-triggered-by': 'resource_change:https://en.wikipedia.org/wiki/Main_Page',
+                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'if-unmodified-since': 'Thu, 01 Jan 1970 00:00:01 +0000'
+            }
+        })
+        .get('/api/rest_v1/page/html/Main_Page')
+        .query({ redirect: false })
+        .reply(200, { });
+
+        return producer.sendAsync([{
+            topic: 'test_dc.resource_change',
+            messages: [
+                JSON.stringify({
+                    meta: {
+                        topic: 'resource_change',
+                        schema_uri: 'resource_change/1',
+                        uri: 'https://en.wikipedia.org/wiki/Main_Page',
+                        request_id: common.SAMPLE_REQUEST_ID,
+                        id: uuid.now(),
+                        dt: new Date(1).toISOString(),
+                        domain: 'en.wikipedia.org'
+                    },
+                    tags: ['purge']
+                })
+            ]
+        }])
+        .delay(common.REQUEST_CHECK_DELAY)
+        .then(() => mwAPI.done())
+        .finally(() => nock.cleanAll());
+    });
+
+    it('Should update RESTBase on revision_create', () => {
+        const mwAPI = nock('https://en.wikipedia.org', {
+            reqheaders: {
+                'cache-control': 'no-cache',
+                'x-triggered-by': 'mediawiki.revision_create:/edit/uri',
+                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'x-restbase-parentrevision': '1233',
+                'if-unmodified-since': 'Thu, 01 Jan 1970 00:00:01 +0000'
+            }
+        })
+        .get('/api/rest_v1/page/html/User%3APchelolo%2FTest/1234')
+        .query({ redirect: false })
+        .reply(200, { });
+
+        return producer.sendAsync([{
+            topic: 'test_dc.mediawiki.revision_create',
+            messages: [
+                JSON.stringify({
+                    meta: {
+                        topic: 'mediawiki.revision_create',
+                        schema_uri: 'revision_create/1',
+                        uri: '/edit/uri',
+                        request_id: common.SAMPLE_REQUEST_ID,
+                        id: uuid.now(),
+                        dt: new Date(1).toISOString(),
+                        domain: 'en.wikipedia.org'
+                    },
+                    page_title: 'User:Pchelolo/Test',
+                    rev_id: 1234,
+                    rev_timestamp: new Date().toISOString(),
+                    rev_parent_id: 1233
+                })
+            ]
+        }])
+        .delay(common.REQUEST_CHECK_DELAY)
+        .then(() => mwAPI.done())
+        .finally(() => nock.cleanAll());
+    });
+
+    it('Should update RESTBase on page delete', () => {
+        const mwAPI = nock('https://en.wikipedia.org', {
+            reqheaders: {
+                'cache-control': 'no-cache',
+                'x-triggered-by': 'mediawiki.page_delete:/delete/uri',
+                'x-request-id': common.SAMPLE_REQUEST_ID
+            }
+        })
+        .get('/api/rest_v1/page/title/User%3APchelolo%2FTest')
+        .query({ redirect: false })
+        .reply(200, { });
+
+        return producer.sendAsync([{
+            topic: 'test_dc.mediawiki.page_delete',
+            messages: [
+                JSON.stringify({
+                    meta: {
+                        topic: 'mediawiki.page_delete',
+                        schema_uri: 'page_delete/1',
+                        uri: '/delete/uri',
+                        request_id: common.SAMPLE_REQUEST_ID,
+                        id: uuid.now(),
+                        dt: new Date().toISOString(),
+                        domain: 'en.wikipedia.org'
+                    },
+                    title: 'User:Pchelolo/Test'
+                })
+            ]
+        }])
+        .delay(common.REQUEST_CHECK_DELAY)
+        .then(() => mwAPI.done())
+        .finally(() => nock.cleanAll());
+    });
+
+    it('Should update RESTBase on page_restore', () => {
+        const mwAPI = nock('https://en.wikipedia.org', {
+            reqheaders: {
+                'cache-control': 'no-cache',
+                'x-triggered-by': 'mediawiki.page_restore:/restore/uri',
+                'x-request-id': common.SAMPLE_REQUEST_ID
+            }
+        })
+        .get('/api/rest_v1/page/html/User%3APchelolo%2FTest')
+        .query({ redirect: false })
+        .reply(200, { });
+
+        return producer.sendAsync([{
+            topic: 'test_dc.mediawiki.page_restore',
+            messages: [
+                JSON.stringify({
+                    meta: {
+                        topic: 'mediawiki.page_restore',
+                        schema_uri: 'page_restore/1',
+                        uri: '/restore/uri',
+                        request_id: common.SAMPLE_REQUEST_ID,
+                        id: uuid.now(),
+                        dt: new Date().toISOString(),
+                        domain: 'en.wikipedia.org'
+                    },
+                    title: 'User:Pchelolo/Test'
+                })
+            ]
+        }])
+        .delay(common.REQUEST_CHECK_DELAY)
+        .then(() => mwAPI.done())
+        .finally(() => nock.cleanAll());
+    });
+
+    it('Should update RESTBase on page move', () => {
+        const mwAPI = nock('https://en.wikipedia.org', {
+            reqheaders: {
+                'cache-control': 'no-cache',
+                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'x-triggered-by': 'mediawiki.page_move:/move/uri'
+            }
+        })
+        .get('/api/rest_v1/page/title/User%3APchelolo%2FTest')
+        .query({ redirect: false })
+        .reply(200, { })
+        .get('/api/rest_v1/page/html/User%3APchelolo%2FTest1/2')
+        .matchHeader( 'if-unmodified-since', 'Thu, 01 Jan 1970 00:00:01 +0000')
+        .query({ redirect: false })
+        .reply(200, { });
+
+        return producer.sendAsync([{
+            topic: 'test_dc.mediawiki.page_move',
+            messages: [
+                JSON.stringify({
+                    meta: {
+                        topic: 'mediawiki.page_move',
+                        schema_uri: 'page_move/1',
+                        uri: '/move/uri',
+                        request_id: common.SAMPLE_REQUEST_ID,
+                        id: uuid.now(),
+                        dt: new Date(1).toISOString(),
+                        domain: 'en.wikipedia.org'
+                    },
+                    old_title: 'User:Pchelolo/Test',
+                    new_title: 'User:Pchelolo/Test1',
+                    old_revision_id: 1,
+                    new_revision_id: 2
+                })
+            ]
+        }])
+        .delay(common.REQUEST_CHECK_DELAY)
+        .then(() => mwAPI.done())
+        .finally(() => nock.cleanAll());
+    });
+
     it('Should purge caches on resource_change coming from RESTBase', (done) => {
         var udpServer = dgram.createSocket('udp4');
         let closed = false;
