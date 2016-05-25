@@ -361,6 +361,40 @@ describe('RESTBase update rules', function() {
         .finally(() => nock.cleanAll());
     });
 
+    it('Should update RESTBase on revision visibility change', () => {
+        const mwAPI = nock('https://en.wikipedia.org', {
+            reqheaders: {
+                'cache-control': 'no-cache',
+                'x-triggered-by': 'mediawiki.revision_visibility_set:/rev/uri',
+                'x-request-id': common.SAMPLE_REQUEST_ID
+            }
+        })
+        .get('/api/rest_v1/page/revision/1234')
+        .query({ redirect: false })
+        .reply(200, { });
+
+        return producer.sendAsync([{
+            topic: 'test_dc.mediawiki.revision_visibility_set',
+            messages: [
+                JSON.stringify({
+                    meta: {
+                        topic: 'mediawiki.revision_visibility_set',
+                        schema_uri: 'revision_visibility_set/1',
+                        uri: '/rev/uri',
+                        request_id: common.SAMPLE_REQUEST_ID,
+                        id: uuid.now(),
+                        dt: new Date().toISOString(),
+                        domain: 'en.wikipedia.org'
+                    },
+                    revision_id: 1234
+                })
+            ]
+        }])
+        .delay(common.REQUEST_CHECK_DELAY)
+        .then(() => mwAPI.done())
+        .finally(() => nock.cleanAll());
+    });
+
     it('Should purge caches on resource_change coming from RESTBase', (done) => {
         var udpServer = dgram.createSocket('udp4');
         let closed = false;
