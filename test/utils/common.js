@@ -16,6 +16,8 @@ common.ALL_TOPICS = [
     'test_dc.change-prop.retry.mediawiki.revision_create',
     'test_dc.change-prop.backlinks.continue',
     'test_dc.change-prop.retry.change-prop.backlinks.continue',
+    'test_dc.change-prop.transcludes.continue',
+    'test_dc.change-prop.retry.change-prop.transcludes.continue',
     'test_dc.resource_change',
     'test_dc.change-prop.retry.resource_change',
     'test_dc.change-prop.error',

@@ -41,7 +41,8 @@
     "service-runner": "^1.3.0",
     "wmf-kafka-node": "^0.1.3",
     "json-stable-stringify": "^1.0.1",
-    "htcp-purge": "^0.1.2"
+    "htcp-purge": "^0.1.2",
+    "mediawiki-title": "^0.4.2"
   },
   "devDependencies": {
     "istanbul": "^0.4.3",

@@ -214,3 +214,10 @@ services:
                             if-unmodified-since: '{{date(message.meta.dt)}}'
                           query:
                             redirect: false
+
+                    transclusion_update:
+                      topic: mediawiki.revision_create
+                      exec:
+                        method: 'post'
+                        uri: '/sys/links/transcludes/{{message.page_title}}'
+                        body: '{{globals.message}}'
