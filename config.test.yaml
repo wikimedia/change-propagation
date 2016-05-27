@@ -56,6 +56,16 @@ services:
                           test_field_name: test_field_value
                           derived_field: '{{message.message}}'
 
+                    redirect_testing_rule:
+                      topic: simple_test_rule
+                      match:
+                        meta:
+                          uri: '/sample/uri'
+                        message: 'redirect'
+                      exec:
+                        method: get
+                        uri: 'http://mock.com/will_redirect'
+
                     process_redlinks:
                       topic: mediawiki.revision_create
                       retry_limit: 0

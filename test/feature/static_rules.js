@@ -88,6 +88,34 @@ describe('Basic rule management', function() {
         .finally(() => nock.cleanAll());
     });
 
+    it('Should not follow redirects', (done) => {
+        let finished = false;
+        const service = nock('http://mock.com')
+        .get('/will_redirect')
+        .reply(301, '', {
+            'location': 'http://mock.com/redirected_resource'
+        })
+        .get('/redirected_resource')
+        .reply(() => {
+            finished = true;
+            done(new Error('Must not have followed the redirect'))
+        });
+
+        return producer.sendAsync([{
+            topic: 'test_dc.simple_test_rule',
+            messages: [
+                JSON.stringify(common.eventWithMessage('redirect'))
+            ]
+        }])
+        .delay(common.REQUEST_CHECK_DELAY)
+        .finally(() => {
+            nock.cleanAll();
+            if (!finished) {
+                done();
+            }
+        });
+    });
+
     it('Should retry simple executor', () => {
         const service = nock('http://mock.com', {
             reqheaders: {
