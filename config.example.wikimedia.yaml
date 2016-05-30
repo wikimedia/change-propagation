@@ -7,6 +7,7 @@ services:
     module: hyperswitch
     conf:
       port: 7272
+      user_agent: SampleChangePropInstance
       spec:
         x-sub-request-filters:
           - type: default
@@ -14,6 +15,8 @@ services:
             options:
               allow:
                 - pattern: /^https?:\/\//
+                  forward_headers:
+                    user-agent: true
         title: The Change Propagation root
         paths:
           /sys/purge:

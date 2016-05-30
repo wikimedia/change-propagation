@@ -6,6 +6,7 @@ services:
   - name: changeprop
     module: hyperswitch
     conf:
+      user_agent: ChangePropTestSuite
       port: 7272
       spec:
         x-sub-request-filters:
@@ -14,6 +15,8 @@ services:
             options:
               allow:
                 - pattern: /^https?:\/\//
+                  forward_headers:
+                    user-agent: true
         title: The Change Propagation root
         paths:
           /sys/links:
@@ -32,7 +35,7 @@ services:
                   uri: 127.0.0.1:2181
                   consume_dc: test_dc
                   produce_dc: test_dc
-                  concurrency: 2
+                  concurrency: 1
                   templates:
                     simple_test_rule:
                       topic: simple_test_rule

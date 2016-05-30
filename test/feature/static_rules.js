@@ -67,7 +67,8 @@ describe('Basic rule management', function() {
                 test_header_name: 'test_header_value',
                 'content-type': 'application/json',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
-                'x-triggered-by': 'simple_test_rule:/sample/uri'
+                'x-triggered-by': 'simple_test_rule:/sample/uri',
+                'user-agent': 'ChangePropTestSuite'
             }
         })
         .post('/', {
@@ -121,7 +122,8 @@ describe('Basic rule management', function() {
             reqheaders: {
                 test_header_name: 'test_header_value',
                 'content-type': 'application/json',
-                'x-request-id': common.SAMPLE_REQUEST_ID
+                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'user-agent': 'ChangePropTestSuite'
             }
         })
         .post('/', {
@@ -151,7 +153,8 @@ describe('Basic rule management', function() {
             reqheaders: {
                 test_header_name: 'test_header_value',
                 'content-type': 'application/json',
-                'x-request-id': common.SAMPLE_REQUEST_ID
+                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'user-agent': 'ChangePropTestSuite'
             }
         })
         .post('/', {
@@ -201,6 +204,7 @@ describe('Basic rule management', function() {
                 test_header_name: 'test_header_value',
                 'content-type': 'application/json',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
+                'user-agent': 'ChangePropTestSuite'
             }
         })
         .post('/', {
@@ -237,14 +241,14 @@ describe('Basic rule management', function() {
                 test_header_name: 'test_header_value',
                 'content-type': 'application/json',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
-                'x-triggered-by': 'simple_test_rule:/sample/uri'
+                'x-triggered-by': 'simple_test_rule:/sample/uri',
+                'user-agent': 'ChangePropTestSuite'
             }
         })
         .post('/', {
             'test_field_name': 'test_field_value',
             'derived_field': 'test'
         })
-        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri')
         .reply(404, {});
 
         return producer.sendAsync([{
@@ -262,14 +266,14 @@ describe('Basic rule management', function() {
                 test_header_name: 'test_header_value',
                 'content-type': 'application/json',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
-                'x-triggered-by': 'simple_test_rule:/sample/uri'
+                'x-triggered-by': 'simple_test_rule:/sample/uri',
+                'user-agent': 'ChangePropTestSuite'
             }
         })
         .post('/', {
             'test_field_name': 'test_field_value',
             'derived_field': 'test'
         })
-        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri')
         .reply(200, {});
 
         return producer.sendAsync([{
@@ -286,7 +290,8 @@ describe('Basic rule management', function() {
             reqheaders: {
                 test_header_name: 'test_header_value',
                 'content-type': 'application/json',
-                'x-request-id': common.SAMPLE_REQUEST_ID
+                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'user-agent': 'ChangePropTestSuite'
             }
         })
         .post('/', {

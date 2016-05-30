@@ -44,6 +44,7 @@ describe('RESTBase update rules', function() {
                 'cache-control': 'no-cache',
                 'x-triggered-by': 'resource_change:https://en.wikipedia.org/api/rest_v1/page/html/Main%20Page',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
+                'user-agent': 'SampleChangePropInstance'
             }
         })
         .get('/api/rest_v1/page/summary/Main%20Page')
@@ -78,6 +79,7 @@ describe('RESTBase update rules', function() {
                 'cache-control': 'no-cache',
                 'x-triggered-by': 'resource_change:https://en.wiktionary.org/api/rest_v1/page/html/Main%20Page',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
+                'user-agent': 'SampleChangePropInstance'
             }
         })
         .get('/api/rest_v1/page/definition/Main%20Page')
@@ -112,6 +114,7 @@ describe('RESTBase update rules', function() {
                 'cache-control': 'no-cache',
                 'x-triggered-by': 'resource_change:https://en.wikipedia.org/api/rest_v1/page/html/Main%20Page',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
+                'user-agent': 'SampleChangePropInstance'
             }
         })
         .get('/api/rest_v1/page/mobile-sections/Main%20Page')
@@ -145,6 +148,7 @@ describe('RESTBase update rules', function() {
             reqheaders: {
                 'cache-control': 'no-cache',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
+                'user-agent': 'SampleChangePropInstance'
             }
         })
         .get('/api/rest_v1/page/definition/User%3APchelolo')
@@ -184,7 +188,8 @@ describe('RESTBase update rules', function() {
                 'cache-control': 'no-cache',
                 'x-triggered-by': 'resource_change:https://en.wikipedia.org/wiki/Main_Page',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
-                'if-unmodified-since': 'Thu, 01 Jan 1970 00:00:01 +0000'
+                'if-unmodified-since': 'Thu, 01 Jan 1970 00:00:01 +0000',
+                'user-agent': 'SampleChangePropInstance'
             }
         })
         .get('/api/rest_v1/page/html/Main_Page')
@@ -220,7 +225,8 @@ describe('RESTBase update rules', function() {
                 'x-triggered-by': 'mediawiki.revision_create:/edit/uri',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
                 'x-restbase-parentrevision': '1233',
-                'if-unmodified-since': 'Thu, 01 Jan 1970 00:00:01 +0000'
+                'if-unmodified-since': 'Thu, 01 Jan 1970 00:00:01 +0000',
+                'user-agent': 'SampleChangePropInstance'
             }
         })
         .get('/api/rest_v1/page/html/User%3APchelolo%2FTest/1234')
@@ -257,7 +263,8 @@ describe('RESTBase update rules', function() {
             reqheaders: {
                 'cache-control': 'no-cache',
                 'x-triggered-by': 'mediawiki.page_delete:/delete/uri',
-                'x-request-id': common.SAMPLE_REQUEST_ID
+                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'user-agent': 'SampleChangePropInstance'
             }
         })
         .get('/api/rest_v1/page/title/User%3APchelolo%2FTest')
@@ -291,7 +298,8 @@ describe('RESTBase update rules', function() {
             reqheaders: {
                 'cache-control': 'no-cache',
                 'x-triggered-by': 'mediawiki.page_restore:/restore/uri',
-                'x-request-id': common.SAMPLE_REQUEST_ID
+                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'user-agent': 'SampleChangePropInstance'
             }
         })
         .get('/api/rest_v1/page/html/User%3APchelolo%2FTest')
@@ -325,7 +333,8 @@ describe('RESTBase update rules', function() {
             reqheaders: {
                 'cache-control': 'no-cache',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
-                'x-triggered-by': 'mediawiki.page_move:/move/uri'
+                'x-triggered-by': 'mediawiki.page_move:/move/uri',
+                'user-agent': 'SampleChangePropInstance'
             }
         })
         .get('/api/rest_v1/page/title/User%3APchelolo%2FTest')
@@ -366,7 +375,8 @@ describe('RESTBase update rules', function() {
             reqheaders: {
                 'cache-control': 'no-cache',
                 'x-triggered-by': 'mediawiki.revision_visibility_set:/rev/uri',
-                'x-request-id': common.SAMPLE_REQUEST_ID
+                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'user-agent': 'SampleChangePropInstance'
             }
         })
         .get('/api/rest_v1/page/revision/1234')
