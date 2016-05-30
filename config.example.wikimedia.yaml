@@ -137,6 +137,22 @@ services:
                         query:
                           redirect: false
 
+                    mw_purge:
+                      topic: resource_change
+                      match:
+                        meta:
+                          uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
+                        tags:
+                          - null_edit
+                      exec:
+                        method: get
+                        uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{{match.meta.uri.title}}'
+                        headers:
+                          cache-control: no-cache
+                          if-unmodified-since: '{{date(message.meta.dt)}}'
+                        query:
+                          redirect: false
+
                     page_edit:
                       topic: mediawiki.revision_create
                       exec:
