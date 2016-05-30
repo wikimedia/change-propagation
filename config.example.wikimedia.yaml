@@ -137,7 +137,7 @@ services:
                         query:
                           redirect: false
 
-                    mw_purge:
+                    null_edit:
                       topic: resource_change
                       match:
                         meta:
