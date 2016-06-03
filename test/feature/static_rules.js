@@ -328,7 +328,9 @@ describe('Basic rule management', function() {
             list: 'backlinks',
             bltitle: 'Main_Page',
             blfilterredir: 'nonredirects',
-            bllimit: '500' })
+            bllimit: '500',
+            formatversion: '2'
+        })
         .reply(200, {
             batchcomplete: '',
             continue: {
@@ -350,7 +352,8 @@ describe('Basic rule management', function() {
             bltitle: 'Main_Page',
             blfilterredir: 'nonredirects',
             bllimit: '500',
-            blcontinue: '1|2272'
+            blcontinue: '1|2272',
+            formatversion: '2'
         })
         .reply(200, {
             batchcomplete: '',

@@ -420,7 +420,9 @@ describe('RESTBase update rules', function() {
             action: 'query',
             list: 'imageusage',
             iutitle: 'File:Test.jpg',
-            iulimit: '500' })
+            iulimit: '500',
+            formatversion: '2'
+        })
         .reply(200, {
             batchcomplete: '',
             continue: {
@@ -432,6 +434,7 @@ describe('RESTBase update rules', function() {
             }
         })
         .get('/api/rest_v1/page/html/Some_Page')
+        .query({redirect: false})
         .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Some_Page')
         .times(2)
         .reply(200)
@@ -441,7 +444,9 @@ describe('RESTBase update rules', function() {
             list: 'imageusage',
             iutitle: 'File:Test.jpg',
             iulimit: '500',
-            iucontinue: '1|2272'})
+            iucontinue: '1|2272',
+            formatversion: '2'
+        })
         .reply(200, {
             batchcomplete: '',
             query: {
@@ -449,6 +454,7 @@ describe('RESTBase update rules', function() {
             }
         })
         .get('/api/rest_v1/page/html/Some_Page')
+        .query({redirect: false})
         .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Some_Page')
         .reply(200);
 

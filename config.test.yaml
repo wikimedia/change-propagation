@@ -28,6 +28,8 @@ services:
                         uri: 'https://{{message.meta.domain}}/w/api.php'
                         headers:
                           host: '{{message.meta.domain}}'
+                        body:
+                          formatversion: 2
           /sys/queue:
             x-modules:
               - path: sys/kafka.js
