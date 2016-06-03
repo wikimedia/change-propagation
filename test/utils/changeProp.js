@@ -15,7 +15,7 @@ var ChangeProp = function(configPath) {
     this._config.num_workers = 0;
     this._config.logging = {
         name: 'change-prop',
-        level: 'error',
+        level: 'fatal',
         streams: [{ type: 'stdout'}]
     };
     this._runner = new ServiceRunner();
