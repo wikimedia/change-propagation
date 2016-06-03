@@ -75,7 +75,7 @@ function createTranscludeInTemplate(options) {
     };
 }
 
-class BackLinksProcessor {
+class DependencyProcessor {
     constructor(options) {
         this.options = options;
         this.siteInfoCache = {};
@@ -237,7 +237,7 @@ class BackLinksProcessor {
 }
 
 module.exports = (options) => {
-    const processor = new BackLinksProcessor(options);
+    const processor = new DependencyProcessor(options);
     return {
         spec: {
             paths: {
