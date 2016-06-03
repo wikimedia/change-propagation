@@ -9,11 +9,9 @@ const Title = require('mediawiki-title').Title;
 const BACKLINKS_CONTINUE_TOPIC_NAME = 'change-prop.backlinks.continue';
 const TRANSCLUDES_CONTINUE_TOPIC_NAME = 'change-prop.transcludes.continue';
 
-class BackLinksProcessor {
-    constructor(options) {
-        this.options = options;
-        this.siteInfoCache = {};
-        this.backLinksRequest = new Template(extend(true, {}, options.templates.mw_api, {
+function createBackLinksTemplate(options) {
+    return {
+        template: new Template(extend(true, {}, options.templates.mw_api, {
             method: 'post',
             body: {
                 format: 'json',
@@ -24,8 +22,17 @@ class BackLinksProcessor {
                 blcontinue: '{{message.continue}}',
                 bllimit: 500
             }
-        }));
-        this.imageLinksRequest = new Template(extend(true, {}, options.templates.mw_api, {
+        })),
+        getContinueToken: (res) => res.body.continue && res.body.continue.blcontinue,
+        continueTopic: BACKLINKS_CONTINUE_TOPIC_NAME,
+        resourceChangeTag: 'backlinks',
+        extractResults: (res) => res.body.query.backlinks
+    };
+}
+
+function createImageUsageTemplate(options) {
+    return {
+        template: new Template(extend(true, {}, options.templates.mw_api, {
             method: 'post',
             body: {
                 format: 'json',
@@ -34,9 +41,19 @@ class BackLinksProcessor {
                 iutitle: '{{request.params.title}}',
                 iucontinue: '{{message.continue}}',
                 iulimit: 500
+                // TODO: decide what do we want to do with redirects
             }
-        }));
-        this.transcludeInRequest = new Template(extend(true, {}, options.templates.mw_api, {
+        })),
+        getContinueToken: (res) => res.body.continue && res.body.continue.iucontinue,
+        continueTopic: TRANSCLUDES_CONTINUE_TOPIC_NAME,
+        resourceChangeTag: 'transcludes',
+        extractResults: (res) =>  res.body.query.imageusage
+    };
+}
+
+function createTranscludeInTemplate(options) {
+    return {
+        template: new Template(extend(true, {}, options.templates.mw_api, {
             method: 'post',
             body: {
                 format: 'json',
@@ -48,7 +65,23 @@ class BackLinksProcessor {
                 ticontinue: '{{message.continue}}',
                 tilimit: 500
             }
-        }));
+        })),
+        getContinueToken: (res) => res.body.continue && res.body.continue.ticontinue,
+        continueTopic: TRANSCLUDES_CONTINUE_TOPIC_NAME,
+        resourceChangeTag: 'transcludes',
+        extractResults: (res) => {
+            return res.body.query.pages[Object.keys(res.body.query.pages)[0]].transcludedin;
+        }
+    };
+}
+
+class BackLinksProcessor {
+    constructor(options) {
+        this.options = options;
+        this.siteInfoCache = {};
+        this.backLinksRequest = createBackLinksTemplate(options);
+        this.imageLinksRequest = createImageUsageTemplate(options);
+        this.transcludeInRequest = createTranscludeInTemplate(options);
         this.siteInfoRequest = new Template(extend(true, {}, options.templates.mw_api, {
             method: 'post',
             body: {
@@ -93,30 +126,11 @@ class BackLinksProcessor {
             request: req,
             message: req.body
         };
-        return hyper.post(this.backLinksRequest.expand(context))
-        .then((res) => {
-            const originalEvent = req.body.original_event || req.body;
-            let actions = this._sendResourceChanges(hyper, res.body.query.backlinks,
-                originalEvent, 'backlinks');
-            if (res.body.continue) {
-                actions = actions.then(() => hyper.post({
-                    uri: '/sys/queue/events',
-                    body: [{
-                        meta: {
-                            topic: BACKLINKS_CONTINUE_TOPIC_NAME,
-                            schema_uri: 'continue/1',
-                            uri: originalEvent.meta.uri,
-                            request_id: originalEvent.meta.request_id,
-                            domain: originalEvent.meta.domain,
-                            dt: originalEvent.meta.dt
-                        },
-                        triggered_by: utils.triggeredBy(originalEvent),
-                        original_event: originalEvent,
-                        continue: res.body.continue.blcontinue
-                    }]
-                }));
-            }
-            return actions.thenReturn({ status: 200 });
+        const originalEvent = req.body.original_event || req.body;
+        return this._getSiteInfo(hyper, req.body)
+        .then((siteInfo) => {
+            return this._fetchAndProcessBatch(hyper, this.backLinksRequest,
+                context, siteInfo, originalEvent);
         });
     }
 
@@ -126,57 +140,56 @@ class BackLinksProcessor {
             request: req,
             message: message
         };
-
+        const originalEvent = req.body.original_event || req.body;
         return this._getSiteInfo(hyper, message)
         .then((siteInfo) => {
-            const title = Title.newFromText(message.page_title, siteInfo);
-            let linksRequest;
-            let continuationName;
-            let resultGetter;
-
+            const title = Title.newFromText(req.params.title, siteInfo);
+            // First step - process only file uploads
             if (title.getNamespace().isFile()) {
-                continuationName = 'iucontinue';
-                resultGetter = (res) => {
-                    return res.body.query.imageusage;
-                };
-                linksRequest = this.imageLinksRequest.expand(context);
-            } else {
-                continuationName = 'ticontinue';
-                resultGetter = (res) => {
-                    return res.body.query.pages[Object.keys(res.body.query.pages)[0]].transcludedin;
-                };
-                linksRequest = this.transcludeInRequest.expand(context);
+                return this._fetchAndProcessBatch(hyper, this.imageLinksRequest,
+                    context, siteInfo, originalEvent);
             }
-            return hyper.post(linksRequest)
-            .then((res) => {
-                const originalEvent = req.body.original_event || req.body;
-                const titles = resultGetter(res).map((item) => {
-                    return {
-                        title: Title.newFromText(item.title, siteInfo).getPrefixedDBKey()
-                    };
-                });
-                let actions = this._sendResourceChanges(hyper, titles,
-                    originalEvent, 'transcludes');
-                if (res.body.continue) {
-                    actions = actions.then(() => hyper.post({
-                        uri: '/sys/queue/events',
-                        body: [{
-                            meta: {
-                                topic: TRANSCLUDES_CONTINUE_TOPIC_NAME,
-                                schema_uri: 'continue/1',
-                                uri: originalEvent.meta.uri,
-                                request_id: originalEvent.meta.request_id,
-                                domain: originalEvent.meta.domain,
-                                dt: originalEvent.meta.dt
-                            },
-                            triggered_by: utils.triggeredBy(originalEvent),
-                            original_event: originalEvent,
-                            continue: res.body.continue[continuationName]
-                        }]
-                    }));
-                }
-                return actions.thenReturn({ status: 200 });
+            return { status: 200 };
+        });
+    }
+
+    _fetchAndProcessBatch(hyper, requestTemplate, context, siteInfo, originalEvent) {
+        return hyper.post(requestTemplate.template.expand(context))
+        .then((res) => {
+            const titles = requestTemplate.extractResults(res).map((item) => {
+                return {
+                    title: Title.newFromText(item.title, siteInfo).getPrefixedDBKey()
+                };
             });
+            let actions = this._sendResourceChanges(hyper, titles,
+                originalEvent, requestTemplate.resourceChangeTag);
+            if (res.body.continue) {
+                actions = actions.then(() =>
+                    this._sendContinueEvent(hyper,
+                        requestTemplate.continueTopic,
+                        originalEvent,
+                        requestTemplate.getContinueToken(res)));
+            }
+            return actions.thenReturn({ status: 200 });
+        });
+    }
+
+    _sendContinueEvent(hyper, topic, origEvent, continueToken) {
+        return hyper.post({
+            uri: '/sys/queue/events',
+            body: [{
+                meta: {
+                    topic: topic,
+                    schema_uri: 'continue/1',
+                    uri: origEvent.meta.uri,
+                    request_id: origEvent.meta.request_id,
+                    domain: origEvent.meta.domain,
+                    dt: origEvent.meta.dt
+                },
+                triggered_by: utils.triggeredBy(origEvent),
+                original_event: origEvent,
+                continue: continueToken
+            }]
         });
     }
 

@@ -405,6 +405,64 @@ describe('RESTBase update rules', function() {
         .finally(() => nock.cleanAll());
     });
 
+
+    it('Should rerender image usages on file update', () => {
+        const mwAPI = nock('https://en.wikipedia.org')
+        .post('/w/api.php', {
+            format: 'json',
+            action: 'query',
+            meta: 'siteinfo',
+            siprop: 'general|namespaces|namespacealiases'
+        })
+        .reply(200, common.EN_SITE_INFO_RESPONSE)
+        .post('/w/api.php', {
+            format: 'json',
+            action: 'query',
+            list: 'imageusage',
+            iutitle: 'File:Test.jpg',
+            iulimit: '500' })
+        .reply(200, {
+            batchcomplete: '',
+            continue: {
+                iucontinue: '1|2272',
+                continue: '-||'
+            },
+            query: {
+                imageusage: common.arrayWithLinks('Some_Page', 2)
+            }
+        })
+        .get('/api/rest_v1/page/html/Some_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Some_Page')
+        .times(2)
+        .reply(200)
+        .post('/w/api.php', {
+            format: 'json',
+            action: 'query',
+            list: 'imageusage',
+            iutitle: 'File:Test.jpg',
+            iulimit: '500',
+            iucontinue: '1|2272'})
+        .reply(200, {
+            batchcomplete: '',
+            query: {
+                imageusage: common.arrayWithLinks('Some_Page', 1)
+            }
+        })
+        .get('/api/rest_v1/page/html/Some_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Some_Page')
+        .reply(200);
+
+        return producer.sendAsync([{
+            topic: 'test_dc.mediawiki.revision_create',
+            messages: [
+                JSON.stringify(common.eventWithProperties('mediawiki.revision_create', { page_title: 'File:Test.jpg' }))
+            ]
+        }])
+        .delay(common.REQUEST_CHECK_DELAY)
+        .then(() => mwAPI.done())
+        .finally(() => nock.cleanAll());
+    });
+
     it('Should purge caches on resource_change coming from RESTBase', (done) => {
         var udpServer = dgram.createSocket('udp4');
         let closed = false;

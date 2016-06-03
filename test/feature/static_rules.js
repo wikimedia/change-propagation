@@ -22,6 +22,7 @@ describe('Basic rule management', function() {
     let producer;
     let retrySchema;
     let errorSchema;
+    let siteInfoResponse;
 
     before(function() {
         // Setting up might tike some tome, so disable the timeout
@@ -46,20 +47,20 @@ describe('Basic rule management', function() {
         .then(() => preq.get({
                 uri: 'https://raw.githubusercontent.com/wikimedia/mediawiki-event-schemas/master/jsonschema/error/1.yaml'
         }))
-        .then((res) => errorSchema = yaml.safeLoad(res.body));
-    });
-
-    function arrayWithLinks(link, num) {
-        const result = [];
-        for(let idx = 0; idx < num; idx++) {
-            result.push({
-                pageid: 1,
-                ns: 0,
-                title: link
+        .then((res) => errorSchema = yaml.safeLoad(res.body))
+        .then(() => {
+            preq.post({
+                uri: 'https://en.wikipedia.org/w/api.php',
+                body: {
+                    format: 'json',
+                    action: 'query',
+                    meta: 'siteinfo',
+                    siprop: 'general|namespaces|namespacealiases'
+                }
             });
-        }
-        return result;
-    }
+        })
+        .then((res) => siteInfoResponse = res)
+    });
 
     it('Should call simple executor', () => {
         const service = nock('http://mock.com', {
@@ -317,6 +318,13 @@ describe('Basic rule management', function() {
         .post('/w/api.php', {
             format: 'json',
             action: 'query',
+            meta: 'siteinfo',
+            siprop: 'general|namespaces|namespacealiases'
+        })
+        .reply(200, common.EN_SITE_INFO_RESPONSE)
+        .post('/w/api.php', {
+            format: 'json',
+            action: 'query',
             list: 'backlinks',
             bltitle: 'Main_Page',
             blfilterredir: 'nonredirects',
@@ -328,7 +336,7 @@ describe('Basic rule management', function() {
                 continue: '-||'
             },
             query: {
-                backlinks: arrayWithLinks('Some_Page', 2)
+                backlinks: common.arrayWithLinks('Some_Page', 2)
             }
         })
         .get('/api/rest_v1/page/html/Some_Page')
@@ -347,7 +355,7 @@ describe('Basic rule management', function() {
         .reply(200, {
             batchcomplete: '',
             query: {
-                backlinks: arrayWithLinks('Some_Page', 1)
+                backlinks: common.arrayWithLinks('Some_Page', 1)
             }
         })
         .get('/api/rest_v1/page/html/Some_Page')
