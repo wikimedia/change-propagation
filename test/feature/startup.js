@@ -55,7 +55,7 @@ describe('Startup', function () {
         .delay(1000)
         .finally(() => {
             if (!finished) {
-                changeProp.stop().then(done);
+                changeProp.stop().then(() => done());
             }
             nock.cleanAll()
         });

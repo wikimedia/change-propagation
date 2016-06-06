@@ -26,14 +26,7 @@ ChangeProp.prototype._loadConfig = function() {
 };
 
 ChangeProp.prototype.start = function() {
-    var self = this;
-    self.port = self._config.services[0].conf.port;
-    self.hostPort = 'http://localhost:' + self.port;
-    return self._runner.run(self._config)
-    .then(function(servers) {
-        self._servers = servers;
-        return true;
-    })
+    return this._runner.start(this._config)
     .delay(200)
     .catch((e) => {
         if (startupRetryLimit > 0 && /EADDRINUSE/.test(e.message)) {
@@ -46,18 +39,7 @@ ChangeProp.prototype.start = function() {
 };
 
 ChangeProp.prototype.stop = function() {
-    var self = this;
-    if (self._servers) {
-        return P.each(self._servers, function(server) {
-            return server.close();
-        })
-        .then(function() {
-            self._servers = undefined;
-        })
-        .delay(CHANGE_PROP_STOP_DELAY);
-    } else {
-        return P.delay(CHANGE_PROP_STOP_DELAY);
-    }
+    return this._runner.stop().delay(CHANGE_PROP_STOP_DELAY);
 };
 
 module.exports = ChangeProp;
