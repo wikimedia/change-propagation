@@ -482,6 +482,30 @@ spec: &spec
                   headers:
                     cache-control: no-cache
 
+              wikidata_description:
+                topic: mediawiki.revision_create
+                match:
+                  meta:
+                    domain: www.wikidata.org
+                exec:
+                  method: 'post'
+                  uri: '/sys/links/wikidata_descriptions'
+                  body: '{{globals.message}}'
+
+              on_wikidata_description_change:
+                topic: resource_change
+                match:
+                  meta:
+                    uri: '/https:\/\/[^\/]+\/wiki\/(?<title>.+)/'
+                  tags: [ 'change-prop', 'wikidata' ]
+                exec:
+                  method: get
+                  uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{{match.meta.uri.title}}'
+                  headers:
+                    cache-control: no-cache
+                  query:
+                    redirect: false
+
 num_workers: 0
 logging:
   name: changeprop

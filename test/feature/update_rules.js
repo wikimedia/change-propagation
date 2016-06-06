@@ -412,6 +412,69 @@ describe('RESTBase update rules', function() {
         .then(() => common.checkAPIDone(oresService))
         .finally(() => nock.cleanAll());
     });
+    it('Should update RESTBase summary on wikidata description change', () => {
+        const wikidataAPI = nock('https://www.wikidata.org')
+        .post('/w/api.php', {
+            format: 'json',
+            formatversion: '2',
+            action: 'wbgetentities',
+            ids: 'Q1',
+            props: 'sitelinks/urls',
+            normalize: 'true'
+        })
+        .reply(200, {
+            "entities": {
+                "Q1": {
+                    "type": "item",
+                    "id": "Q1",
+                    "sitelinks": {
+                        "enwiki": {
+                            "site": "enwiki",
+                            "title": "Main Page",
+                            "badges": [],
+                            "url": "https://en.wikipedia.org/wiki/Main_Page"
+                        }
+                    }
+                }
+            }
+        });
+
+        const mwAPI = nock('https://en.wikipedia.org', {
+            reqheaders: {
+                'cache-control': 'no-cache',
+                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'user-agent': 'SampleChangePropInstance',
+                'x-triggered-by': 'mediawiki.revision_create:/rev/uri,resource_change:https://en.wikipedia.org/wiki/Main_Page'
+            }
+        })
+        .get('/api/rest_v1/page/summary/Main_Page')
+        .query({ redirect: false })
+        .reply(200, { });
+
+        return producer.sendAsync([{
+            topic: 'test_dc.mediawiki.revision_create',
+            messages: [
+                JSON.stringify({
+                    meta: {
+                        topic: 'mediawiki.revision_create',
+                        schema_uri: 'revision_create/1',
+                        uri: '/rev/uri',
+                        request_id: common.SAMPLE_REQUEST_ID,
+                        id: uuid.now(),
+                        dt: new Date().toISOString(),
+                        domain: 'www.wikidata.org'
+                    },
+                    page_title: 'Q1'
+                })
+            ]
+        }])
+        .delay(common.REQUEST_CHECK_DELAY)
+        .then(() => {
+            wikidataAPI.done();
+            mwAPI.done();
+        })
+        .finally(() => nock.cleanAll());
+    });
 
     it('Should rerender image usages on file update', () => {
         const mwAPI = nock('https://en.wikipedia.org')

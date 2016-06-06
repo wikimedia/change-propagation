@@ -75,6 +75,33 @@ function createTranscludeInTemplate(options) {
     };
 }
 
+function createWikidataTemplate(options) {
+    return {
+        template: new Template(extend(true, {}, options.templates.mw_api, {
+            method: 'post',
+            body: {
+                format: 'json',
+                action: 'wbgetentities',
+                ids: '{{message.page_title}}',
+                props: 'sitelinks/urls',
+                normalize: true
+            }
+        })),
+        resourceChangeTag: 'wikidata',
+        extractResults: (res) => {
+            const siteLinks = res.body.entities[Object.keys(res.body.entities)[0]].sitelinks;
+            return Object.keys(siteLinks).map((siteId) => {
+                const pageURI = siteLinks[siteId].url;
+                const match = /^https?:\/\/([^\/]+)\/wiki\/(.+)$/.exec(pageURI);
+                return {
+                    domain: match[1],
+                    title: match[2]
+                };
+            });
+        }
+    };
+}
+
 class DependencyProcessor {
     constructor(options) {
         this.options = options;
@@ -82,6 +109,7 @@ class DependencyProcessor {
         this.backLinksRequest = createBackLinksTemplate(options);
         this.imageLinksRequest = createImageUsageTemplate(options);
         this.transcludeInRequest = createTranscludeInTemplate(options);
+        this.wikidataRequest = createWikidataTemplate(options);
         this.siteInfoRequest = new Template(extend(true, {}, options.templates.mw_api, {
             method: 'post',
             body: {
@@ -153,12 +181,27 @@ class DependencyProcessor {
         });
     }
 
+    processWikidata(hyper, req) {
+        const context = {
+            request: req,
+            message: req.body
+        };
+        return hyper.request(this.wikidataRequest.template.expand(context))
+        .then(this.wikidataRequest.extractResults)
+        .then((items) => {
+            return this._sendResourceChanges(hyper, items, req.body,
+                this.wikidataRequest.resourceChangeTag);
+        })
+        .thenReturn({ status: 200 });
+    }
+
     _fetchAndProcessBatch(hyper, requestTemplate, context, siteInfo, originalEvent) {
         return hyper.post(requestTemplate.template.expand(context))
         .then((res) => {
             const titles = requestTemplate.extractResults(res).map((item) => {
                 return {
-                    title: Title.newFromText(item.title, siteInfo).getPrefixedDBKey()
+                    title: Title.newFromText(item.title, siteInfo).getPrefixedDBKey(),
+                    domain: originalEvent.meta.domain
                 };
             });
             if (!titles.length) {
@@ -210,7 +253,7 @@ class DependencyProcessor {
                         schema_uri: 'resource_change/1',
                         uri: resourceURI,
                         request_id: originalEvent.meta.request_id,
-                        domain: originalEvent.meta.domain,
+                        domain: item.domain,
                         dt: originalEvent.meta.dt
                     },
                     triggered_by: utils.triggeredBy(originalEvent),
@@ -264,12 +307,20 @@ module.exports = (options) => {
                         summary: 'check if the page is transcluded somewhere and update',
                         operationId: 'process_transcludes'
                     }
+                },
+                '/wikidata_descriptions': {
+                    post: {
+                        summary: 'find all pages corresponding to ' +
+                            'the wikidata item and update summary',
+                        operationId: 'process_wikidata'
+                    }
                 }
             }
         },
         operations: {
             process_backlinks: processor.processBackLinks.bind(processor),
             process_transcludes: processor.processTranscludes.bind(processor),
+            process_wikidata: processor.processWikidata.bind(processor),
             setup: processor.setup.bind(processor)
         },
         resources: [{
