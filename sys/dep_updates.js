@@ -187,12 +187,12 @@ class DependencyProcessor {
         return this._getSiteInfo(hyper, message)
         .then((siteInfo) => {
             const title = Title.newFromText(req.params.title, siteInfo);
-            // First step - process only file uploads
             if (title.getNamespace().isFile()) {
                 return this._fetchAndProcessBatch(hyper, this.imageLinksRequest,
                     context, siteInfo, originalEvent);
             }
-            return { status: 200 };
+            return this._fetchAndProcessBatch(hyper, this.transcludeInRequest,
+                context, siteInfo, originalEvent);
         });
     }
 
