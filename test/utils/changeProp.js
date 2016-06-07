@@ -19,6 +19,7 @@ var ChangeProp = function(configPath) {
         streams: [{ type: 'stdout'}]
     };
     this._runner = new ServiceRunner();
+    this._running = false;
 };
 
 ChangeProp.prototype._loadConfig = function() {
@@ -26,7 +27,13 @@ ChangeProp.prototype._loadConfig = function() {
 };
 
 ChangeProp.prototype.start = function() {
+    if (this._running) {
+        console.log('The test server is already running. Skipping start.')
+        return P.resolve();
+    }
+
     return this._runner.start(this._config)
+    .tap(() => this._running = true)
     .delay(200)
     .catch((e) => {
         if (startupRetryLimit > 0 && /EADDRINUSE/.test(e.message)) {
@@ -39,7 +46,11 @@ ChangeProp.prototype.start = function() {
 };
 
 ChangeProp.prototype.stop = function() {
-    return this._runner.stop().delay(CHANGE_PROP_STOP_DELAY);
+    if (this._running) {
+        return this._runner.stop()
+        .tap(() => this._running = false)
+        .delay(CHANGE_PROP_STOP_DELAY);
+    }
 };
 
 module.exports = ChangeProp;

@@ -199,8 +199,9 @@ describe('Basic rule management', function() {
         });
     });
 
-    it('Should retry simple executor no more than limit', () => {
-        const service = nock('http://mock.com', {
+    it('Should retry simple executor no more than limit', (done) => {
+        let finished = false;
+        nock('http://mock.com', {
             reqheaders: {
                 test_header_name: 'test_header_value',
                 'content-type': 'application/json',
@@ -225,15 +226,27 @@ describe('Basic rule management', function() {
             'derived_field': 'test'
         })
         .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri,change-prop.retry.simple_test_rule:/sample/uri,change-prop.retry.simple_test_rule:/sample/uri')
-        .reply(500, {});
+        .reply(500, {})
+        .post('/', {
+            'test_field_name': 'test_field_value',
+            'derived_field': 'test'
+        })
+        .reply(() => {
+            finished = true;
+            done(new Error('Must not have retried this time'))
+        });
 
         return producer.sendAsync([{
             topic: 'test_dc.simple_test_rule',
             messages: [ JSON.stringify(common.eventWithMessage('test')) ]
         }])
         .delay(common.REQUEST_CHECK_DELAY)
-        .then(() => service.done())
-        .finally(() => nock.cleanAll());
+        .finally(() => {
+            if (!finished) {
+                done();
+            }
+            nock.cleanAll()
+        });
     });
 
     it('Should not retry if retry_on not matched', () => {
