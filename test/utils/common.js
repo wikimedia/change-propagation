@@ -55,6 +55,22 @@ common.eventWithMessage = (message) => {
     return common.eventWithProperties('simple_test_rule', { message: message });
 };
 
+common.eventWithMessageAndRandom = (message, random) => {
+    return common.eventWithProperties('simple_test_rule', {
+        message: message,
+        random: random
+    });
+};
+
+common.randomString = () => {
+    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let text = '';
+    while (text.length < 5) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
+};
+
 common.arrayWithLinks = function(link, num) {
     const result = [];
     for(let idx = 0; idx < num; idx++) {

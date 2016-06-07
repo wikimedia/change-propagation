@@ -494,7 +494,8 @@ describe('RESTBase update rules', function() {
                 JSON.stringify(common.eventWithProperties('mediawiki.revision_create', { page_title: 'File:Test.jpg' }))
             ]
         }])
-        .delay(common.REQUEST_CHECK_DELAY)
+        // Larger delay since it's a long list of events
+        .delay(common.REQUEST_CHECK_DELAY * 2)
         .then(() => mwAPI.done())
         .finally(() => nock.cleanAll());
     });

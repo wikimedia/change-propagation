@@ -1,9 +1,10 @@
 'use strict';
 
-var ServiceRunner = require('service-runner');
-var fs        = require('fs');
-var yaml      = require('js-yaml');
-var P         = require('bluebird');
+const ServiceRunner = require('service-runner');
+const fs        = require('fs');
+const yaml      = require('js-yaml');
+const P         = require('bluebird');
+const preq      = require('preq');
 
 const CHANGE_PROP_STOP_DELAY = 500;
 
@@ -32,6 +33,9 @@ ChangeProp.prototype.start = function() {
         return P.resolve();
     }
 
+    this.port = this._config.services[0].conf.port;
+    this.hostPort = 'http://localhost:' + this.port;
+
     return this._runner.start(this._config)
     .tap(() => this._running = true)
     .delay(200)
@@ -47,10 +51,14 @@ ChangeProp.prototype.start = function() {
 
 ChangeProp.prototype.stop = function() {
     if (this._running) {
-        return this._runner.stop()
+        return preq.post({
+            uri: this.hostPort + '/v1/close'
+        })
+        .then(() => this._runner.stop())
         .tap(() => this._running = false)
         .delay(CHANGE_PROP_STOP_DELAY);
     }
+    return P.resolve();
 };
 
 module.exports = ChangeProp;

@@ -95,6 +95,12 @@ class Kafka {
         }))
         .thenReturn({ status: 201 });
     }
+
+    close() {
+        return P.each(Object.values(this.ruleExecutors),
+            (executor) => executor.close())
+        .thenReturn({ status: 200 });
+    }
 }
 
 module.exports = (options) => {
@@ -119,17 +125,23 @@ module.exports = (options) => {
                         summary: 'adds a new subscription dynamically',
                         operationId: 'subscribe'
                     }
+                },
+                '/close': {
+                    post: {
+                        summary: 'Closes all the subscriptions. Used only in the test mode',
+                        operationId: 'close'
+                    }
                 }
             }
         },
         operations: {
             setup_kafka: kafkaMod.setup.bind(kafkaMod),
             produce: kafkaMod.produce.bind(kafkaMod),
-            subscribe: kafkaMod.subscribe.bind(kafkaMod)
+            subscribe: kafkaMod.subscribe.bind(kafkaMod),
+            close: kafkaMod.close.bind(kafkaMod)
         },
         resources: [{
             uri: '/sys/queue/setup'
         }]
     };
 };
-

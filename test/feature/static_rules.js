@@ -63,6 +63,7 @@ describe('Basic rule management', function() {
     });
 
     it('Should call simple executor', () => {
+        const random = common.randomString();
         const service = nock('http://mock.com', {
             reqheaders: {
                 test_header_name: 'test_header_value',
@@ -74,14 +75,15 @@ describe('Basic rule management', function() {
         })
         .post('/', {
             'test_field_name': 'test_field_value',
-            'derived_field': 'test'
+            'derived_field': 'test',
+            'random_field': random
         }).reply({});
 
         return producer.sendAsync([{
             topic: 'test_dc.simple_test_rule',
             messages: [
-                JSON.stringify(common.eventWithMessage('this_will_not_match')),
-                JSON.stringify(common.eventWithMessage('test')),
+                JSON.stringify(common.eventWithMessageAndRandom('this_will_not_match', random)),
+                JSON.stringify(common.eventWithMessageAndRandom('test', random)),
                 // The empty message should cause a failure in the match test
                 '{}' ]
         }])
@@ -90,35 +92,8 @@ describe('Basic rule management', function() {
         .finally(() => nock.cleanAll());
     });
 
-    it('Should not follow redirects', (done) => {
-        let finished = false;
-        const service = nock('http://mock.com')
-        .get('/will_redirect')
-        .reply(301, '', {
-            'location': 'http://mock.com/redirected_resource'
-        })
-        .get('/redirected_resource')
-        .reply(() => {
-            finished = true;
-            done(new Error('Must not have followed the redirect'))
-        });
-
-        return producer.sendAsync([{
-            topic: 'test_dc.simple_test_rule',
-            messages: [
-                JSON.stringify(common.eventWithMessage('redirect'))
-            ]
-        }])
-        .delay(common.REQUEST_CHECK_DELAY)
-        .finally(() => {
-            nock.cleanAll();
-            if (!finished) {
-                done();
-            }
-        });
-    });
-
     it('Should retry simple executor', () => {
+        const random = common.randomString();
         const service = nock('http://mock.com', {
             reqheaders: {
                 test_header_name: 'test_header_value',
@@ -129,27 +104,30 @@ describe('Basic rule management', function() {
         })
         .post('/', {
             'test_field_name': 'test_field_value',
-            'derived_field': 'test'
+            'derived_field': 'test',
+            'random_field': random
         })
         .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri')
         .reply(500, {})
         .post('/', {
             'test_field_name': 'test_field_value',
-            'derived_field': 'test'
+            'derived_field': 'test',
+            'random_field': random
         })
         .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri,change-prop.retry.simple_test_rule:/sample/uri')
         .reply(200, {});
 
         return producer.sendAsync([{
             topic: 'test_dc.simple_test_rule',
-            messages: [ JSON.stringify(common.eventWithMessage('test')) ]
+            messages: [ JSON.stringify(common.eventWithMessageAndRandom('test', random)) ]
         }])
         .delay(common.REQUEST_CHECK_DELAY)
         .then(() => service.done())
         .finally(() => nock.cleanAll());
     });
 
-    it('Should emit valid retry message', (done) => {
+    it('Should retry simple executor no more than limit', () => {
+        const random = common.randomString();
         const service = nock('http://mock.com', {
             reqheaders: {
                 test_header_name: 'test_header_value',
@@ -160,12 +138,64 @@ describe('Basic rule management', function() {
         })
         .post('/', {
             'test_field_name': 'test_field_value',
-            'derived_field': 'test'
+            'derived_field': 'test',
+            'random_field': random
+        })
+        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri')
+        .reply(500, {})
+        .post('/', {
+            'test_field_name': 'test_field_value',
+            'derived_field': 'test',
+            'random_field': random
+        })
+        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri,change-prop.retry.simple_test_rule:/sample/uri')
+        .reply(500, {})
+        .post('/', {
+            'test_field_name': 'test_field_value',
+            'derived_field': 'test',
+            'random_field': random
+        })
+        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri,change-prop.retry.simple_test_rule:/sample/uri,change-prop.retry.simple_test_rule:/sample/uri')
+        .reply(500, {})
+        // Next one must never get called, we verify that by checking pending mocks
+        .post('/', {
+            'test_field_name': 'test_field_value',
+            'derived_field': 'test',
+            'random_field': random
+        })
+        .reply(500, {});
+
+        return producer.sendAsync([{
+            topic: 'test_dc.simple_test_rule',
+            messages: [ JSON.stringify(common.eventWithMessageAndRandom('test', random)) ]
+        }])
+        .delay(common.REQUEST_CHECK_DELAY)
+        .then(() => {
+            assert.equal(service.pendingMocks().length, 1);
+        })
+        .finally(() => nock.cleanAll());
+    });
+
+    it('Should emit valid retry message', (done) => {
+        const random = common.randomString();
+        nock('http://mock.com', {
+            reqheaders: {
+                test_header_name: 'test_header_value',
+                'content-type': 'application/json',
+                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'user-agent': 'ChangePropTestSuite'
+            }
+        })
+        .post('/', {
+            'test_field_name': 'test_field_value',
+            'derived_field': 'test',
+            'random_field': random
         })
         .reply(500, {})
         .post('/', {
             'test_field_name': 'test_field_value',
-            'derived_field': 'test'
+            'derived_field': 'test',
+            'random_field': random
         })
         .reply(200, {});
         
@@ -194,62 +224,13 @@ describe('Basic rule management', function() {
             });
             return producer.sendAsync([{
                 topic: 'test_dc.simple_test_rule',
-                messages: [ JSON.stringify(common.eventWithMessage('test')) ]
+                messages: [ JSON.stringify(common.eventWithMessageAndRandom('test', random)) ]
             }]);
         });
     });
 
-    it('Should retry simple executor no more than limit', (done) => {
-        let finished = false;
-        nock('http://mock.com', {
-            reqheaders: {
-                test_header_name: 'test_header_value',
-                'content-type': 'application/json',
-                'x-request-id': common.SAMPLE_REQUEST_ID,
-                'user-agent': 'ChangePropTestSuite'
-            }
-        })
-        .post('/', {
-            'test_field_name': 'test_field_value',
-            'derived_field': 'test'
-        })
-        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri')
-        .reply(500, {})
-        .post('/', {
-            'test_field_name': 'test_field_value',
-            'derived_field': 'test'
-        })
-        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri,change-prop.retry.simple_test_rule:/sample/uri')
-        .reply(500, {})
-        .post('/', {
-            'test_field_name': 'test_field_value',
-            'derived_field': 'test'
-        })
-        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri,change-prop.retry.simple_test_rule:/sample/uri,change-prop.retry.simple_test_rule:/sample/uri')
-        .reply(500, {})
-        .post('/', {
-            'test_field_name': 'test_field_value',
-            'derived_field': 'test'
-        })
-        .reply(() => {
-            finished = true;
-            done(new Error('Must not have retried this time'))
-        });
-
-        return producer.sendAsync([{
-            topic: 'test_dc.simple_test_rule',
-            messages: [ JSON.stringify(common.eventWithMessage('test')) ]
-        }])
-        .delay(common.REQUEST_CHECK_DELAY)
-        .finally(() => {
-            if (!finished) {
-                done();
-            }
-            nock.cleanAll()
-        });
-    });
-
     it('Should not retry if retry_on not matched', () => {
+        const random = common.randomString();
         const service = nock('http://mock.com', {
             reqheaders: {
                 test_header_name: 'test_header_value',
@@ -261,16 +242,45 @@ describe('Basic rule management', function() {
         })
         .post('/', {
             'test_field_name': 'test_field_value',
-            'derived_field': 'test'
+            'derived_field': 'test',
+            'random_field': random
+        })
+        .reply(404, {})
+        // Next one must never get called, we verify that by checking pending mocks
+        .post('/', {
+            'test_field_name': 'test_field_value',
+            'derived_field': 'test',
+            'random_field': random
         })
         .reply(404, {});
 
         return producer.sendAsync([{
             topic: 'test_dc.simple_test_rule',
-            messages: [ JSON.stringify(common.eventWithMessage('test')) ]
+            messages: [ JSON.stringify(common.eventWithMessageAndRandom('test', random)) ]
         }])
         .delay(common.REQUEST_CHECK_DELAY)
-        .then(() => service.done())
+        .then(() => assert.equal(service.pendingMocks().length, 1))
+        .finally(() => nock.cleanAll());
+    });
+
+    it('Should not follow redirects', () => {
+        const service = nock('http://mock.com/')
+        .get('/will_redirect')
+        .reply(301, '', {
+            'location': 'http://mock.com/redirected_resource'
+        })
+        // Next one must never get called, we verify that by checking pending mocks
+        .get('/redirected_resource')
+        .reply(200, {});
+
+        return producer.sendAsync([{
+            topic: 'test_dc.simple_test_rule',
+            messages: [
+                JSON.stringify(common.eventWithMessage('redirect'))
+            ]
+        }])
+        .delay(common.REQUEST_CHECK_DELAY)
+        .then(() => assert.equal(service.pendingMocks().length, 1))
         .finally(() => nock.cleanAll());
     });
 

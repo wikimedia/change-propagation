@@ -19,6 +19,14 @@ services:
                     user-agent: true
         title: The Change Propagation root
         paths:
+          # Test-only endpoint for a graceful service shutdown
+          /v1/close:
+            post:
+              x-request-handler:
+                - do_close:
+                    request:
+                      method: post
+                      uri: /sys/queue/close
           /sys/links:
             x-modules:
               - path: sys/dep_updates.js
@@ -38,6 +46,7 @@ services:
                   consume_dc: test_dc
                   produce_dc: test_dc
                   concurrency: 1
+                  commit_interval: 0
                   templates:
                     simple_test_rule:
                       topic: simple_test_rule
@@ -60,6 +69,7 @@ services:
                         body:
                           test_field_name: test_field_value
                           derived_field: '{{message.message}}'
+                          random_field: '{{message.random}}'
 
                     redirect_testing_rule:
                       topic: simple_test_rule
