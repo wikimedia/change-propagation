@@ -46,7 +46,6 @@ services:
                   consume_dc: test_dc
                   produce_dc: test_dc
                   concurrency: 1
-                  commit_interval: 0
                   templates:
                     simple_test_rule:
                       topic: simple_test_rule
