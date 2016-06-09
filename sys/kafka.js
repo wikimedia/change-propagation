@@ -41,14 +41,14 @@ class Kafka {
     }
 
     _subscribeRules(hyper, rules) {
-        return P.all(Object.keys(rules)
-        .map((ruleName) => new Rule(ruleName, rules[ruleName]))
-        .filter((rule) => !rule.noop)
-        .map((rule) => {
+        const activeRules = Object.keys(rules)
+            .map((ruleName) => new Rule(ruleName, rules[ruleName]))
+            .filter((rule) => !rule.noop);
+        return P.each(activeRules, (rule) => {
             this.ruleExecutors[rule.name] = new RuleExecutor(rule,
                 this.kafkaFactory, this.taskQueue, hyper, this.log);
             return this.ruleExecutors[rule.name].subscribe();
-        }))
+        })
         .thenReturn({ status: 201 });
     }
 
