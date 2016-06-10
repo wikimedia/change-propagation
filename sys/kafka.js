@@ -7,7 +7,8 @@
 
 
 const P = require('bluebird');
-const HTTPError = require('hyperswitch').HTTPError;
+const HyperSwitch = require('hyperswitch');
+const HTTPError = HyperSwitch.HTTPError;
 const uuid = require('cassandra-uuid').TimeUuid;
 
 const Rule = require('../lib/rule');
@@ -29,6 +30,10 @@ class Kafka {
         this.staticRules = options.templates || {};
         this.ruleExecutors = {};
         this.taskQueue = new TaskQueue(this.tqOpts);
+
+        HyperSwitch.lifecycle.on('close', () => {
+            this.close();
+        });
     }
 
     setup(hyper) {
@@ -124,12 +129,6 @@ module.exports = (options) => {
                     post: {
                         summary: 'adds a new subscription dynamically',
                         operationId: 'subscribe'
-                    }
-                },
-                '/close': {
-                    post: {
-                        summary: 'Closes all the subscriptions. Used only in the test mode',
-                        operationId: 'close'
                     }
                 }
             }

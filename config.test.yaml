@@ -19,14 +19,6 @@ services:
                     user-agent: true
         title: The Change Propagation root
         paths:
-          # Test-only endpoint for a graceful service shutdown
-          /v1/close:
-            post:
-              x-request-handler:
-                - do_close:
-                    request:
-                      method: post
-                      uri: /sys/queue/close
           /sys/links:
             x-modules:
               - path: sys/dep_updates.js

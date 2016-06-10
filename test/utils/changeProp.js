@@ -51,10 +51,7 @@ ChangeProp.prototype.start = function() {
 
 ChangeProp.prototype.stop = function() {
     if (this._running) {
-        return preq.post({
-            uri: this.hostPort + '/v1/close'
-        })
-        .then(() => this._runner.stop())
+        this._runner.stop()
         .tap(() => this._running = false)
         .delay(CHANGE_PROP_STOP_DELAY);
     }
