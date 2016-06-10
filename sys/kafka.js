@@ -136,8 +136,7 @@ module.exports = (options) => {
         operations: {
             setup_kafka: kafkaMod.setup.bind(kafkaMod),
             produce: kafkaMod.produce.bind(kafkaMod),
-            subscribe: kafkaMod.subscribe.bind(kafkaMod),
-            close: kafkaMod.close.bind(kafkaMod)
+            subscribe: kafkaMod.subscribe.bind(kafkaMod)
         },
         resources: [{
             uri: '/sys/queue/setup'
