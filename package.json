@@ -1,6 +1,6 @@
 {
   "name": "change-propagation",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Listens to events from Kafka and delivers them",
   "main": "server.js",
   "repository": {
@@ -39,10 +39,10 @@
     "extend": "^3.0.0",
     "hyperswitch": "^0.5.3",
     "service-runner": "^2.0.1",
-    "wmf-kafka-node": "^0.1.7",
+    "wmf-kafka-node": "^0.1.9",
     "json-stable-stringify": "^1.0.1",
     "htcp-purge": "^0.1.2",
-    "mediawiki-title": "^0.4.2"
+    "mediawiki-title": "^0.5.0"
   },
   "devDependencies": {
     "istanbul": "^0.4.3",
