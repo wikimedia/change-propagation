@@ -197,12 +197,14 @@ class DependencyProcessor {
         return hyper.post({
             uri: '/sys/queue/events',
             body: items.map((item) => {
+                // TODO: need to check whether a wiki is http or https!
+                const resourceURI =
+                    `https://${originalEvent.meta.domain}/wiki/${encodeURIComponent(item.title)}`;
                 return {
                     meta: {
                         topic: 'resource_change',
                         schema_uri: 'resource_change/1',
-                        // TODO: need to check whether a wiki is http or https!
-                        uri: `https://${originalEvent.meta.domain}/wiki/${item.title}`,
+                        uri: resourceURI,
                         request_id: originalEvent.meta.request_id,
                         domain: originalEvent.meta.domain,
                         dt: originalEvent.meta.dt

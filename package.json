@@ -46,15 +46,15 @@
   },
   "devDependencies": {
     "istanbul": "^0.4.3",
-    "mocha": "^2.4.5",
-    "mocha-jscs": "^4.2.0",
+    "mocha": "^2.5.3",
+    "mocha-jscs": "^5.0.1",
     "mocha-jshint": "^2.3.1",
     "mocha-lcov-reporter": "^1.2.0",
     "coveralls": "^2.11.9",
-    "js-yaml": "^3.6.0",
+    "js-yaml": "^3.6.1",
     "nock": "^8.0.0",
     "preq": "^0.4.9",
-    "ajv": "^4.0.4"
+    "ajv": "^4.1.3"
   },
   "deploy": {
     "node": "4.3.0",
