@@ -58,12 +58,12 @@ class Kafka {
 
     produce(hyper, req) {
         const messages = req.body;
-        if (!Array.isArray(messages)) {
+        if (!Array.isArray(messages) || !messages.length) {
             throw new HTTPError({
                 status: 400,
                 body: {
                     type: 'bad_request',
-                    detail: 'Events should be an array'
+                    detail: 'Events should be a non-empty array'
                 }
             });
         }

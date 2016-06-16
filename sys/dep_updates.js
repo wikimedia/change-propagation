@@ -161,6 +161,10 @@ class DependencyProcessor {
                     title: Title.newFromText(item.title, siteInfo).getPrefixedDBKey()
                 };
             });
+            if (!titles.length) {
+                // the batch is complete or the list of transcluded titles is empty
+                return { status: 200 };
+            }
             let actions = this._sendResourceChanges(hyper, titles,
                 originalEvent, requestTemplate.resourceChangeTag);
             if (res.body.continue) {
