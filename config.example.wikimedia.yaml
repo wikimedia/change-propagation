@@ -111,7 +111,6 @@ services:
                         headers:
                           cache-control: no-cache
 
-
                     purge_varnish:
                       topic: resource_change
                       match:
@@ -242,7 +241,7 @@ services:
                     # ORES caching updates
                     ores_cache:
                       topic: mediawiki.revision_create
-                      switch:
+                      cases:
                         - match:
                             meta:
                               domain: ar.wikipedia.org
