@@ -430,6 +430,7 @@ describe('Basic rule management', function() {
         .then((errorConsumer) => {
             errorConsumer.once('message', (message) => {
                 if (!finished) {
+                    finished = true;
                     done(new Error('Error should have been ignored'))
                 }
             });
@@ -444,6 +445,7 @@ describe('Basic rule management', function() {
             .finally(() => {
                 nock.cleanAll();
                 if (!finished) {
+                    finished = true;
                     done();
                 }
             });
