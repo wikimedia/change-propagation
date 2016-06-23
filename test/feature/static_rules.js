@@ -407,5 +407,48 @@ describe('Basic rule management', function() {
         });
     });
 
+    it('Should not emit messages to error topic if ignore condition was met', (done) => {
+        let finished = false;
+        const service = nock('http://mock.com', {
+            reqheaders: {
+                test_header_name: 'test_header_value',
+                'content-type': 'application/json',
+                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'user-agent': 'ChangePropTestSuite'
+            }
+        })
+        .post('/', {
+            'test_field_name': 'test_field_value',
+            'derived_field': 'test'
+        })
+        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri')
+        .reply(412, {});
+
+        kafkaFactory.newConsumer(kafkaFactory.newClient(),
+            'change-prop.error',
+            'change-prop-test-error-consumer')
+        .then((errorConsumer) => {
+            errorConsumer.once('message', (message) => {
+                if (!finished) {
+                    done(new Error('Error should have been ignored'))
+                }
+            });
+        })
+        .then(() => {
+            return producer.sendAsync([{
+                topic: 'test_dc.simple_test_rule',
+                messages: [ JSON.stringify(common.eventWithMessage('test')) ]
+            }])
+            .delay(common.REQUEST_CHECK_DELAY)
+            .then(() => service.done())
+            .finally(() => {
+                nock.cleanAll();
+                if (!finished) {
+                    done();
+                }
+            });
+        });
+    });
+
     after(() => changeProp.stop());
 });
