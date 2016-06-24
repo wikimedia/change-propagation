@@ -14,11 +14,10 @@ const uuid = require('cassandra-uuid').TimeUuid;
 const Rule = require('../lib/rule');
 const KafkaFactory = require('../lib/kafka_factory');
 const RuleExecutor = require('../lib/rule_executor');
-const TaskQueue = require('../lib/task_queue');
 
 class Kafka {
     constructor(options) {
-        this.tqOpts = { size: options.concurrency };
+        this.options = options;
         this.log = options.log || function() { };
         this.kafkaFactory = new KafkaFactory({
             uri: options.uri || 'localhost:2181/',
@@ -29,7 +28,6 @@ class Kafka {
         });
         this.staticRules = options.templates || {};
         this.ruleExecutors = {};
-        this.taskQueue = new TaskQueue(this.tqOpts);
 
         HyperSwitch.lifecycle.on('close', () => {
             this.close();
@@ -51,7 +49,7 @@ class Kafka {
             .filter((rule) => !rule.noop);
         return P.each(activeRules, (rule) => {
             this.ruleExecutors[rule.name] = new RuleExecutor(rule,
-                this.kafkaFactory, this.taskQueue, hyper, this.log);
+                this.kafkaFactory, hyper, this.log, this.options);
             return this.ruleExecutors[rule.name].subscribe();
         })
         .thenReturn({ status: 201 });
