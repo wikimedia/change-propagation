@@ -57,7 +57,7 @@
     "ajv": "^4.1.3"
   },
   "deploy": {
-    "node": "4.3.0",
+    "node": "4.4.6",
     "target": "debian",
     "dependencies": {
       "_all": []
