@@ -247,11 +247,21 @@ spec: &spec
                       uri: 'https://ores.wikimedia.org/v2/scores/arwiki/reverted/{{message.rev_id}}/?precache=true'
                   - match:
                       meta:
+                        domain: cs.wikipedia.org
+                    exec:
+                      uri: 'https://ores.wikimedia.org/v2/scores/cswiki/reverted/{{message.rev_id}}/?precache=true'
+                  - match:
+                      meta:
                         domain: en.wikipedia.org
                     exec:
                       - uri: 'https://ores.wikimedia.org/v2/scores/enwiki/damaging/{{message.rev_id}}/?precache=true'
                       - uri: 'https://ores.wikimedia.org/v2/scores/enwiki/reverted/{{message.rev_id}}/?precache=true'
                       - uri: 'https://ores.wikimedia.org/v2/scores/enwiki/goodfaith/{{message.rev_id}}/?precache=true'
+                  - match:
+                      meta:
+                        domain: en.wiktionary.org
+                    exec:
+                      uri: 'https://ores.wikimedia.org/v2/scores/enwiktionary/reverted/{{message.rev_id}}/?precache=true'
                   - match:
                       meta:
                         domain: es.wikipedia.org
@@ -305,7 +315,9 @@ spec: &spec
                       meta:
                         domain: pl.wikipedia.org
                     exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/plwiki/reverted/{{message.rev_id}}/?precache=true'
+                      - uri: 'https://ores.wikimedia.org/v2/scores/plwiki/damaging/{{message.rev_id}}/?precache=true'
+                      - uri: 'https://ores.wikimedia.org/v2/scores/plwiki/goodfaith/{{message.rev_id}}/?precache=true'
+                      - uri: 'https://ores.wikimedia.org/v2/scores/plwiki/reverted/{{message.rev_id}}/?precache=true'
                   - match:
                       meta:
                         domain: pt.wikipedia.org
@@ -313,11 +325,6 @@ spec: &spec
                       - uri: 'https://ores.wikimedia.org/v2/scores/ptwiki/damaging/{{message.rev_id}}/?precache=true'
                       - uri: 'https://ores.wikimedia.org/v2/scores/ptwiki/reverted/{{message.rev_id}}/?precache=true'
                       - uri: 'https://ores.wikimedia.org/v2/scores/ptwiki/goodfaith/{{message.rev_id}}/?precache=true'
-                  - match:
-                      meta:
-                        domain: test.wikipedia.org
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/testwiki/reverted/{{message.rev_id}}/?precache=true'
                   - match:
                       meta:
                         domain: ru.wikipedia.org
@@ -345,6 +352,7 @@ spec: &spec
                   - match:
                       meta:
                         domain: wikidata.org
+                      page_namespace: 0
                     exec:
                       - uri: 'https://ores.wikimedia.org/v2/scores/wikidatawiki/damaging/{{message.rev_id}}/?precache=true'
                       - uri: 'https://ores.wikimedia.org/v2/scores/wikidatawiki/reverted/{{message.rev_id}}/?precache=true'
