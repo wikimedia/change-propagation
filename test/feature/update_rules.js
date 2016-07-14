@@ -10,7 +10,7 @@ const assert = require('assert');
 const P = require('bluebird');
 
 describe('RESTBase update rules', function() {
-    this.timeout(2000);
+    this.timeout(20000);
 
     const changeProp = new ChangeProp('config.example.wikimedia.yaml');
     const kafkaFactory = new KafkaFactory({
@@ -22,9 +22,9 @@ describe('RESTBase update rules', function() {
 
     before(function() {
         // Setting up might tike some tome, so disable the timeout
-        this.timeout(20000);
+        this.timeout(40000);
 
-        return kafkaFactory.newProducer(kafkaFactory.newClient())
+        return kafkaFactory.newProducer()
         .then((newProducer) => {
             producer = newProducer;
             if (!common.topics_created) {

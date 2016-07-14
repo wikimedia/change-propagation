@@ -35,7 +35,7 @@ class Kafka {
     }
 
     setup(hyper) {
-        return this.kafkaFactory.newProducer(this.kafkaFactory.newClient())
+        return this.kafkaFactory.newProducer()
         .then((producer) => {
             this.producer = producer;
             return this._subscribeRules(hyper, this.staticRules);

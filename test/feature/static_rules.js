@@ -11,7 +11,7 @@ const common = require('../utils/common');
 const P = require('bluebird');
 
 describe('Basic rule management', function() {
-    this.timeout(2000);
+    this.timeout(20000);
 
     const changeProp = new ChangeProp('config.test.yaml');
     const kafkaFactory = new KafkaFactory({
@@ -26,9 +26,9 @@ describe('Basic rule management', function() {
 
     before(function() {
         // Setting up might tike some tome, so disable the timeout
-        this.timeout(20000);
+        this.timeout(40000);
 
-        return kafkaFactory.newProducer(kafkaFactory.newClient())
+        return kafkaFactory.newProducer()
         .then((newProducer) => {
             producer = newProducer;
             if (!common.topics_created) {
@@ -64,6 +64,7 @@ describe('Basic rule management', function() {
 
     it('Should call simple executor', () => {
         const random = common.randomString();
+        console.log('RANDOM NOW IS', random);
         const service = nock('http://mock.com', {
             reqheaders: {
                 test_header_name: 'test_header_value',
@@ -199,9 +200,7 @@ describe('Basic rule management', function() {
         })
         .reply(200, {});
         
-        return kafkaFactory.newConsumer(kafkaFactory.newClient(),
-            'change-prop.retry.simple_test_rule',
-            'change-prop-test-consumer-valid-retry')
+        return kafkaFactory.newConsumer('change-prop.retry.simple_test_rule', 'change-prop-test-consumer-valid-retry')
         .then((retryConsumer) => {
             retryConsumer.once('message', (message) => {
                 try {
@@ -401,9 +400,7 @@ describe('Basic rule management', function() {
 
     it('Should emit valid messages to error topic', (done) => {
         // No need to emit new messages, we will use on from previous test
-        kafkaFactory.newConsumer(kafkaFactory.newClient(),
-            'change-prop.error',
-            'change-prop-test-error-consumer')
+        kafkaFactory.newConsumer('change-prop.error', 'change-prop-test-error-consumer')
         .then((errorConsumer) => {
             errorConsumer.once('message', (message) => {
                 try {
@@ -447,9 +444,7 @@ describe('Basic rule management', function() {
         .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri')
         .reply(403, {});
 
-        kafkaFactory.newConsumer(kafkaFactory.newClient(),
-            'change-prop.error',
-            'change-prop-test-error-consumer')
+        kafkaFactory.newConsumer('change-prop.error', 'change-prop-test-error-consumer')
         .then((errorConsumer) => {
             errorConsumer.once('message', (message) => {
                 if (!finished) {
