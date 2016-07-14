@@ -14,6 +14,7 @@ const uuid = require('cassandra-uuid').TimeUuid;
 const Rule = require('../lib/rule');
 const KafkaFactory = require('../lib/kafka_factory');
 const RuleExecutor = require('../lib/rule_executor');
+const kafka = require('librdkafka-node');
 
 class Kafka {
     constructor(options) {
@@ -35,11 +36,12 @@ class Kafka {
     }
 
     setup(hyper) {
-        return this.kafkaFactory.newProducer()
-        .then((producer) => {
-            this.producer = producer;
-            return this._subscribeRules(hyper, this.staticRules);
-        })
+        this.producer = new kafka.Producer({
+            "metadata.broker.list": "127.0.0.1:9092",
+            "queue.buffering.max.ms": "1"
+        });
+        // TODO: it's not a promise actually
+        return this._subscribeRules(hyper, this.staticRules)
         .tap(() => this.log('info/change-prop/init', 'Kafka Queue module initialised'));
     }
 
@@ -60,6 +62,7 @@ class Kafka {
     }
 
     produce(hyper, req) {
+        console.log('PRODUCE REQUEST')
         const messages = req.body;
         if (!Array.isArray(messages) || !messages.length) {
             throw new HTTPError({
@@ -70,7 +73,8 @@ class Kafka {
                 }
             });
         }
-        const groupedPerTopic = messages.reduce((result, message) => {
+        // Check whether all messages contain the topic
+        messages.forEach((message) => {
             if (!message || !message.meta || !message.meta.topic) {
                 throw new HTTPError({
                     status: 400,
@@ -81,21 +85,20 @@ class Kafka {
                     }
                 });
             }
-            const topic = message.meta.topic;
-            result[topic] = result[topic] || [];
+        });
+        return P.all(messages.map((message) => {
             const now = new Date();
             message.meta.id = message.meta.id || uuid.fromDate(now).toString();
             message.meta.dt = message.meta.dt || now.toISOString();
-            result[topic].push(JSON.stringify(message));
-            return result;
-        }, {});
 
-        return this.producer.sendAsync(Object.keys(groupedPerTopic).map((topic) => {
-            return {
-                topic: `${this.kafkaFactory.produceDC}.${topic}`,
-                messages: groupedPerTopic[topic]
-            };
+            return this.producer.produce(
+                `${this.kafkaFactory.produceDC}.${message.meta.topic}`,
+                JSON.stringify(message)
+            );
         }))
+        .catch((e) => {
+            console.log('PRODUCE ERROR', e);
+        })
         .thenReturn({ status: 201 });
     }
 
