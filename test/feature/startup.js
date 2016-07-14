@@ -18,7 +18,7 @@ describe('Startup', function () {
     let producer;
 
     before(() => {
-        return kafkaFactory.newProducer(kafkaFactory.newClient())
+        return kafkaFactory.newProducer()
         .then((newProducer) => {
             producer = newProducer;
             if (!common.topics_created) {
