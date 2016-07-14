@@ -95,6 +95,7 @@ describe('Basic rule management', function() {
 
     it('Should retry simple executor', () => {
         const random = common.randomString();
+        console.log('RANDOM NOW IS', random);
         const service = nock('http://mock.com', {
             reqheaders: {
                 test_header_name: 'test_header_value',
