@@ -5,7 +5,7 @@ const uuid = require('cassandra-uuid').TimeUuid;
 const common = {};
 
 common.topics_created = false;
-common.REQUEST_CHECK_DELAY = 1000;
+common.REQUEST_CHECK_DELAY = 2000;
 
 common.ALL_TOPICS = [
     'test_dc.simple_test_rule',

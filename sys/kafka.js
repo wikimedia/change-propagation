@@ -62,7 +62,6 @@ class Kafka {
     }
 
     produce(hyper, req) {
-        console.log('PRODUCE REQUEST')
         const messages = req.body;
         if (!Array.isArray(messages) || !messages.length) {
             throw new HTTPError({
@@ -91,14 +90,13 @@ class Kafka {
             message.meta.id = message.meta.id || uuid.fromDate(now).toString();
             message.meta.dt = message.meta.dt || now.toISOString();
 
+            console.log('PRODUCE', message);
+
             return this.producer.produce(
                 `${this.kafkaFactory.produceDC}.${message.meta.topic}`,
                 JSON.stringify(message)
             );
         }))
-        .catch((e) => {
-            console.log('PRODUCE ERROR', e);
-        })
         .thenReturn({ status: 201 });
     }
 

@@ -9,9 +9,10 @@ const assert = require('assert');
 const yaml = require('js-yaml');
 const common = require('../utils/common');
 const P = require('bluebird');
+const kafka = require('librdkafka-node');
 
 describe('Basic rule management', function() {
-    this.timeout(20000);
+    this.timeout(10000);
 
     const changeProp = new ChangeProp('config.test.yaml');
     const kafkaFactory = new KafkaFactory({
@@ -19,27 +20,19 @@ describe('Basic rule management', function() {
         clientId: 'change-prop-test-suite',
         dc_name: 'test_dc'
     });
-    let producer;
+    let producer = new kafka.Producer({
+        "metadata.broker.list": "127.0.0.1:9092",
+        "queue.buffering.max.ms": "1"
+    });
     let retrySchema;
     let errorSchema;
     let siteInfoResponse;
 
     before(function() {
         // Setting up might tike some tome, so disable the timeout
-        this.timeout(40000);
+        this.timeout(20000);
 
-        return kafkaFactory.newProducer()
-        .then((newProducer) => {
-            producer = newProducer;
-            if (!common.topics_created) {
-                common.topics_created = true;
-                return P.each(common.ALL_TOPICS, (topic) => {
-                    return producer.createTopicsAsync([ topic ], false);
-                });
-            }
-            return P.resolve();
-        })
-        .then(() => changeProp.start())
+        return changeProp.start()
         .then(() => preq.get({
                 uri: 'https://raw.githubusercontent.com/wikimedia/mediawiki-event-schemas/master/jsonschema/change-prop/retry/1.yaml'
         }))
@@ -64,7 +57,6 @@ describe('Basic rule management', function() {
 
     it('Should call simple executor', () => {
         const random = common.randomString();
-        console.log('RANDOM NOW IS', random);
         const service = nock('http://mock.com', {
             reqheaders: {
                 test_header_name: 'test_header_value',
@@ -80,14 +72,14 @@ describe('Basic rule management', function() {
             'random_field': random
         }).reply({});
 
-        return producer.sendAsync([{
-            topic: 'test_dc.simple_test_rule',
-            messages: [
-                JSON.stringify(common.eventWithMessageAndRandom('this_will_not_match', random)),
-                JSON.stringify(common.eventWithMessageAndRandom('test', random)),
-                // The empty message should cause a failure in the match test
-                '{}' ]
-        }])
+        return P.each([
+            JSON.stringify(common.eventWithMessageAndRandom('this_will_not_match', random)),
+            JSON.stringify(common.eventWithMessageAndRandom('test', random)),
+            // The empty message should cause a failure in the match test
+            '{}'
+        ], (msg) => {
+            return producer.produce(`test_dc.simple_test_rule`, msg);
+        })
         .delay(common.REQUEST_CHECK_DELAY)
         .then(() => service.done())
         .finally(() => nock.cleanAll());
@@ -95,7 +87,6 @@ describe('Basic rule management', function() {
 
     it('Should retry simple executor', () => {
         const random = common.randomString();
-        console.log('RANDOM NOW IS', random);
         const service = nock('http://mock.com', {
             reqheaders: {
                 test_header_name: 'test_header_value',
@@ -119,10 +110,8 @@ describe('Basic rule management', function() {
         .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri,change-prop.retry.simple_test_rule:/sample/uri')
         .reply(200, {});
 
-        return producer.sendAsync([{
-            topic: 'test_dc.simple_test_rule',
-            messages: [ JSON.stringify(common.eventWithMessageAndRandom('test', random)) ]
-        }])
+        return producer.produce('test_dc.simple_test_rule',
+            JSON.stringify(common.eventWithMessageAndRandom('test', random)))
         .delay(common.REQUEST_CHECK_DELAY)
         .then(() => service.done())
         .finally(() => nock.cleanAll());
@@ -167,10 +156,8 @@ describe('Basic rule management', function() {
         })
         .reply(500, {});
 
-        return producer.sendAsync([{
-            topic: 'test_dc.simple_test_rule',
-            messages: [ JSON.stringify(common.eventWithMessageAndRandom('test', random)) ]
-        }])
+        return producer.produce('test_dc.simple_test_rule',
+            JSON.stringify(common.eventWithMessageAndRandom('test', random)))
         .delay(common.REQUEST_CHECK_DELAY)
         .then(() => {
             assert.equal(service.pendingMocks().length, 1);
@@ -178,7 +165,8 @@ describe('Basic rule management', function() {
         .finally(() => nock.cleanAll());
     });
 
-    it('Should emit valid retry message', (done) => {
+    it('Should emit valid retry message', function() {
+        this.timeout(10000);
         const random = common.randomString();
         nock('http://mock.com', {
             reqheaders: {
@@ -200,32 +188,34 @@ describe('Basic rule management', function() {
             'random_field': random
         })
         .reply(200, {});
-        
-        return kafkaFactory.newConsumer('change-prop.retry.simple_test_rule', 'change-prop-test-consumer-valid-retry')
-        .then((retryConsumer) => {
-            retryConsumer.once('message', (message) => {
-                try {
-                    const ajv = new Ajv();
-                    const validate = ajv.compile(retrySchema);
-                    const msg = JSON.parse(message.value);
-                    const valid = validate(msg);
-                    if (!valid) {
-                        done(new assert.AssertionError({
-                            message: ajv.errorsText(validate.errors)
-                        }));
-                    } else if (msg.triggered_by !== 'simple_test_rule:/sample/uri') {
-                            done(new Error('TriggeredBy should be equal to simple_test_rule:/sample/uri'));
-                    } else {
-                        done();
-                    }
-                } catch(e) {
-                    done(e);
-                }
-            });
-            return producer.sendAsync([{
-                topic: 'test_dc.simple_test_rule',
-                messages: [ JSON.stringify(common.eventWithMessageAndRandom('test', random)) ]
-            }]);
+
+        const retryConsumer = new kafka.KafkaConsumer({
+            "default_topic_conf": {
+                "auto.offset.reset": "largest"
+            },
+            "group.id": 'change-prop-test-consumer-valid-retry',
+            "metadata.broker.list": "127.0.0.1:9092",
+            "fetch.wait.max.ms": "1",
+            "fetch.min.bytes": "1",
+            "queue.buffering.max.ms": "1"
+        });
+        retryConsumer.subscribe([ 'change-prop.retry.simple_test_rule' ]);
+        setTimeout(() => producer.produce('test_dc.simple_test_rule',
+            JSON.stringify(common.eventWithMessageAndRandom('test', random))), 4000);
+        return retryConsumer.consume()
+        .then((message) => {
+            console.log(message);
+            const ajv = new Ajv();
+            const validate = ajv.compile(retrySchema);
+            const msg = JSON.parse(message.payload.toString());
+            const valid = validate(msg);
+            if (!valid) {
+                throw new assert.AssertionError({
+                    message: ajv.errorsText(validate.errors)
+                });
+            } else if (msg.triggered_by !== 'simple_test_rule:/sample/uri') {
+                throw new Error('TriggeredBy should be equal to simple_test_rule:/sample/uri');
+            }
         });
     });
 
@@ -254,10 +244,8 @@ describe('Basic rule management', function() {
         })
         .reply(404, {});
 
-        return producer.sendAsync([{
-            topic: 'test_dc.simple_test_rule',
-            messages: [ JSON.stringify(common.eventWithMessageAndRandom('test', random)) ]
-        }])
+        return producer.produce('test_dc.simple_test_rule',
+            JSON.stringify(common.eventWithMessageAndRandom('test', random)))
         .delay(common.REQUEST_CHECK_DELAY)
         .then(() => assert.equal(service.pendingMocks().length, 1))
         .finally(() => nock.cleanAll());
@@ -273,12 +261,8 @@ describe('Basic rule management', function() {
         .get('/redirected_resource')
         .reply(200, {});
 
-        return producer.sendAsync([{
-            topic: 'test_dc.simple_test_rule',
-            messages: [
-                JSON.stringify(common.eventWithMessage('redirect'))
-            ]
-        }])
+        return producer.produce('test_dc.simple_test_rule',
+            JSON.stringify(common.eventWithMessage('redirect')))
         .delay(common.REQUEST_CHECK_DELAY)
         .then(() => assert.equal(service.pendingMocks().length, 1))
         .finally(() => nock.cleanAll());
@@ -300,10 +284,10 @@ describe('Basic rule management', function() {
         })
         .reply(200, {});
 
-        return producer.sendAsync([{
-            topic: 'test_dc.simple_test_rule',
-            messages: [ 'non-parsable-json', JSON.stringify(common.eventWithMessage('test')) ]
-        }])
+        return P.each([
+            'non-parsable-json',
+            JSON.stringify(common.eventWithMessage('test'))
+        ], (msg) => producer.produce('test_dc.simple_test_rule', msg))
         .delay(common.REQUEST_CHECK_DELAY)
         .then(() => service.done())
         .finally(() => nock.cleanAll());
@@ -325,12 +309,10 @@ describe('Basic rule management', function() {
         .matchHeader('x-triggered-by', 'test_dc.kafka_producing_rule:/sample/uri,simple_test_rule:/sample/uri')
         .times(2).reply({});
 
-        return producer.sendAsync([{
-            topic: 'test_dc.kafka_producing_rule',
-            messages: [ JSON.stringify(common.eventWithProperties('test_dc.kafka_producing_rule', {
+        return producer.produce('test_dc.kafka_producing_rule',
+            JSON.stringify(common.eventWithProperties('test_dc.kafka_producing_rule', {
                 produce_to_topic: 'simple_test_rule'
-            })) ]
-        }])
+            })))
         .delay(common.REQUEST_CHECK_DELAY)
         .then(() => service.done())
         .finally(() => nock.cleanAll());
@@ -388,12 +370,8 @@ describe('Basic rule management', function() {
         .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Some_Page')
         .reply(200);
 
-        return producer.sendAsync([{
-            topic: 'test_dc.mediawiki.revision_create',
-            messages: [
-                JSON.stringify(common.eventWithProperties('mediawiki.revision_create', { title: 'Main_Page' }))
-            ]
-        }])
+        return producer.produce('test_dc.mediawiki.revision_create',
+            JSON.stringify(common.eventWithProperties('mediawiki.revision_create', { title: 'Main_Page' })))
         .delay(common.REQUEST_CHECK_DELAY)
         .then(() => mwAPI.done())
         .finally(() => nock.cleanAll());
@@ -420,12 +398,7 @@ describe('Basic rule management', function() {
                 }
             });
         })
-        .then(() => {
-            return producer.sendAsync([{
-                topic: 'test_dc.mediawiki.revision_create',
-                messages: [ 'not_a_json_message' ]
-            }]);
-        });
+        .then(() => producer.produce('test_dc.mediawiki.revision_create', 'not_a_json_message'));
     });
 
     it('Should not emit messages to error topic if ignore condition was met', (done) => {
@@ -455,10 +428,8 @@ describe('Basic rule management', function() {
             });
         })
         .then(() => {
-            return producer.sendAsync([{
-                topic: 'test_dc.simple_test_rule',
-                messages: [ JSON.stringify(common.eventWithMessage('test')) ]
-            }])
+            return producer.produce('test_dc.simple_test_rule',
+                JSON.stringify(common.eventWithMessage('test')))
             .delay(common.REQUEST_CHECK_DELAY)
             .then(() => service.done())
             .finally(() => {
