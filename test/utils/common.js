@@ -1,11 +1,12 @@
 "use strict";
 
 const uuid = require('cassandra-uuid').TimeUuid;
+const P    = require('bluebird');
 
 const common = {};
 
 common.topics_created = false;
-common.REQUEST_CHECK_DELAY = 2000;
+common.REQUEST_CHECK_DELAY = 3000;
 
 common.ALL_TOPICS = [
     'test_dc.simple_test_rule',
@@ -103,6 +104,20 @@ common.EN_SITE_INFO_RESPONSE = {
             "7": {"id": 7, "case": "first-letter", "subpages": "", "canonical": "File talk", "*": "File talk"}
         }
     }
+};
+
+common.checkAPIDone = (api) => {
+    let attempts = 0;
+    const check = () => {
+        if (api.isDone()) {
+            return;
+        } else if (attempts++ < 20) {
+            return P.delay(500).then(check);
+        } else {
+            return api.done();
+        }
+    };
+    return check();
 };
 
 module.exports = common;

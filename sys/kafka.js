@@ -89,9 +89,6 @@ class Kafka {
             const now = new Date();
             message.meta.id = message.meta.id || uuid.fromDate(now).toString();
             message.meta.dt = message.meta.dt || now.toISOString();
-
-            console.log('PRODUCE', message);
-
             return this.producer.produce(
                 `${this.kafkaFactory.produceDC}.${message.meta.topic}`,
                 JSON.stringify(message)

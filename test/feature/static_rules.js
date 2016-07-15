@@ -377,68 +377,29 @@ describe('Basic rule management', function() {
         .finally(() => nock.cleanAll());
     });
 
-    it('Should emit valid messages to error topic', (done) => {
-        // No need to emit new messages, we will use on from previous test
-        kafkaFactory.newConsumer('change-prop.error', 'change-prop-test-error-consumer')
-        .then((errorConsumer) => {
-            errorConsumer.once('message', (message) => {
-                try {
-                    const ajv = new Ajv();
-                    const validate = ajv.compile(errorSchema);
-                    var valid = validate(JSON.parse(message.value));
-                    if (!valid) {
-                        done(new assert.AssertionError({
-                            message: ajv.errorsText(validate.errors)
-                        }));
-                    } else {
-                        done();
-                    }
-                } catch(e) {
-                    done(e);
-                }
-            });
-        })
-        .then(() => producer.produce('test_dc.mediawiki.revision_create', 'not_a_json_message'));
-    });
-
-    it('Should not emit messages to error topic if ignore condition was met', (done) => {
-        let finished = false;
-        const service = nock('http://mock.com', {
-            reqheaders: {
-                test_header_name: 'test_header_value',
-                'content-type': 'application/json',
-                'x-request-id': common.SAMPLE_REQUEST_ID,
-                'user-agent': 'ChangePropTestSuite'
+    it('Should emit valid messages to error topic', () => {
+        const errorConsumer = new kafka.KafkaConsumer({
+            "default_topic_conf": {
+                "auto.offset.reset": "smallest"
+            },
+            "group.id": 'change-prop-test-error-consumer',
+            "metadata.broker.list": "127.0.0.1:9092",
+            "fetch.wait.max.ms": "1",
+            "fetch.min.bytes": "1",
+            "queue.buffering.max.ms": "1"
+        });
+        errorConsumer.subscribe([ 'test_dc.change-prop.error' ]);
+        setTimeout(() => producer.produce('test_dc.mediawiki.revision_create', 'not_a_json_message'), 1000);
+        return errorConsumer.consume()
+        .then((message) => {
+            const ajv = new Ajv();
+            const validate = ajv.compile(errorSchema);
+            var valid = validate(JSON.parse(message.payload.toString()));
+            if (!valid) {
+                throw  new assert.AssertionError({
+                    message: ajv.errorsText(validate.errors)
+                });
             }
-        })
-        .post('/', {
-            'test_field_name': 'test_field_value',
-            'derived_field': 'test'
-        })
-        .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri')
-        .reply(403, {});
-
-        kafkaFactory.newConsumer('change-prop.error', 'change-prop-test-error-consumer')
-        .then((errorConsumer) => {
-            errorConsumer.once('message', (message) => {
-                if (!finished) {
-                    finished = true;
-                    done(new Error('Error should have been ignored'))
-                }
-            });
-        })
-        .then(() => {
-            return producer.produce('test_dc.simple_test_rule',
-                JSON.stringify(common.eventWithMessage('test')))
-            .delay(common.REQUEST_CHECK_DELAY)
-            .then(() => service.done())
-            .finally(() => {
-                nock.cleanAll();
-                if (!finished) {
-                    finished = true;
-                    done();
-                }
-            });
         });
     });
 
