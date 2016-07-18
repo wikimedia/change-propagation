@@ -349,7 +349,8 @@ describe('RESTBase update rules', function() {
                     page_title: 'TestPage',
                     rev_id: 1234,
                     rev_timestamp: new Date().toISOString(),
-                    rev_parent_id: 1233
+                    rev_parent_id: 1233,
+                    rev_by_bot: false
                 })
             ]
         }])
