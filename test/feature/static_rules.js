@@ -201,7 +201,7 @@ describe('Basic rule management', function() {
         });
         retryConsumer.subscribe([ 'change-prop.retry.simple_test_rule' ]);
         setTimeout(() => producer.produce('test_dc.simple_test_rule',
-            JSON.stringify(common.eventWithMessageAndRandom('test', random))), 4000);
+            JSON.stringify(common.eventWithMessageAndRandom('test', random))), 2000);
         return retryConsumer.consume()
         .then((message) => {
             console.log(message);
@@ -216,7 +216,8 @@ describe('Basic rule management', function() {
             } else if (msg.triggered_by !== 'simple_test_rule:/sample/uri') {
                 throw new Error('TriggeredBy should be equal to simple_test_rule:/sample/uri');
             }
-        });
+        })
+        .finally(() => retryConsumer.close());
     });
 
     it('Should not retry if retry_on not matched', () => {
@@ -400,8 +401,12 @@ describe('Basic rule management', function() {
                     message: ajv.errorsText(validate.errors)
                 });
             }
-        });
+        })
+        .finally(() => errorConsumer.close());
     });
 
-    after(() => changeProp.stop());
+    after(() => {
+        changeProp.stop();
+        producer.close();
+    });
 });
