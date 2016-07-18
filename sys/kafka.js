@@ -30,7 +30,7 @@ class Kafka {
         this.staticRules = options.templates || {};
         this.ruleExecutors = {};
 
-        HyperSwitch.lifecycle.on('close', () => {
+        HyperSwitch.lifecycle.once('close', () => {
             this.close();
         });
     }
@@ -100,6 +100,9 @@ class Kafka {
     close() {
         return P.each(Object.values(this.ruleExecutors),
             (executor) => executor.close())
+        .then(() => {
+            this.producer.close();
+        })
         .thenReturn({ status: 200 });
     }
 }

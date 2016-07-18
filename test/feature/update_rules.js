@@ -494,5 +494,8 @@ describe('RESTBase update rules', function() {
         });
     });
 
-    after(() => changeProp.stop());
+    after(() => {
+        changeProp.stop();
+        producer.close();
+    });
 });
