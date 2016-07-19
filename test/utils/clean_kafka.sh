@@ -60,3 +60,4 @@ createTopic "test_dc.mediawiki.page_restore"
 createTopic "test_dc.change-prop.retry.mediawiki.page_restore"
 createTopic "test_dc.mediawiki.revision_visibility_set"
 createTopic "test_dc.change-prop.retry.mediawiki.revision_visibility_set"
+sleep 5
