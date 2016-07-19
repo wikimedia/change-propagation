@@ -94,4 +94,18 @@ common.checkAPIDone = (api) => {
     return check();
 };
 
+common.checkPendingMocks = (api, num) => {
+    let attempts = 0;
+    const check = () => {
+        if (api.pendingMocks().length === num) {
+            return;
+        } else if (attempts++ < 20) {
+            return P.delay(500).then(check);
+        } else {
+            assert.equal(api.pendingMocks().length, 1);
+        }
+    };
+    return check();
+};
+
 module.exports = common;
