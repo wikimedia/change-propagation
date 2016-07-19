@@ -31,10 +31,7 @@ class Kafka {
     }
 
     setup(hyper) {
-        this.producer = new kafka.Producer({
-            "metadata.broker.list": "127.0.0.1:9092",
-            "queue.buffering.max.ms": "1"
-        });
+        this.producer = new kafka.Producer(this.kafkaConf.producerConf());
         this._subscribeRules(hyper, this.staticRules);
         this.log('info/change-prop/init', 'Kafka Queue module initialised');
         return { status: 201 };
