@@ -39,10 +39,10 @@
     "extend": "^3.0.0",
     "hyperswitch": "^0.5.3",
     "service-runner": "^2.0.4",
-    "wmf-kafka-node": "^0.1.9",
     "json-stable-stringify": "^1.0.1",
     "htcp-purge": "^0.1.2",
-    "mediawiki-title": "^0.5.4"
+    "mediawiki-title": "^0.5.4",
+    "librdkafka-node": "git+https://github.com/Pchelolo/librdkafka-node.git"
   },
   "devDependencies": {
     "istanbul": "^0.4.3",
