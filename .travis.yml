@@ -5,6 +5,11 @@ node_js:
   - "4"
   - "5"
 
+addons:
+  apt:
+    packages:
+    - librdkafka-dev
+
 env:
   - KAFKA_HOME=../kafka CXX=g++-4.8
 
@@ -13,6 +18,7 @@ before_install:
 - mkdir -p ${KAFKA_HOME} && tar xzf kafka.tgz -C ${KAFKA_HOME} --strip-components 1
 - echo 'delete.topic.enable=true' >> ${KAFKA_HOME}/config/server.properties
 - sh test/utils/start_kafka.sh start
+-
 
 addons:
   apt:
