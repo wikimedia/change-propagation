@@ -1,6 +1,5 @@
 language: node_js
 sudo: false
-dist: trusty
 
 node_js:
   - "4"
@@ -21,6 +20,5 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-4.8
-      - librdkafka-dev
 
 script: npm run coverage && (npm run coveralls || exit 0)
