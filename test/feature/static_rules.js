@@ -80,8 +80,7 @@ describe('Basic rule management', function() {
         ], (msg) => {
             return producer.produce(`test_dc.simple_test_rule`, msg);
         })
-        .delay(common.REQUEST_CHECK_DELAY)
-        .then(() => service.done())
+        .then(() => common.checkAPIDone(service))
         .finally(() => nock.cleanAll());
     });
 
@@ -112,8 +111,7 @@ describe('Basic rule management', function() {
 
         return producer.produce('test_dc.simple_test_rule',
             JSON.stringify(common.eventWithMessageAndRandom('test', random)))
-        .delay(common.REQUEST_CHECK_DELAY)
-        .then(() => service.done())
+        .then(() => common.checkAPIDone(service))
         .finally(() => nock.cleanAll());
     });
 
@@ -158,10 +156,7 @@ describe('Basic rule management', function() {
 
         return producer.produce('test_dc.simple_test_rule',
             JSON.stringify(common.eventWithMessageAndRandom('test', random)))
-        .delay(common.REQUEST_CHECK_DELAY)
-        .then(() => {
-            assert.equal(service.pendingMocks().length, 1);
-        })
+        .then(() => common.checkPendingMocks(service, 1))
         .finally(() => nock.cleanAll());
     });
 
@@ -247,8 +242,7 @@ describe('Basic rule management', function() {
 
         return producer.produce('test_dc.simple_test_rule',
             JSON.stringify(common.eventWithMessageAndRandom('test', random)))
-        .delay(common.REQUEST_CHECK_DELAY)
-        .then(() => assert.equal(service.pendingMocks().length, 1))
+        .then(() => common.checkPendingMocks(service, 1))
         .finally(() => nock.cleanAll());
     });
 
@@ -264,8 +258,7 @@ describe('Basic rule management', function() {
 
         return producer.produce('test_dc.simple_test_rule',
             JSON.stringify(common.eventWithMessage('redirect')))
-        .delay(common.REQUEST_CHECK_DELAY)
-        .then(() => assert.equal(service.pendingMocks().length, 1))
+        .then(() => common.checkPendingMocks(service, 1))
         .finally(() => nock.cleanAll());
     });
 
@@ -289,8 +282,7 @@ describe('Basic rule management', function() {
             'non-parsable-json',
             JSON.stringify(common.eventWithMessage('test'))
         ], (msg) => producer.produce('test_dc.simple_test_rule', msg))
-        .delay(common.REQUEST_CHECK_DELAY)
-        .then(() => service.done())
+        .then(() => common.checkAPIDone(service))
         .finally(() => nock.cleanAll());
     });
 
@@ -314,8 +306,7 @@ describe('Basic rule management', function() {
             JSON.stringify(common.eventWithProperties('test_dc.kafka_producing_rule', {
                 produce_to_topic: 'simple_test_rule'
             })))
-        .delay(common.REQUEST_CHECK_DELAY)
-        .then(() => service.done())
+        .then(() => common.checkAPIDone(service))
         .finally(() => nock.cleanAll());
     });
 
@@ -373,8 +364,7 @@ describe('Basic rule management', function() {
 
         return producer.produce('test_dc.mediawiki.revision_create',
             JSON.stringify(common.eventWithProperties('mediawiki.revision_create', { title: 'Main_Page' })))
-        .delay(common.REQUEST_CHECK_DELAY)
-        .then(() => mwAPI.done())
+        .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
     });
 
@@ -390,7 +380,7 @@ describe('Basic rule management', function() {
             "queue.buffering.max.ms": "1"
         });
         errorConsumer.subscribe([ 'test_dc.change-prop.error' ]);
-        setTimeout(() => producer.produce('test_dc.mediawiki.revision_create', 'not_a_json_message'), 1000);
+        setTimeout(() => producer.produce('test_dc.mediawiki.revision_create', 'not_a_json_message'), 2000);
         return errorConsumer.consume()
         .then((message) => {
             const ajv = new Ajv();

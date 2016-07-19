@@ -24,10 +24,14 @@ spec: &spec
       x-modules:
         - path: sys/kafka.js
           options:
-            uri: 127.0.0.1:2181
+            metadata_broker_list: 127.0.0.1:9092
             consume_dc: test_dc
             produce_dc: test_dc
-            concurrency: 100
+            consumer:
+              fetch.wait.max.ms: "1"
+              fetch.min.bytes: "1"
+              queue.buffering.max.ms: "1"
+            concurrency: 1
             templates:
               simple_test_rule:
                 topic: simple_test_rule

@@ -141,7 +141,7 @@ describe('RESTBase update rules', function() {
         .finally(() => nock.cleanAll());
     });
 
-    it('Should not update definition endpoint for non-main namespace', (done) => {
+    it('Should not update definition endpoint for non-main namespace', () => {
         const mwAPI = nock('https://en.wiktionary.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
@@ -151,7 +151,7 @@ describe('RESTBase update rules', function() {
         })
         .get('/api/rest_v1/page/definition/User%3APchelolo')
         .reply(200, () => {
-            done(new Error('Update was made while it should not have'))
+            throw new Error('Update was made while it should not have');
         });
 
         return producer.produce('test_dc.resource_change',
@@ -167,13 +167,8 @@ describe('RESTBase update rules', function() {
                 },
                 tags: ['restbase']
             }))
-        .delay(common.REQUEST_CHECK_DELAY)
-        .finally(() => {
-            nock.cleanAll();
-            if (!mwAPI.isDone()) {
-                done();
-            }
-        });
+        .then(() => common.checkPendingMocks(mwAPI, 1))
+        .finally(() => nock.cleanAll());
     });
 
     it('Should update RESTBase on resource_change from MW', () => {
