@@ -42,7 +42,7 @@
     "json-stable-stringify": "^1.0.1",
     "htcp-purge": "^0.1.2",
     "mediawiki-title": "^0.5.4",
-    "librdkafka-node": "git+https://github.com/Pchelolo/librdkafka-node.git"
+    "librdkafka-node": "^0.0.2"
   },
   "devDependencies": {
     "istanbul": "^0.4.3",
