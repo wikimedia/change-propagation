@@ -37,6 +37,10 @@ spec: &spec
                   status:
                     - '50x'
                     - 400
+                ignore:
+                  status:
+                    - 403
+                    - 412
                 match:
                   meta:
                     uri: '/sample/uri'

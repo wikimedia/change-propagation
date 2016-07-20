@@ -445,7 +445,7 @@ describe('Basic rule management', function() {
             'derived_field': 'test'
         })
         .matchHeader('x-triggered-by', 'simple_test_rule:/sample/uri')
-        .reply(412, {});
+        .reply(403, {});
 
         kafkaFactory.newConsumer(kafkaFactory.newClient(),
             'change-prop.error',
