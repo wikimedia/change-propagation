@@ -108,6 +108,34 @@ describe('RESTBase update rules', function() {
         .finally(() => nock.cleanAll());
     });
 
+    it('Should not react to revision change event from restbase for definition endpoint', () => {
+        const mwAPI = nock('https://en.wiktionary.org')
+        .get('/api/rest_v1/page/definition/Main_Page/12345')
+        .query({ redirect: false })
+        .reply(200, { });
+
+        return producer.sendAsync([{
+            topic: 'test_dc.resource_change',
+            messages: [
+                JSON.stringify({
+                    meta: {
+                        topic: 'resource_change',
+                        schema_uri: 'resource_change/1',
+                        uri: 'https://en.wiktionary.org/api/rest_v1/page/html/Main_Page/12345',
+                        request_id: common.SAMPLE_REQUEST_ID,
+                        id: uuid.now(),
+                        dt: new Date().toISOString(),
+                        domain: 'en.wiktionary.org'
+                    },
+                    tags: ['restbase']
+                })
+            ]
+        }])
+        .delay(common.REQUEST_CHECK_DELAY)
+        .then(() => assert.equal(mwAPI.pendingMocks().length, 1))
+        .finally(() => nock.cleanAll());
+    });
+
     it('Should update mobile apps endpoint', () => {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
