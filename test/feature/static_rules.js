@@ -1,7 +1,6 @@
 "use strict";
 
 const ChangeProp = require('../utils/changeProp');
-const KafkaFactory = require('../../lib/kafka_factory');
 const nock = require('nock');
 const preq = require('preq');
 const Ajv = require('ajv');
@@ -15,11 +14,6 @@ describe('Basic rule management', function() {
     this.timeout(10000);
 
     const changeProp = new ChangeProp('config.test.yaml');
-    const kafkaFactory = new KafkaFactory({
-        uri: 'localhost:2181/', // TODO: find out from the config
-        clientId: 'change-prop-test-suite',
-        dc_name: 'test_dc'
-    });
     let producer = new kafka.Producer({
         "metadata.broker.list": "127.0.0.1:9092",
         "queue.buffering.max.ms": "1"
@@ -194,12 +188,11 @@ describe('Basic rule management', function() {
             "fetch.min.bytes": "1",
             "queue.buffering.max.ms": "1"
         });
-        retryConsumer.subscribe([ 'change-prop.retry.simple_test_rule' ]);
+        retryConsumer.subscribe([ 'test_dc.change-prop.retry.simple_test_rule' ]);
         setTimeout(() => producer.produce('test_dc.simple_test_rule',
             JSON.stringify(common.eventWithMessageAndRandom('test', random))), 2000);
         return retryConsumer.consume()
         .then((message) => {
-            console.log(message);
             const ajv = new Ajv();
             const validate = ajv.compile(retrySchema);
             const msg = JSON.parse(message.payload.toString());
