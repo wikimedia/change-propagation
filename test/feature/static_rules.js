@@ -8,7 +8,7 @@ const assert = require('assert');
 const yaml = require('js-yaml');
 const common = require('../utils/common');
 const P = require('bluebird');
-const kafka = require('librdkafka-node');
+const kafka = require('rdkafka');
 
 describe('Basic rule management', function() {
     this.timeout(10000);
@@ -72,7 +72,7 @@ describe('Basic rule management', function() {
             // The empty message should cause a failure in the match test
             '{}'
         ], (msg) => {
-            return producer.produce(`test_dc.simple_test_rule`, msg);
+            return producer.produce(`test_dc.simple_test_rule`, 0, msg);
         })
         .then(() => common.checkAPIDone(service))
         .finally(() => nock.cleanAll());
@@ -104,6 +104,7 @@ describe('Basic rule management', function() {
         .reply(200, {});
 
         return producer.produce('test_dc.simple_test_rule',
+            0,
             JSON.stringify(common.eventWithMessageAndRandom('test', random)))
         .then(() => common.checkAPIDone(service))
         .finally(() => nock.cleanAll());
@@ -149,6 +150,7 @@ describe('Basic rule management', function() {
         .reply(500, {});
 
         return producer.produce('test_dc.simple_test_rule',
+            0,
             JSON.stringify(common.eventWithMessageAndRandom('test', random)))
         .then(() => common.checkPendingMocks(service, 1))
         .finally(() => nock.cleanAll());
@@ -190,6 +192,7 @@ describe('Basic rule management', function() {
         });
         retryConsumer.subscribe([ 'test_dc.change-prop.retry.simple_test_rule' ]);
         setTimeout(() => producer.produce('test_dc.simple_test_rule',
+            0,
             JSON.stringify(common.eventWithMessageAndRandom('test', random))), 2000);
         return retryConsumer.consume()
         .then((message) => {
@@ -234,6 +237,7 @@ describe('Basic rule management', function() {
         .reply(404, {});
 
         return producer.produce('test_dc.simple_test_rule',
+            0,
             JSON.stringify(common.eventWithMessageAndRandom('test', random)))
         .then(() => common.checkPendingMocks(service, 1))
         .finally(() => nock.cleanAll());
@@ -250,6 +254,7 @@ describe('Basic rule management', function() {
         .reply(200, {});
 
         return producer.produce('test_dc.simple_test_rule',
+            0,
             JSON.stringify(common.eventWithMessage('redirect')))
         .then(() => common.checkPendingMocks(service, 1))
         .finally(() => nock.cleanAll());
@@ -274,7 +279,7 @@ describe('Basic rule management', function() {
         return P.each([
             'non-parsable-json',
             JSON.stringify(common.eventWithMessage('test'))
-        ], (msg) => producer.produce('test_dc.simple_test_rule', msg))
+        ], (msg) => producer.produce('test_dc.simple_test_rule', 0, msg))
         .then(() => common.checkAPIDone(service))
         .finally(() => nock.cleanAll());
     });
@@ -296,6 +301,7 @@ describe('Basic rule management', function() {
         .times(2).reply({});
 
         return producer.produce('test_dc.kafka_producing_rule',
+            0,
             JSON.stringify(common.eventWithProperties('test_dc.kafka_producing_rule', {
                 produce_to_topic: 'simple_test_rule'
             })))
@@ -356,6 +362,7 @@ describe('Basic rule management', function() {
         .reply(200);
 
         return producer.produce('test_dc.mediawiki.revision_create',
+            0,
             JSON.stringify(common.eventWithProperties('mediawiki.revision_create', { title: 'Main_Page' })))
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
@@ -373,7 +380,7 @@ describe('Basic rule management', function() {
             "queue.buffering.max.ms": "1"
         });
         errorConsumer.subscribe([ 'test_dc.change-prop.error' ]);
-        setTimeout(() => producer.produce('test_dc.mediawiki.revision_create', 'not_a_json_message'), 2000);
+        setTimeout(() => producer.produce('test_dc.mediawiki.revision_create', 0, 'not_a_json_message'), 2000);
         return errorConsumer.consume()
         .then((message) => {
             const ajv = new Ajv();
