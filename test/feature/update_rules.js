@@ -1,7 +1,7 @@
 "use strict";
 
 const ChangeProp = require('../utils/changeProp');
-const kafka = require('librdkafka-node');
+const kafka = require('rdkafka');
 const nock = require('nock');
 const uuid = require('cassandra-uuid').TimeUuid;
 const common = require('../utils/common');
@@ -37,6 +37,7 @@ describe('RESTBase update rules', function() {
         .reply(200, { });
 
         return producer.produce('test_dc.resource_change',
+            0,
             JSON.stringify({
                 meta: {
                     topic: 'resource_change',
@@ -67,6 +68,7 @@ describe('RESTBase update rules', function() {
         .reply(200, {});
 
         return producer.produce('test_dc.resource_change',
+            0,
             JSON.stringify({
                 meta: {
                     topic: 'resource_change',
@@ -89,7 +91,7 @@ describe('RESTBase update rules', function() {
         .query({ redirect: false })
         .reply(200, { });
 
-        return producer.produce('test_dc.resource_change', JSON.stringify({
+        return producer.produce('test_dc.resource_change', 0, JSON.stringify({
             meta: {
                 topic: 'resource_change',
                 schema_uri: 'resource_change/1',
@@ -119,6 +121,7 @@ describe('RESTBase update rules', function() {
         .reply(200, { });
 
         return producer.produce('test_dc.resource_change',
+            0,
             JSON.stringify({
                 meta: {
                     topic: 'resource_change',
@@ -149,6 +152,7 @@ describe('RESTBase update rules', function() {
         });
 
         return producer.produce('test_dc.resource_change',
+            0,
             JSON.stringify({
                 meta: {
                     topic: 'resource_change',
@@ -180,6 +184,7 @@ describe('RESTBase update rules', function() {
         .reply(200, { });
 
         return producer.produce('test_dc.resource_change',
+            0,
             JSON.stringify({
                 meta: {
                     topic: 'resource_change',
@@ -212,6 +217,7 @@ describe('RESTBase update rules', function() {
         .reply(200, { });
 
         return producer.produce('test_dc.mediawiki.revision_create',
+            0,
             JSON.stringify({
                 meta: {
                     topic: 'mediawiki.revision_create',
@@ -245,6 +251,7 @@ describe('RESTBase update rules', function() {
         .reply(200, { });
 
         return producer.produce('test_dc.mediawiki.page_delete',
+            0,
             JSON.stringify({
                 meta: {
                     topic: 'mediawiki.page_delete',
@@ -275,6 +282,7 @@ describe('RESTBase update rules', function() {
         .reply(200, { });
 
         return producer.produce('test_dc.mediawiki.page_restore',
+            0,
             JSON.stringify({
                 meta: {
                     topic: 'mediawiki.page_restore',
@@ -301,6 +309,7 @@ describe('RESTBase update rules', function() {
         .reply(200, { });
 
         return producer.produce('test_dc.mediawiki.revision_create',
+            0,
             JSON.stringify({
                 meta: {
                     topic: 'mediawiki.revision_create',
@@ -339,6 +348,7 @@ describe('RESTBase update rules', function() {
         .reply(200, { });
 
         return producer.produce('test_dc.mediawiki.page_move',
+            0,
             JSON.stringify({
                 meta: {
                     topic: 'mediawiki.page_move',
@@ -372,6 +382,7 @@ describe('RESTBase update rules', function() {
         .reply(200, { });
 
         return producer.produce('test_dc.mediawiki.revision_visibility_set',
+            0,
             JSON.stringify({
                 meta: {
                     topic: 'mediawiki.revision_visibility_set',
@@ -435,6 +446,7 @@ describe('RESTBase update rules', function() {
         .reply(200);
 
         return producer.produce('test_dc.mediawiki.revision_create',
+            0,
             JSON.stringify(common.eventWithProperties('mediawiki.revision_create', { page_title: 'File:Test.jpg' })))
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
@@ -461,7 +473,7 @@ describe('RESTBase update rules', function() {
         });
         udpServer.bind(4321);
 
-        return producer.produce('test_dc.resource_change',
+        return producer.produce('test_dc.resource_change', 0,
             JSON.stringify({
                 meta: {
                     topic: 'resource_change',

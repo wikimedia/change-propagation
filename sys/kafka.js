@@ -15,7 +15,7 @@ const Rule = require('../lib/rule');
 const KafkaConfig = require('../lib/kafka_config');
 const RuleExecutor = require('../lib/rule_executor');
 const RetryExecutor = require('../lib/retry_executor');
-const kafka = require('librdkafka-node');
+const kafka = require('rdkafka');
 
 class Kafka {
     constructor(options) {
@@ -87,6 +87,7 @@ class Kafka {
             message.meta.dt = message.meta.dt || now.toISOString();
             return this.producer.produce(
                 `${this.kafkaConf.produceDC}.${message.meta.topic}`,
+                0, // TODO: Partition is hard-coded for now
                 JSON.stringify(message)
             );
         }))
