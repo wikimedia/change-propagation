@@ -89,25 +89,19 @@ describe('RESTBase update rules', function() {
         .query({ redirect: false })
         .reply(200, { });
 
-        return producer.sendAsync([{
-            topic: 'test_dc.resource_change',
-            messages: [
-                JSON.stringify({
-                    meta: {
-                        topic: 'resource_change',
-                        schema_uri: 'resource_change/1',
-                        uri: 'https://en.wiktionary.org/api/rest_v1/page/html/Main_Page/12345',
-                        request_id: common.SAMPLE_REQUEST_ID,
-                        id: uuid.now(),
-                        dt: new Date().toISOString(),
-                        domain: 'en.wiktionary.org'
-                    },
-                    tags: ['restbase']
-                })
-            ]
-        }])
-        .delay(common.REQUEST_CHECK_DELAY)
-        .then(() => assert.equal(mwAPI.pendingMocks().length, 1))
+        return producer.produce('test_dc.resource_change', JSON.stringify({
+            meta: {
+                topic: 'resource_change',
+                schema_uri: 'resource_change/1',
+                uri: 'https://en.wiktionary.org/api/rest_v1/page/html/Main_Page/12345',
+                request_id: common.SAMPLE_REQUEST_ID,
+                id: uuid.now(),
+                dt: new Date().toISOString(),
+                domain: 'en.wiktionary.org'
+            },
+            tags: ['restbase']
+        }))
+        .then(() => common.checkPendingMocks(mwAPI, 1))
         .finally(() => nock.cleanAll());
     });
 
