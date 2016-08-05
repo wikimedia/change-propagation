@@ -175,7 +175,7 @@ describe('RESTBase update rules', function() {
                 'cache-control': 'no-cache',
                 'x-triggered-by': 'resource_change:https://en.wikipedia.org/wiki/Main_Page',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
-                'if-unmodified-since': 'Thu, 01 Jan 1970 00:00:01 +0000',
+                'if-unmodified-since': 'Tue, 20 Feb 1990 19:31:13 +0000',
                 'user-agent': 'SampleChangePropInstance'
             }
         })
@@ -192,7 +192,7 @@ describe('RESTBase update rules', function() {
                     uri: 'https://en.wikipedia.org/wiki/Main_Page',
                     request_id: common.SAMPLE_REQUEST_ID,
                     id: uuid.now(),
-                    dt: new Date(1000).toISOString(),
+                    dt: '1990-02-20T19:31:13+00:00',
                     domain: 'en.wikipedia.org'
                 },
                 tags: ['purge']
