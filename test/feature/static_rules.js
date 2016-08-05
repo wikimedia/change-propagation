@@ -194,21 +194,29 @@ describe('Basic rule management', function() {
         setTimeout(() => producer.produce('test_dc.simple_test_rule',
             0,
             JSON.stringify(common.eventWithMessageAndRandom('test', random))), 2000);
-        return retryConsumer.consume()
-        .then((message) => {
-            const ajv = new Ajv();
-            const validate = ajv.compile(retrySchema);
-            const msg = JSON.parse(message.payload.toString());
-            const valid = validate(msg);
-            if (!valid) {
-                throw new assert.AssertionError({
-                    message: ajv.errorsText(validate.errors)
-                });
-            } else if (msg.triggered_by !== 'simple_test_rule:/sample/uri') {
-                throw new Error('TriggeredBy should be equal to simple_test_rule:/sample/uri');
-            }
-        })
-        .finally(() => retryConsumer.close());
+        function check() {
+            return retryConsumer.consume()
+            .then((message) => {
+                const ajv = new Ajv();
+                const validate = ajv.compile(retrySchema);
+                const msg = JSON.parse(message.payload.toString());
+                const valid = validate(msg);
+                if (!valid) {
+                    throw new assert.AssertionError({
+                        message: ajv.errorsText(validate.errors)
+                    });
+                }
+                if (msg.original_event.random !== random) {
+                    return check();
+                }
+
+                if (msg.triggered_by !== 'simple_test_rule:/sample/uri') {
+                    throw new Error('TriggeredBy should be equal to simple_test_rule:/sample/uri');
+                }
+            });
+        }
+
+        check().finally(() => retryConsumer.close());
     });
 
     it('Should not retry if retry_on not matched', () => {
