@@ -234,7 +234,7 @@ describe('RESTBase update rules', function() {
                         uri: 'https://en.wikipedia.org/wiki/Main_Page',
                         request_id: common.SAMPLE_REQUEST_ID,
                         id: uuid.now(),
-                        dt: new Date(1).toISOString(),
+                        dt: new Date(1000).toISOString(),
                         domain: 'en.wikipedia.org'
                     },
                     tags: ['purge']
@@ -271,7 +271,7 @@ describe('RESTBase update rules', function() {
                         uri: '/edit/uri',
                         request_id: common.SAMPLE_REQUEST_ID,
                         id: uuid.now(),
-                        dt: new Date(1).toISOString(),
+                        dt: new Date(1000).toISOString(),
                         domain: 'en.wikipedia.org'
                     },
                     page_title: 'User:Pchelolo/Test',
@@ -358,7 +358,11 @@ describe('RESTBase update rules', function() {
 
     it('Should update ORES on revision_create', () => {
         const oresService = nock('https://ores.wikimedia.org')
-        .get('/v2/scores/etwiki/reverted/1234/?precache=true')
+        .get('/v2/scores/enwiki/')
+        .query({
+            models: 'reverted|damaging|goodfaith',
+            revids: 1234,
+            precache: true })
         .reply(200, { });
 
         return producer.sendAsync([{
@@ -372,7 +376,7 @@ describe('RESTBase update rules', function() {
                         request_id: common.SAMPLE_REQUEST_ID,
                         id: uuid.now(),
                         dt: new Date(1).toISOString(),
-                        domain: 'et.wikipedia.org'
+                        domain: 'en.wikipedia.org'
                     },
                     page_title: 'TestPage',
                     rev_id: 1234,
@@ -414,7 +418,7 @@ describe('RESTBase update rules', function() {
                         uri: '/move/uri',
                         request_id: common.SAMPLE_REQUEST_ID,
                         id: uuid.now(),
-                        dt: new Date(1).toISOString(),
+                        dt: new Date(1000).toISOString(),
                         domain: 'en.wikipedia.org'
                     },
                     old_title: 'User:Pchelolo/Test',
