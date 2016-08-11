@@ -469,15 +469,8 @@ describe('RESTBase update rules', function() {
     });
 
 
-    it.skip('Should rerender image usages on file update', () => {
+    it('Should rerender image usages on file update', () => {
         const mwAPI = nock('https://en.wikipedia.org')
-        .post('/w/api.php', {
-            format: 'json',
-            action: 'query',
-            meta: 'siteinfo',
-            siprop: 'general|namespaces|namespacealiases'
-        })
-        .reply(200, common.EN_SITE_INFO_RESPONSE)
         .post('/w/api.php', {
             format: 'json',
             action: 'query',
