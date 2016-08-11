@@ -59,8 +59,20 @@
   "deploy": {
     "node": "4.4.6",
     "target": "debian",
+    "env": {
+      "BUILD_LIBRDKAFKA": "0"
+    },
     "dependencies": {
-      "_all": []
+      "debian": [
+        {
+          "repo_url": "https://apt.wikimedia.org/wikimedia",
+          "release": "jessie-wikimedia",
+          "pool": "main",
+          "packages": [
+            "librdkafka-dev"
+          ]
+        }
+      ]
     }
   }
 }
