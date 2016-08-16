@@ -1,37 +1,12 @@
 "use strict";
 
 const uuid = require('cassandra-uuid').TimeUuid;
+const P    = require('bluebird');
 
 const common = {};
 
 common.topics_created = false;
-common.REQUEST_CHECK_DELAY = 300;
-
-common.ALL_TOPICS = [
-    'test_dc.simple_test_rule',
-    'test_dc.change-prop.retry.simple_test_rule',
-    'test_dc.kafka_producing_rule',
-    'test_dc.change-prop.retry.kafka_producing_rule',
-    'test_dc.mediawiki.revision_create',
-    'test_dc.change-prop.retry.mediawiki.revision_create',
-    'test_dc.change-prop.backlinks.continue',
-    'test_dc.change-prop.retry.change-prop.backlinks.continue',
-    'test_dc.change-prop.transcludes.continue',
-    'test_dc.change-prop.retry.change-prop.transcludes.continue',
-    'test_dc.resource_change',
-    'test_dc.change-prop.retry.resource_change',
-    'test_dc.change-prop.error',
-    'test_dc.mediawiki.revision_create',
-    'test_dc.change-prop.retry.mediawiki.revision_create',
-    'test_dc.mediawiki.page_delete',
-    'test_dc.change-prop.retry.mediawiki.page_delete',
-    'test_dc.mediawiki.page_move',
-    'test_dc.change-prop.retry.mediawiki.page_move',
-    'test_dc.mediawiki.page_restore',
-    'test_dc.change-prop.retry.mediawiki.page_restore',
-    'test_dc.mediawiki.revision_visibility_set',
-    'test_dc.change-prop.retry.mediawiki.revision_visibility_set',
-];
+common.REQUEST_CHECK_DELAY = 3000;
 
 common.SAMPLE_REQUEST_ID = uuid.now().toString();
 
@@ -103,6 +78,34 @@ common.EN_SITE_INFO_RESPONSE = {
             "7": {"id": 7, "case": "first-letter", "subpages": "", "canonical": "File talk", "*": "File talk"}
         }
     }
+};
+
+common.checkAPIDone = (api) => {
+    let attempts = 0;
+    const check = () => {
+        if (api.isDone()) {
+            return;
+        } else if (attempts++ < 20) {
+            return P.delay(500).then(check);
+        } else {
+            return api.done();
+        }
+    };
+    return check();
+};
+
+common.checkPendingMocks = (api, num) => {
+    let attempts = 0;
+    const check = () => {
+        if (api.pendingMocks().length === num) {
+            return;
+        } else if (attempts++ < 20) {
+            return P.delay(500).then(check);
+        } else {
+            assert.equal(api.pendingMocks().length, 1);
+        }
+    };
+    return check();
 };
 
 module.exports = common;
