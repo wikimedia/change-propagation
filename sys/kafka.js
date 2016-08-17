@@ -12,7 +12,7 @@ const HTTPError = HyperSwitch.HTTPError;
 const uuid = require('cassandra-uuid').TimeUuid;
 
 const Rule = require('../lib/rule');
-const KafkaConfig = require('../lib/kafka_factory');
+const KafkaFactory = require('../lib/kafka_factory');
 const RuleExecutor = require('../lib/rule_executor');
 const RetryExecutor = require('../lib/retry_executor');
 
@@ -20,7 +20,7 @@ class Kafka {
     constructor(options) {
         this.options = options;
         this.log = options.log || function() { };
-        this.kafkaFactory = new KafkaConfig(options);
+        this.kafkaFactory = new KafkaFactory(options);
         this.staticRules = options.templates || {};
         this.ruleExecutors = {};
     }
@@ -31,15 +31,14 @@ class Kafka {
             this.producer = producer;
             return this._subscribeRules(hyper, this.staticRules);
         })
-        .tap(() => this.log('info/change-prop/init', 'Kafka Queue module initialised'))
-        .thenReturn({ status: 201 });
+        .tap(() => this.log('info/change-prop/init', 'Kafka Queue module initialised'));
     }
 
     _subscribeRules(hyper, rules) {
         const activeRules = Object.keys(rules)
             .map((ruleName) => new Rule(ruleName, rules[ruleName]))
             .filter((rule) => !rule.noop);
-        return P.all(activeRules.map( (rule) => {
+        return P.each(activeRules, (rule) => {
             this.ruleExecutors[rule.name] = new RuleExecutor(rule,
                 this.kafkaFactory, hyper, this.log, this.options);
             this.ruleExecutors[`${rule.name}_retry`] = new RetryExecutor(rule,
@@ -47,11 +46,12 @@ class Kafka {
             return P.join(
                     this.ruleExecutors[rule.name].subscribe(),
                     this.ruleExecutors[`${rule.name}_retry`].subscribe());
-        }));
+        })
+        .thenReturn({ status: 201 });
     }
 
     subscribe(hyper, req) {
-        return this._subscribeRules(hyper, req.body).thenReturn({ status: 201 });
+        return this._subscribeRules(hyper, req.body);
     }
 
     produce(hyper, req) {
