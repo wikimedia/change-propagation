@@ -39,7 +39,7 @@ spec: &spec
               fetch.wait.max.ms: "1"
               fetch.min.bytes: "1"
               queue.buffering.max.ms: "1"
-            concurrency: 1
+            concurrency: 250
             templates:
 
               summary_rerender:
@@ -254,7 +254,7 @@ spec: &spec
               # ORES caching updates
               ores_cache:
                 topic: mediawiki.revision_create
-                concurrency: 1
+                concurrency: 10
                 cases:
                   - match:
                       meta:

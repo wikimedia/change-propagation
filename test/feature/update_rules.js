@@ -310,38 +310,6 @@ describe('RESTBase update rules', function() {
         .finally(() => nock.cleanAll());
     });
 
-    it('Should update ORES on revision_create', () => {
-        const oresService = nock('https://ores.wikimedia.org')
-        .get('/v2/scores/enwiki/')
-        .query({
-            models: 'reverted|damaging|goodfaith',
-            revids: 1234,
-            precache: true })
-        .reply(200, { });
-
-        return producer.produceAsync({
-            topic: 'test_dc.mediawiki.revision_create',
-            message: JSON.stringify({
-                meta: {
-                    topic: 'mediawiki.revision_create',
-                    schema_uri: 'revision_create/1',
-                    uri: '/edit/uri',
-                    request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
-                    dt: new Date(1000).toISOString(),
-                    domain: 'en.wikipedia.org'
-                },
-                page_title: 'TestPage',
-                rev_id: 1234,
-                rev_timestamp: new Date().toISOString(),
-                rev_parent_id: 1233,
-                rev_by_bot: false
-            })
-        })
-        .then(() => common.checkAPIDone(oresService))
-        .finally(() => nock.cleanAll());
-    });
-
     it('Should update RESTBase on page move', () => {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
@@ -413,6 +381,37 @@ describe('RESTBase update rules', function() {
         .finally(() => nock.cleanAll());
     });
 
+    it('Should update ORES on revision_create', () => {
+        const oresService = nock('https://ores.wikimedia.org')
+        .get('/v2/scores/enwiki/')
+        .query({
+            models: 'reverted|damaging|goodfaith',
+            revids: 1234,
+            precache: true })
+        .reply(200, { });
+
+        return producer.produceAsync({
+            topic: 'test_dc.mediawiki.revision_create',
+            message: JSON.stringify({
+                meta: {
+                    topic: 'mediawiki.revision_create',
+                    schema_uri: 'revision_create/1',
+                    uri: '/edit/uri',
+                    request_id: common.SAMPLE_REQUEST_ID,
+                    id: uuid.now(),
+                    dt: new Date(1000).toISOString(),
+                    domain: 'en.wikipedia.org'
+                },
+                page_title: 'TestPage',
+                rev_id: 1234,
+                rev_timestamp: new Date().toISOString(),
+                rev_parent_id: 1233,
+                rev_by_bot: false
+            })
+        })
+        .then(() => common.checkAPIDone(oresService))
+        .finally(() => nock.cleanAll());
+    });
 
     it('Should rerender image usages on file update', () => {
         const mwAPI = nock('https://en.wikipedia.org')

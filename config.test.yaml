@@ -9,17 +9,6 @@ spec: &spec
               user-agent: true
   title: The Change Propagation root
   paths:
-    /sys/links:
-      x-modules:
-        - path: sys/dep_updates.js
-          options:
-            templates:
-              mw_api:
-                  uri: 'https://{{message.meta.domain}}/w/api.php'
-                  headers:
-                    host: '{{message.meta.domain}}'
-                  body:
-                    formatversion: 2
     /sys/queue:
       x-modules:
         - path: sys/kafka.js
