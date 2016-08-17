@@ -12,49 +12,46 @@ const HTTPError = HyperSwitch.HTTPError;
 const uuid = require('cassandra-uuid').TimeUuid;
 
 const Rule = require('../lib/rule');
-const KafkaConfig = require('../lib/kafka_config');
+const KafkaConfig = require('../lib/kafka_factory');
 const RuleExecutor = require('../lib/rule_executor');
 const RetryExecutor = require('../lib/retry_executor');
-const kafka = require('rdkafka');
 
 class Kafka {
     constructor(options) {
         this.options = options;
         this.log = options.log || function() { };
-        this.kafkaConf = new KafkaConfig(options);
+        this.kafkaFactory = new KafkaConfig(options);
         this.staticRules = options.templates || {};
         this.ruleExecutors = {};
-
-        HyperSwitch.lifecycle.once('close', () => {
-            this.close();
-        });
     }
 
     setup(hyper) {
-        this.producer = new kafka.Producer(this.kafkaConf.producerConf());
-        this._subscribeRules(hyper, this.staticRules);
-        this.log('info/change-prop/init', 'Kafka Queue module initialised');
-        return { status: 201 };
+        return this.kafkaFactory.createProducer()
+        .then((producer) => {
+            this.producer = producer;
+            return this._subscribeRules(hyper, this.staticRules);
+        })
+        .tap(() => this.log('info/change-prop/init', 'Kafka Queue module initialised'))
+        .thenReturn({ status: 201 });
     }
 
     _subscribeRules(hyper, rules) {
         const activeRules = Object.keys(rules)
             .map((ruleName) => new Rule(ruleName, rules[ruleName]))
             .filter((rule) => !rule.noop);
-        activeRules.forEach((rule => {
+        return P.all(activeRules.map( (rule) => {
             this.ruleExecutors[rule.name] = new RuleExecutor(rule,
-                this.kafkaConf, hyper, this.log, this.options);
-            this.ruleExecutors[rule.name].subscribe();
-
+                this.kafkaFactory, hyper, this.log, this.options);
             this.ruleExecutors[`${rule.name}_retry`] = new RetryExecutor(rule,
-                this.kafkaConf, hyper, this.log, this.options);
-            this.ruleExecutors[`${rule.name}_retry`].subscribe();
+                this.kafkaFactory, hyper, this.log, this.options);
+            return P.join(
+                    this.ruleExecutors[rule.name].subscribe(),
+                    this.ruleExecutors[`${rule.name}_retry`].subscribe());
         }));
     }
 
     subscribe(hyper, req) {
-        this._subscribeRules(hyper, req.body);
-        return { status: 201 };
+        return this._subscribeRules(hyper, req.body).thenReturn({ status: 201 });
     }
 
     produce(hyper, req) {
@@ -85,19 +82,12 @@ class Kafka {
             const now = new Date();
             message.meta.id = message.meta.id || uuid.fromDate(now).toString();
             message.meta.dt = message.meta.dt || now.toISOString();
-            return this.producer.produce(
-                `${this.kafkaConf.produceDC}.${message.meta.topic}`,
-                0, // TODO: Partition is hard-coded for now
-                JSON.stringify(message)
-            );
+            return this.producer.produceAsync({
+                message: JSON.stringify(message),
+                topic: `${this.kafkaFactory.produceDC}.${message.meta.topic}`,
+            });
         }))
         .thenReturn({ status: 201 });
-    }
-
-    close() {
-        return P.all(Object.values(this.ruleExecutors).map((executor) => executor.close()))
-        .then(() => this.producer.close())
-        .thenReturn({ status: 200 });
     }
 }
 

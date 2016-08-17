@@ -39,7 +39,7 @@ spec: &spec
               fetch.wait.max.ms: "1"
               fetch.min.bytes: "1"
               queue.buffering.max.ms: "1"
-            concurrency: 250
+            concurrency: 1
             templates:
 
               summary_rerender:
@@ -254,7 +254,7 @@ spec: &spec
               # ORES caching updates
               ores_cache:
                 topic: mediawiki.revision_create
-                concurrency: 10
+                concurrency: 1
                 cases:
                   - match:
                       meta:
@@ -457,6 +457,29 @@ spec: &spec
                         models: 'reverted|damaging|goodfaith'
                         revids: '{{message.rev_id}}'
                         precache: true
+
+              # This is not yet used in production
+              process_redlinks:
+                topic: mediawiki.revision_create
+                retry_limit: 0
+                match:
+                  rev_parent_id: undefined
+                exec:
+                  method: post
+                  uri: '/sys/links/backlinks/{message.title}'
+                  body: '{{globals.message}}'
+
+              rerender_restbase:
+                topic: resource_change
+                match:
+                  meta:
+                    uri: '/https:\/\/[^\/]+\/wiki\/(?<title>.+)/'
+                  tags: [ 'change-prop', 'backlinks' ]
+                exec:
+                  method: get
+                  uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{{match.meta.uri.title}}'
+                  headers:
+                    cache-control: no-cache
 
 num_workers: 0
 logging:

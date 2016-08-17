@@ -8,12 +8,12 @@
     "url": "git://github.com/wikimedia/change-propagation.git"
   },
   "scripts": {
-    "start": "service-runner",
+    "start": "export UV_THREADPOOL_SIZE=128 && service-runner",
     "cleanup": "sh test/utils/clean_kafka.sh",
     "start-kafka": "sh test/utils/start_kafka.sh start",
     "stop-kafka": "sh test/utils/start_kafka.sh stop",
-    "test": "npm run cleanup && mocha",
-    "coverage": "npm run cleanup && istanbul cover _mocha -- -R spec",
+    "test": "export UV_THREADPOOL_SIZE=128 && npm run cleanup && mocha",
+    "coverage": "export UV_THREADPOOL_SIZE=128 && npm run cleanup && istanbul cover _mocha -- -R spec",
     "coveralls": "cat ./coverage/lcov.info | coveralls"
   },
   "keywords": [
@@ -42,7 +42,7 @@
     "json-stable-stringify": "^1.0.1",
     "htcp-purge": "^0.1.2",
     "mediawiki-title": "^0.5.4",
-    "rdkafka": "^0.0.10"
+    "node-rdkafka": "^0.3.0"
   },
   "devDependencies": {
     "istanbul": "^0.4.3",

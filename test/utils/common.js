@@ -1,7 +1,8 @@
 "use strict";
 
-const uuid = require('cassandra-uuid').TimeUuid;
-const P    = require('bluebird');
+const uuid         = require('cassandra-uuid').TimeUuid;
+const P            = require('bluebird');
+const KafkaFactory = require('../../lib/kafka_factory');
 
 const common = {};
 
@@ -107,5 +108,21 @@ common.checkPendingMocks = (api, num) => {
     };
     return check();
 };
+
+common.factory = new KafkaFactory({
+    metadata_broker_list: '127.0.0.1:9092',
+    producer: {
+        'queue.buffering.max.ms': '1'
+    },
+    consumer: {
+        default_topic_conf: {
+            "auto.offset.reset": "largest"
+        },
+        "group.id": 'change-prop-test-consumer',
+        "fetch.wait.max.ms": "1",
+        "fetch.min.bytes": "1",
+        "queue.buffering.max.ms": "1"
+    }
+});
 
 module.exports = common;

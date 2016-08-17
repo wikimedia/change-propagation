@@ -1,26 +1,26 @@
 "use strict";
 
 const ChangeProp = require('../utils/changeProp');
-const kafka = require('rdkafka');
 const nock = require('nock');
 const uuid = require('cassandra-uuid').TimeUuid;
 const common = require('../utils/common');
 const dgram  = require('dgram');
 const assert = require('assert');
 
+process.env.UV_THREADPOOL_SIZE = 128;
+
 describe('RESTBase update rules', function() {
     this.timeout(15000);
 
     const changeProp = new ChangeProp('config.example.wikimedia.yaml');
-    let producer = new kafka.Producer({
-        "metadata.broker.list": "127.0.0.1:9092",
-        "queue.buffering.max.ms": "1"
-    });
+    let producer;
 
     before(function() {
         // Setting up might take some tome, so disable the timeout
         this.timeout(20000);
-        return changeProp.start();
+        return changeProp.start()
+        .then(() =>  common.factory.createProducer())
+        .then((result) => producer = result);
     });
 
     it('Should update summary endpoint', () => {
@@ -36,9 +36,9 @@ describe('RESTBase update rules', function() {
         .query({ redirect: false })
         .reply(200, { });
 
-        return producer.produce('test_dc.resource_change',
-            0,
-            JSON.stringify({
+        return producer.produceAsync({
+            topic: 'test_dc.resource_change',
+            message: JSON.stringify({
                 meta: {
                     topic: 'resource_change',
                     schema_uri: 'resource_change/1',
@@ -49,7 +49,8 @@ describe('RESTBase update rules', function() {
                     domain: 'en.wikipedia.org'
                 },
                 tags: ['restbase']
-            }))
+            })
+        })
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
     });
@@ -67,9 +68,9 @@ describe('RESTBase update rules', function() {
         .query({ redirect: false })
         .reply(200, {});
 
-        return producer.produce('test_dc.resource_change',
-            0,
-            JSON.stringify({
+        return producer.produceAsync({
+            topic: 'test_dc.resource_change',
+            message: JSON.stringify({
                 meta: {
                     topic: 'resource_change',
                     schema_uri: 'resource_change/1',
@@ -80,7 +81,8 @@ describe('RESTBase update rules', function() {
                     domain: 'en.wiktionary.org'
                 },
                 tags: ['restbase']
-            }))
+            })
+        })
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
     });
@@ -91,18 +93,21 @@ describe('RESTBase update rules', function() {
         .query({ redirect: false })
         .reply(200, { });
 
-        return producer.produce('test_dc.resource_change', 0, JSON.stringify({
-            meta: {
-                topic: 'resource_change',
-                schema_uri: 'resource_change/1',
-                uri: 'https://en.wiktionary.org/api/rest_v1/page/html/Main_Page/12345',
-                request_id: common.SAMPLE_REQUEST_ID,
-                id: uuid.now(),
-                dt: new Date().toISOString(),
-                domain: 'en.wiktionary.org'
-            },
-            tags: ['restbase']
-        }))
+        return producer.produceAsync({
+            topic: 'test_dc.resource_change',
+            message: JSON.stringify({
+                meta: {
+                    topic: 'resource_change',
+                    schema_uri: 'resource_change/1',
+                    uri: 'https://en.wiktionary.org/api/rest_v1/page/html/Main_Page/12345',
+                    request_id: common.SAMPLE_REQUEST_ID,
+                    id: uuid.now(),
+                    dt: new Date().toISOString(),
+                    domain: 'en.wiktionary.org'
+                },
+                tags: ['restbase']
+            })
+        })
         .then(() => common.checkPendingMocks(mwAPI, 1))
         .finally(() => nock.cleanAll());
     });
@@ -120,9 +125,9 @@ describe('RESTBase update rules', function() {
         .query({ redirect: false })
         .reply(200, { });
 
-        return producer.produce('test_dc.resource_change',
-            0,
-            JSON.stringify({
+        return producer.produceAsync({
+            topic: 'test_dc.resource_change',
+            message: JSON.stringify({
                 meta: {
                     topic: 'resource_change',
                     schema_uri: 'resource_change/1',
@@ -133,7 +138,8 @@ describe('RESTBase update rules', function() {
                     domain: 'en.wikipedia.org'
                 },
                 tags: ['restbase']
-            }))
+            })
+        })
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
     });
@@ -151,9 +157,9 @@ describe('RESTBase update rules', function() {
             throw new Error('Update was made while it should not have');
         });
 
-        return producer.produce('test_dc.resource_change',
-            0,
-            JSON.stringify({
+        return producer.produceAsync({
+            topic: 'test_dc.resource_change',
+            message: JSON.stringify({
                 meta: {
                     topic: 'resource_change',
                     schema_uri: 'resource_change/1',
@@ -164,7 +170,8 @@ describe('RESTBase update rules', function() {
                     domain: 'en.wiktionary.org'
                 },
                 tags: ['restbase']
-            }))
+            })
+        })
         .then(() => common.checkPendingMocks(mwAPI, 1))
         .finally(() => nock.cleanAll());
     });
@@ -183,9 +190,9 @@ describe('RESTBase update rules', function() {
         .query({ redirect: false })
         .reply(200, { });
 
-        return producer.produce('test_dc.resource_change',
-            0,
-            JSON.stringify({
+        return producer.produceAsync({
+            topic: 'test_dc.resource_change',
+            message: JSON.stringify({
                 meta: {
                     topic: 'resource_change',
                     schema_uri: 'resource_change/1',
@@ -196,7 +203,8 @@ describe('RESTBase update rules', function() {
                     domain: 'en.wikipedia.org'
                 },
                 tags: ['purge']
-            }))
+            })
+        })
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
     });
@@ -216,9 +224,9 @@ describe('RESTBase update rules', function() {
         .query({ redirect: false })
         .reply(200, { });
 
-        return producer.produce('test_dc.mediawiki.revision_create',
-            0,
-            JSON.stringify({
+        return producer.produceAsync({
+            topic: 'test_dc.mediawiki.revision_create',
+            message: JSON.stringify({
                 meta: {
                     topic: 'mediawiki.revision_create',
                     schema_uri: 'revision_create/1',
@@ -232,7 +240,8 @@ describe('RESTBase update rules', function() {
                 rev_id: 1234,
                 rev_timestamp: new Date().toISOString(),
                 rev_parent_id: 1233
-            }))
+            })
+        })
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
     });
@@ -250,9 +259,9 @@ describe('RESTBase update rules', function() {
         .query({ redirect: false })
         .reply(200, { });
 
-        return producer.produce('test_dc.mediawiki.page_delete',
-            0,
-            JSON.stringify({
+        return producer.produceAsync({
+            topic: 'test_dc.mediawiki.page_delete',
+            message: JSON.stringify({
                 meta: {
                     topic: 'mediawiki.page_delete',
                     schema_uri: 'page_delete/1',
@@ -263,7 +272,8 @@ describe('RESTBase update rules', function() {
                     domain: 'en.wikipedia.org'
                 },
                 title: 'User:Pchelolo/Test'
-            }))
+            })
+        })
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
     });
@@ -281,9 +291,9 @@ describe('RESTBase update rules', function() {
         .query({ redirect: false })
         .reply(200, { });
 
-        return producer.produce('test_dc.mediawiki.page_restore',
-            0,
-            JSON.stringify({
+        return producer.produceAsync({
+            topic: 'test_dc.mediawiki.page_restore',
+            message: JSON.stringify({
                 meta: {
                     topic: 'mediawiki.page_restore',
                     schema_uri: 'page_restore/1',
@@ -294,7 +304,8 @@ describe('RESTBase update rules', function() {
                     domain: 'en.wikipedia.org'
                 },
                 title: 'User:Pchelolo/Test'
-            }))
+            })
+        })
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
     });
@@ -308,9 +319,9 @@ describe('RESTBase update rules', function() {
             precache: true })
         .reply(200, { });
 
-        return producer.produce('test_dc.mediawiki.revision_create',
-            0,
-            JSON.stringify({
+        return producer.produceAsync({
+            topic: 'test_dc.mediawiki.revision_create',
+            message: JSON.stringify({
                 meta: {
                     topic: 'mediawiki.revision_create',
                     schema_uri: 'revision_create/1',
@@ -325,7 +336,8 @@ describe('RESTBase update rules', function() {
                 rev_timestamp: new Date().toISOString(),
                 rev_parent_id: 1233,
                 rev_by_bot: false
-            }))
+            })
+        })
         .then(() => common.checkAPIDone(oresService))
         .finally(() => nock.cleanAll());
     });
@@ -347,9 +359,9 @@ describe('RESTBase update rules', function() {
         .query({ redirect: false })
         .reply(200, { });
 
-        return producer.produce('test_dc.mediawiki.page_move',
-            0,
-            JSON.stringify({
+        return producer.produceAsync({
+            topic: 'test_dc.mediawiki.page_move',
+            message: JSON.stringify({
                 meta: {
                     topic: 'mediawiki.page_move',
                     schema_uri: 'page_move/1',
@@ -363,7 +375,8 @@ describe('RESTBase update rules', function() {
                 new_title: 'User:Pchelolo/Test1',
                 old_revision_id: 1,
                 new_revision_id: 2
-            }))
+            })
+        })
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
     });
@@ -381,9 +394,9 @@ describe('RESTBase update rules', function() {
         .query({ redirect: false })
         .reply(200, { });
 
-        return producer.produce('test_dc.mediawiki.revision_visibility_set',
-            0,
-            JSON.stringify({
+        return producer.produceAsync({
+            topic: 'test_dc.mediawiki.revision_visibility_set',
+            message: JSON.stringify({
                 meta: {
                     topic: 'mediawiki.revision_visibility_set',
                     schema_uri: 'revision_visibility_set/1',
@@ -394,7 +407,8 @@ describe('RESTBase update rules', function() {
                     domain: 'en.wikipedia.org'
                 },
                 revision_id: 1234
-            }))
+            })
+        })
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
     });
@@ -445,9 +459,10 @@ describe('RESTBase update rules', function() {
         .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Some_Page')
         .reply(200);
 
-        return producer.produce('test_dc.mediawiki.revision_create',
-            0,
-            JSON.stringify(common.eventWithProperties('mediawiki.revision_create', { page_title: 'File:Test.jpg' })))
+        return producer.produceAsync({
+            topic: 'test_dc.mediawiki.revision_create',
+            message: JSON.stringify(common.eventWithProperties('mediawiki.revision_create', { page_title: 'File:Test.jpg' }))
+        })
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
     });
@@ -473,8 +488,9 @@ describe('RESTBase update rules', function() {
         });
         udpServer.bind(4321);
 
-        return producer.produce('test_dc.resource_change', 0,
-            JSON.stringify({
+        return producer.produceAsync({
+            topic: 'test_dc.resource_change',
+            message: JSON.stringify({
                 meta: {
                     topic: 'resource_change',
                     schema_uri: 'resource_change/1',
@@ -485,7 +501,8 @@ describe('RESTBase update rules', function() {
                     domain: 'en.wikipedia.beta.wmflabs.org'
                 },
                 tags: ['restbase']
-            }))
+            })
+        })
         .delay(common.REQUEST_CHECK_DELAY)
         .finally(() => {
             if (!closed) {
@@ -495,8 +512,58 @@ describe('RESTBase update rules', function() {
         });
     });
 
-    after(() => {
-        changeProp.stop();
-        producer.close();
+    it('Should process backlinks', () => {
+        const mwAPI = nock('https://en.wikipedia.org')
+        .post('/w/api.php', {
+            format: 'json',
+            action: 'query',
+            list: 'backlinks',
+            bltitle: 'Main_Page',
+            blfilterredir: 'nonredirects',
+            bllimit: '500',
+            formatversion: '2'
+        })
+        .reply(200, {
+            batchcomplete: '',
+            continue: {
+                blcontinue: '1|2272',
+                continue: '-||'
+            },
+            query: {
+                backlinks: common.arrayWithLinks('Some_Page', 2)
+            }
+        })
+        .get('/api/rest_v1/page/html/Some_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Some_Page')
+        .times(2)
+        .reply(200)
+        .post('/w/api.php', {
+            format: 'json',
+            action: 'query',
+            list: 'backlinks',
+            bltitle: 'Main_Page',
+            blfilterredir: 'nonredirects',
+            bllimit: '500',
+            blcontinue: '1|2272',
+            formatversion: '2'
+        })
+        .reply(200, {
+            batchcomplete: '',
+            query: {
+                backlinks: common.arrayWithLinks('Some_Page', 1)
+            }
+        })
+        .get('/api/rest_v1/page/html/Some_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Some_Page')
+        .reply(200);
+
+        return producer.produceAsync({
+            topic: 'test_dc.mediawiki.revision_create',
+            message: JSON.stringify(common.eventWithProperties('mediawiki.revision_create', {title: 'Main_Page'}))
+        })
+        .then(() => common.checkAPIDone(mwAPI))
+        .finally(() => nock.cleanAll());
     });
+
+    after(() => changeProp.stop());
 });
