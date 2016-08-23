@@ -16,6 +16,7 @@ spec: &spec
             metadata_broker_list: 127.0.0.1:9092
             consume_dc: test_dc
             produce_dc: test_dc
+            startup_delay: 0
             consumer:
               fetch.wait.max.ms: "1"
               fetch.min.bytes: "1"
