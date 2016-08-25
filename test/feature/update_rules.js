@@ -412,6 +412,7 @@ describe('RESTBase update rules', function() {
         .then(() => common.checkAPIDone(oresService))
         .finally(() => nock.cleanAll());
     });
+
     it('Should update RESTBase summary on wikidata description change', () => {
         const wikidataAPI = nock('https://www.wikidata.org')
         .post('/w/api.php', {
@@ -469,6 +470,46 @@ describe('RESTBase update rules', function() {
         .delay(common.REQUEST_CHECK_DELAY)
         .then(() => common.checkAPIDone(wikidataAPI))
         .then(() => common.checkAPIDone(restbase))
+        .finally(() => nock.cleanAll());
+    });
+
+    it('Should not crash if wikidata description can not be found', () => {
+        const wikidataAPI = nock('https://www.wikidata.org')
+        .post('/w/api.php', {
+            format: 'json',
+            formatversion: '2',
+            action: 'wbgetentities',
+            ids: 'Q2',
+            props: 'sitelinks/urls',
+            normalize: 'true'
+        })
+        .reply(200, {
+            "entities": {
+                "Q1220694122": {
+                    "id": "Q1220694122",
+                    "missing": ""
+                }
+            },
+            "success": 1
+        });
+
+        return producer.produceAsync({
+            topic: 'test_dc.mediawiki.revision_create',
+            message: JSON.stringify({
+                meta: {
+                    topic: 'mediawiki.revision_create',
+                    schema_uri: 'revision_create/1',
+                    uri: '/rev/uri',
+                    request_id: common.SAMPLE_REQUEST_ID,
+                    id: uuid.now(),
+                    dt: new Date().toISOString(),
+                    domain: 'www.wikidata.org'
+                },
+                page_title: 'Q2'
+            })
+        })
+        .delay(common.REQUEST_CHECK_DELAY)
+        .then(() => common.checkAPIDone(wikidataAPI))
         .finally(() => nock.cleanAll());
     });
 

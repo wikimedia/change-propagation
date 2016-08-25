@@ -88,6 +88,7 @@ function createWikidataTemplate(options) {
             }
         })),
         resourceChangeTag: 'wikidata',
+        shouldProcess: (res) => { return res && res.body && !res.body.success; },
         extractResults: (res) => {
             const siteLinks = res.body.entities[Object.keys(res.body.entities)[0]].sitelinks;
             return Object.keys(siteLinks).map((siteId) => {
@@ -105,6 +106,7 @@ function createWikidataTemplate(options) {
 class DependencyProcessor {
     constructor(options) {
         this.options = options;
+        this.log = options.log || function() { };
         this.siteInfoCache = {};
         this.backLinksRequest = createBackLinksTemplate(options);
         this.imageLinksRequest = createImageUsageTemplate(options);
@@ -187,10 +189,17 @@ class DependencyProcessor {
             message: req.body
         };
         return hyper.request(this.wikidataRequest.template.expand(context))
-        .then(this.wikidataRequest.extractResults)
-        .then((items) => {
-            return this._sendResourceChanges(hyper, items, req.body,
-                this.wikidataRequest.resourceChangeTag);
+        .then((res) => {
+            if (this.wikidataRequest.shouldProcess(res)) {
+                const items = this.wikidataRequest.extractResults(res);
+                return this._sendResourceChanges(hyper, items, req.body,
+                    this.wikidataRequest.resourceChangeTag);
+            } else {
+                this.log('warn/wikidata_description', {
+                    msg: 'Could not extract items',
+                    event: context.message
+                });
+            }
         })
         .thenReturn({ status: 200 });
     }
