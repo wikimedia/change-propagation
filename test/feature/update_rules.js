@@ -439,7 +439,7 @@ describe('RESTBase update rules', function() {
             }
         });
 
-        const mwAPI = nock('https://en.wikipedia.org', {
+        const restbase = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
@@ -451,28 +451,24 @@ describe('RESTBase update rules', function() {
         .query({ redirect: false })
         .reply(200, { });
 
-        return producer.sendAsync([{
+        return producer.produceAsync({
             topic: 'test_dc.mediawiki.revision_create',
-            messages: [
-                JSON.stringify({
-                    meta: {
-                        topic: 'mediawiki.revision_create',
-                        schema_uri: 'revision_create/1',
-                        uri: '/rev/uri',
-                        request_id: common.SAMPLE_REQUEST_ID,
-                        id: uuid.now(),
-                        dt: new Date().toISOString(),
-                        domain: 'www.wikidata.org'
-                    },
-                    page_title: 'Q1'
-                })
-            ]
-        }])
-        .delay(common.REQUEST_CHECK_DELAY)
-        .then(() => {
-            wikidataAPI.done();
-            mwAPI.done();
+            message: JSON.stringify({
+                meta: {
+                    topic: 'mediawiki.revision_create',
+                    schema_uri: 'revision_create/1',
+                    uri: '/rev/uri',
+                    request_id: common.SAMPLE_REQUEST_ID,
+                    id: uuid.now(),
+                    dt: new Date().toISOString(),
+                    domain: 'www.wikidata.org'
+                },
+                page_title: 'Q1'
+            })
         })
+        .delay(common.REQUEST_CHECK_DELAY)
+        .then(() => common.checkAPIDone(wikidataAPI))
+        .then(() => common.checkAPIDone(restbase))
         .finally(() => nock.cleanAll());
     });
 

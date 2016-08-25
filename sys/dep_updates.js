@@ -246,7 +246,7 @@ class DependencyProcessor {
             body: items.map((item) => {
                 // TODO: need to check whether a wiki is http or https!
                 const resourceURI =
-                    `https://${originalEvent.meta.domain}/wiki/${encodeURIComponent(item.title)}`;
+                    `https://${item.domain}/wiki/${encodeURIComponent(item.title)}`;
                 return {
                     meta: {
                         topic: 'resource_change',
