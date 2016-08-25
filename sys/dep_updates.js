@@ -156,7 +156,7 @@ class DependencyProcessor {
     _fetchAndProcessBatch(hyper, requestTemplate, context, siteInfo, originalEvent) {
         return hyper.post(requestTemplate.template.expand(context))
         .then((res) => {
-            const titles = requestTemplate.extractResults(res).map((item) => {
+            const titles = (requestTemplate.extractResults(res) || []).map((item) => {
                 return {
                     title: Title.newFromText(item.title, siteInfo).getPrefixedDBKey()
                 };
