@@ -21,7 +21,7 @@ class Kafka {
         this.options = options;
         this.log = options.log || function() { };
         this.kafkaFactory = new KafkaFactory(options);
-        this.staticRules = options.templates || {};
+        this.staticRules = this._loadRules();
         this.ruleExecutors = {};
     }
 
@@ -48,6 +48,25 @@ class Kafka {
                     this.ruleExecutors[`${rule.name}_retry`].subscribe());
         })
         .thenReturn({ status: 201 });
+    }
+
+    _loadRules() {
+        if (this.options.rules) {
+            return this.options.rules
+            .map((path) => HyperSwitch.utils.loadSpec(`${__dirname}/../${path}`))
+            .reduce((rules, result) => {
+                const duplicates = Object.keys(result).filter((rule_name) =>
+                Object.keys(rules).indexOf(rule_name) !== -1);
+                if (duplicates.length) {
+                    throw new Error(`Duplicated rules: ${duplicates}`);
+                }
+                return Object.assign(result, rules);
+            }, {});
+        } else if (this.options.templates) {
+            return this.options.templates;
+        } else {
+            throw new Error('Rules must be specified for the kafka module');
+        }
     }
 
     subscribe(hyper, req) {

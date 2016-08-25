@@ -1,0 +1,128 @@
+# RESTBase update jobs
+mw_purge:
+  topic: resource_change
+  match:
+    meta:
+      uri: '/^https?:\/\/[^\/]+\/wiki\/(?<title>.+)$/'
+    tags:
+      - purge
+  exec:
+    method: get
+    uri: '{{hosts.restbase}}/page/html/{{match.meta.uri.title}}'
+    headers:
+      cache-control: no-cache
+      if-unmodified-since: '{{date(message.meta.dt)}}'
+    query:
+      redirect: false
+
+null_edit:
+  topic: resource_change
+  ignore:
+    status:
+      - 403 # Ignoring 403 since some of the pages with high number of null_edit events are blacklisted
+      - 412
+  match:
+    meta:
+      uri: '/^https?:\/\/[^\/]+\/wiki\/(?<title>.+)$/'
+    tags:
+      - null_edit
+  exec:
+    method: get
+    uri: '{{hosts.restbase}}/page/html/{{match.meta.uri.title}}'
+    headers:
+      cache-control: no-cache
+      if-unmodified-since: '{{date(message.meta.dt)}}'
+    query:
+      redirect: false
+
+page_edit:
+  topic: mediawiki.revision_create
+  retry_on:
+    status:
+      - '5xx'
+      - 404 # Sometimes occasional 404s happen because of the mysql replication lag, so retry
+  exec:
+    method: get
+    uri: '{{hosts.restbase}}/page/html/{message.page_title}/{{message.rev_id}}'
+    headers:
+      cache-control: no-cache
+      x-restbase-parentrevision: '{{message.rev_parent_id}}'
+      if-unmodified-since: '{{date(message.meta.dt)}}'
+    query:
+      redirect: false
+
+revision_visibility_change:
+  topic: mediawiki.revision_visibility_set
+  ignore:
+    status:
+      - 403 # When the revision is hidden 403 will be returned by RESTBase, it's a valid situation
+      - 412
+  exec:
+    method: get
+    uri: '{{hosts.restbase}}/page/revision/{{message.revision_id}}'
+    headers:
+      cache-control: no-cache
+    query:
+      redirect: false
+
+page_delete:
+  topic: mediawiki.page_delete
+  ignore:
+    status:
+      - 404 # 404 is a normal response for page deletion
+      - 412
+  exec:
+    method: get
+    uri: '{{hosts.restbase}}/page/title/{message.title}'
+    headers:
+      cache-control: no-cache
+    query:
+      redirect: false
+
+page_restore:
+  topic: mediawiki.page_restore
+  exec:
+    method: get
+    uri: '{{hosts.restbase}}/page/html/{message.title}'
+    headers:
+      cache-control: no-cache
+    query:
+      redirect: false
+
+page_move:
+  topic: mediawiki.page_move
+  exec:
+    - method: get
+      uri: '{{hosts.restbase}}/page/html/{message.new_title}/{{message.new_revision_id}}'
+      headers:
+        cache-control: no-cache
+        if-unmodified-since: '{{date(message.meta.dt)}}'
+      query:
+        redirect: false
+    - method: get
+      uri: '{{hosts.restbase}}/page/title/{message.old_title}'
+      headers:
+        cache-control: no-cache
+      query:
+        redirect: false
+
+transclusion_update:
+  topic: mediawiki.revision_create
+  exec:
+    method: 'post'
+    uri: '/sys/links/transcludes/{{message.page_title}}'
+    body: '{{globals.message}}'
+
+transclusion_updates:
+  topic: resource_change
+  match:
+    meta:
+      uri: '/https:\/\/[^\/]+\/wiki\/(?<title>.+)/'
+    tags: [ 'change-prop', 'transcludes' ]
+  exec:
+    method: get
+    uri: '{{hosts.restbase}}/page/html/{{match.meta.uri.title}}'
+    headers:
+      cache-control: no-cache
+    query:
+      redirect: false
