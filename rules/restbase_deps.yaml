@@ -1,0 +1,79 @@
+summary_rerender:
+  topic: resource_change
+  retry_limit: 2
+  retry_delay: 500
+  retry_on:
+    status:
+      - '5xx'
+  match:
+    meta:
+      uri: '/^https?:\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>[^/]+)$/'
+    tags:
+      - restbase
+  match_not:
+    meta:
+      domain: '/wiktionary.org$/'
+  exec:
+    method: get
+    # Don't encode title since it should be already encoded
+    uri: '{{hosts.restbase}}/page/summary/{{match.meta.uri.title}}'
+    query:
+      redirect: false
+    headers:
+      cache-control: no-cache
+
+definition_rerender:
+  topic: resource_change
+  retry_limit: 2
+  retry_delay: 500
+  retry_on:
+    status:
+      - '5xx'
+  match:
+    meta:
+      # These URIs are coming from RESTBase, so we know that article titles will be normalized
+      # and main namespace articles will not have : (uri-encoded, so %3a or %3A)
+      uri: '/^https?:\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>(?:(?!%3a|%3A|\/).)+)$/'
+      domain: '/^en.wiktionary.org$/'
+    tags:
+      - restbase
+  exec:
+    method: get
+    # Don't encode title since it should be already encoded
+    uri: '{{hosts.restbase}}/page/definition/{{match.meta.uri.title}}'
+    query:
+      redirect: false
+    headers:
+      cache-control: no-cache
+
+mobile_rerender:
+  topic: resource_change
+  retry_limit: 2
+  retry_delay: 500
+  retry_on:
+    status:
+      - '5xx'
+  match:
+    meta:
+      uri: '/^https?:\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>[^/]+)$/'
+  exec:
+    method: get
+    uri: '{{hosts.restbase}}/page/mobile-sections/{{match.meta.uri.title}}'
+    query:
+      redirect: false
+    headers:
+      cache-control: no-cache
+
+purge_varnish:
+  topic: resource_change
+  match:
+    meta:
+      uri: '/^https?:\/\/[^\/]+\/api\/rest_v1\/(?<title>.+)$/'
+    tags:
+      - restbase
+  exec:
+    method: post
+    uri: '/sys/purge/'
+    body:
+      - meta:
+          uri: '//{{message.meta.domain}}/api/rest_v1/{{match.meta.uri.title}}'
