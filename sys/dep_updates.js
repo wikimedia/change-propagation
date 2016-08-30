@@ -88,7 +88,7 @@ function createWikidataTemplate(options) {
             }
         })),
         resourceChangeTag: 'wikidata',
-        shouldProcess: (res) => { return res && res.body && !res.body.success; },
+        shouldProcess: (res) => { return res && res.body && !!res.body.success; },
         extractResults: (res) => {
             const siteLinks = res.body.entities[Object.keys(res.body.entities)[0]].sitelinks;
             return Object.keys(siteLinks).map((siteId) => {

@@ -424,6 +424,7 @@ describe('RESTBase update rules', function() {
             normalize: 'true'
         })
         .reply(200, {
+            "success": 1,
             "entities": {
                 "Q1": {
                     "type": "item",
