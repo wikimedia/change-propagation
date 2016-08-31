@@ -109,7 +109,7 @@ function createWikidataTemplate(options) {
                 const match = /^https?:\/\/([^\/]+)\/wiki\/(.+)$/.exec(pageURI);
                 return {
                     domain: match[1],
-                    title: match[2]
+                    title: decodeURIComponent(match[2])
                 };
             });
         }

@@ -431,25 +431,25 @@ describe('RESTBase update rules', function() {
                     "id": "Q1",
                     "sitelinks": {
                         "enwiki": {
-                            "site": "enwiki",
-                            "title": "Main Page",
+                            "site": "ruwiki",
+                            "title": "Пётр",
                             "badges": [],
-                            "url": "https://en.wikipedia.org/wiki/Main_Page"
+                            "url": "https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80"
                         }
                     }
                 }
             }
         });
 
-        const restbase = nock('https://en.wikipedia.org', {
+        const restbase = nock('https://ru.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
                 'user-agent': 'SampleChangePropInstance',
-                'x-triggered-by': 'mediawiki.revision_create:/rev/uri,resource_change:https://en.wikipedia.org/wiki/Main_Page'
+                'x-triggered-by': 'mediawiki.revision_create:/rev/uri,resource_change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80'
             }
         })
-        .get('/api/rest_v1/page/summary/Main_Page')
+        .get('/api/rest_v1/page/summary/%D0%9F%D1%91%D1%82%D1%80')
         .query({ redirect: false })
         .reply(200, { });
 
