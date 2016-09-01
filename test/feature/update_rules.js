@@ -209,11 +209,11 @@ describe('RESTBase update rules', function() {
         .finally(() => nock.cleanAll());
     });
 
-    it('Should update RESTBase on revision_create', () => {
+    it('Should update RESTBase on revision create', () => {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': 'mediawiki.revision_create:/edit/uri',
+                'x-triggered-by': 'mediawiki.revision-create:/edit/uri',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
                 'x-restbase-parentrevision': '1233',
                 'if-unmodified-since': 'Thu, 01 Jan 1970 00:00:01 +0000',
@@ -225,11 +225,11 @@ describe('RESTBase update rules', function() {
         .reply(200, { });
 
         return producer.produceAsync({
-            topic: 'test_dc.mediawiki.revision_create',
+            topic: 'test_dc.mediawiki.revision-create',
             message: JSON.stringify({
                 meta: {
-                    topic: 'mediawiki.revision_create',
-                    schema_uri: 'revision_create/1',
+                    topic: 'mediawiki.revision-create',
+                    schema_uri: 'revision-create/1',
                     uri: '/edit/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
                     id: uuid.now(),
@@ -250,7 +250,7 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': 'mediawiki.page_delete:/delete/uri',
+                'x-triggered-by': 'mediawiki.page-delete:/delete/uri',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
                 'user-agent': 'SampleChangePropInstance'
             }
@@ -260,10 +260,10 @@ describe('RESTBase update rules', function() {
         .reply(200, { });
 
         return producer.produceAsync({
-            topic: 'test_dc.mediawiki.page_delete',
+            topic: 'test_dc.mediawiki.page-delete',
             message: JSON.stringify({
                 meta: {
-                    topic: 'mediawiki.page_delete',
+                    topic: 'mediawiki.page-delete',
                     schema_uri: 'page_delete/1',
                     uri: '/delete/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
@@ -271,18 +271,18 @@ describe('RESTBase update rules', function() {
                     dt: new Date().toISOString(),
                     domain: 'en.wikipedia.org'
                 },
-                title: 'User:Pchelolo/Test'
+                page_title: 'User:Pchelolo/Test'
             })
         })
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
     });
 
-    it('Should update RESTBase on page_restore', () => {
+    it('Should update RESTBase on page undelete', () => {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': 'mediawiki.page_restore:/restore/uri',
+                'x-triggered-by': 'mediawiki.page-undelete:/restore/uri',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
                 'user-agent': 'SampleChangePropInstance'
             }
@@ -292,10 +292,10 @@ describe('RESTBase update rules', function() {
         .reply(200, { });
 
         return producer.produceAsync({
-            topic: 'test_dc.mediawiki.page_restore',
+            topic: 'test_dc.mediawiki.page-undelete',
             message: JSON.stringify({
                 meta: {
-                    topic: 'mediawiki.page_restore',
+                    topic: 'mediawiki.page-undelete',
                     schema_uri: 'page_restore/1',
                     uri: '/restore/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
@@ -303,7 +303,7 @@ describe('RESTBase update rules', function() {
                     dt: new Date().toISOString(),
                     domain: 'en.wikipedia.org'
                 },
-                title: 'User:Pchelolo/Test'
+                page_title: 'User:Pchelolo/Test'
             })
         })
         .then(() => common.checkAPIDone(mwAPI))
@@ -315,7 +315,7 @@ describe('RESTBase update rules', function() {
             reqheaders: {
                 'cache-control': 'no-cache',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
-                'x-triggered-by': 'mediawiki.page_move:/move/uri',
+                'x-triggered-by': 'mediawiki.page-move:/move/uri',
                 'user-agent': 'SampleChangePropInstance'
             }
         })
@@ -328,10 +328,10 @@ describe('RESTBase update rules', function() {
         .reply(200, { });
 
         return producer.produceAsync({
-            topic: 'test_dc.mediawiki.page_move',
+            topic: 'test_dc.mediawiki.page-move',
             message: JSON.stringify({
                 meta: {
-                    topic: 'mediawiki.page_move',
+                    topic: 'mediawiki.page-move',
                     schema_uri: 'page_move/1',
                     uri: '/move/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
@@ -339,10 +339,11 @@ describe('RESTBase update rules', function() {
                     dt: new Date(1000).toISOString(),
                     domain: 'en.wikipedia.org'
                 },
-                old_title: 'User:Pchelolo/Test',
-                new_title: 'User:Pchelolo/Test1',
-                old_revision_id: 1,
-                new_revision_id: 2
+                page_title: 'User:Pchelolo/Test1',
+                rev_id: 2,
+                prior_state: {
+                    page_title: 'User:Pchelolo/Test'
+                }
             })
         })
         .then(() => common.checkAPIDone(mwAPI))
@@ -353,7 +354,7 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': 'mediawiki.revision_visibility_set:/rev/uri',
+                'x-triggered-by': 'mediawiki.revision-visibility-set:/rev/uri',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
                 'user-agent': 'SampleChangePropInstance'
             }
@@ -363,10 +364,10 @@ describe('RESTBase update rules', function() {
         .reply(200, { });
 
         return producer.produceAsync({
-            topic: 'test_dc.mediawiki.revision_visibility_set',
+            topic: 'test_dc.mediawiki.revision-visibility-set',
             message: JSON.stringify({
                 meta: {
-                    topic: 'mediawiki.revision_visibility_set',
+                    topic: 'mediawiki.revision-visibility-set',
                     schema_uri: 'revision_visibility_set/1',
                     uri: '/rev/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
@@ -374,14 +375,14 @@ describe('RESTBase update rules', function() {
                     dt: new Date().toISOString(),
                     domain: 'en.wikipedia.org'
                 },
-                revision_id: 1234
+                rev_id: 1234
             })
         })
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
     });
 
-    it('Should update ORES on revision_create', () => {
+    it('Should update ORES on revision-create', () => {
         const oresService = nock('https://ores.wikimedia.org')
         .get('/v2/scores/enwiki/')
         .query({
@@ -391,11 +392,11 @@ describe('RESTBase update rules', function() {
         .reply(200, { });
 
         return producer.produceAsync({
-            topic: 'test_dc.mediawiki.revision_create',
+            topic: 'test_dc.mediawiki.revision-create',
             message: JSON.stringify({
                 meta: {
-                    topic: 'mediawiki.revision_create',
-                    schema_uri: 'revision_create/1',
+                    topic: 'mediawiki.revision-create',
+                    schema_uri: 'revision-create/1',
                     uri: '/edit/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
                     id: uuid.now(),
@@ -446,7 +447,7 @@ describe('RESTBase update rules', function() {
                 'cache-control': 'no-cache',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
                 'user-agent': 'SampleChangePropInstance',
-                'x-triggered-by': 'mediawiki.revision_create:/rev/uri,resource_change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80'
+                'x-triggered-by': 'mediawiki.revision-create:/rev/uri,resource_change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80'
             }
         })
         .get('/api/rest_v1/page/summary/%D0%9F%D1%91%D1%82%D1%80')
@@ -457,18 +458,19 @@ describe('RESTBase update rules', function() {
         .reply(200, { });
 
         return producer.produceAsync({
-            topic: 'test_dc.mediawiki.revision_create',
+            topic: 'test_dc.mediawiki.revision-create',
             message: JSON.stringify({
                 meta: {
-                    topic: 'mediawiki.revision_create',
-                    schema_uri: 'revision_create/1',
+                    topic: 'mediawiki.revision-create',
+                    schema_uri: 'revision-create/1',
                     uri: '/rev/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
                     id: uuid.now(),
                     dt: new Date().toISOString(),
                     domain: 'www.wikidata.org'
                 },
-                page_title: 'Q1'
+                page_title: 'Q1',
+                page_namespace: 0
             })
         })
         .delay(common.REQUEST_CHECK_DELAY)
@@ -477,7 +479,7 @@ describe('RESTBase update rules', function() {
         .finally(() => nock.cleanAll());
     });
 
-    it('Should not ask Wikidata for info for non-mainspace titles', () => {
+    it('Should not ask Wikidata for info for non-main namespace titles', () => {
         const wikidataAPI = nock('https://www.wikidata.org')
         .post('/w/api.php', {
             format: 'json',
@@ -502,18 +504,19 @@ describe('RESTBase update rules', function() {
         });
 
         return producer.produceAsync({
-            topic: 'test_dc.mediawiki.revision_create',
+            topic: 'test_dc.mediawiki.revision-create',
             message: JSON.stringify({
                 meta: {
-                    topic: 'mediawiki.revision_create',
-                    schema_uri: 'revision_create/1',
+                    topic: 'mediawiki.revision-create',
+                    schema_uri: 'revision-create/1',
                     uri: '/rev/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
                     id: uuid.now(),
                     dt: new Date().toISOString(),
                     domain: 'www.wikidata.org'
                 },
-                page_title: 'Property:P1'
+                page_title: 'Property:P1',
+                page_namespace: 3
             })
         })
         .delay(common.REQUEST_CHECK_DELAY)
@@ -542,18 +545,19 @@ describe('RESTBase update rules', function() {
         });
 
         return producer.produceAsync({
-            topic: 'test_dc.mediawiki.revision_create',
+            topic: 'test_dc.mediawiki.revision-create',
             message: JSON.stringify({
                 meta: {
-                    topic: 'mediawiki.revision_create',
-                    schema_uri: 'revision_create/1',
+                    topic: 'mediawiki.revision-create',
+                    schema_uri: 'revision-create/1',
                     uri: '/rev/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
                     id: uuid.now(),
                     dt: new Date().toISOString(),
                     domain: 'www.wikidata.org'
                 },
-                page_title: 'Q2'
+                page_title: 'Q2',
+                page_namespace: 0
             })
         })
         .delay(common.REQUEST_CHECK_DELAY)
@@ -583,7 +587,7 @@ describe('RESTBase update rules', function() {
         })
         .get('/api/rest_v1/page/html/File_Transcluded_Page')
         .query({redirect: false})
-        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/File_Transcluded_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/File_Transcluded_Page')
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
         .times(2)
         .reply(200)
@@ -604,15 +608,15 @@ describe('RESTBase update rules', function() {
         })
         .get('/api/rest_v1/page/html/File_Transcluded_Page')
         .query({redirect: false})
-        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/File_Transcluded_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/File_Transcluded_Page')
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
         .reply(200);
-        
+
         return producer.produceAsync({
-            topic: 'test_dc.mediawiki.revision_create',
+            topic: 'test_dc.mediawiki.revision-create',
             message: JSON.stringify({
                 meta: {
-                    topic: 'mediawiki.revision_create',
+                    topic: 'mediawiki.revision-create',
                     schema_uri: 'schema/1',
                     uri: '/sample/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
@@ -774,7 +778,7 @@ describe('RESTBase update rules', function() {
             }
         })
         .get('/api/rest_v1/page/html/Some_Page')
-        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Some_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Some_Page')
         .times(2)
         .reply(200)
         .post('/w/api.php', {
@@ -794,11 +798,11 @@ describe('RESTBase update rules', function() {
             }
         })
         .get('/api/rest_v1/page/html/Some_Page')
-        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Some_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Some_Page')
         .reply(200);
 
         return producer.produceAsync({
-            topic: 'test_dc.mediawiki.revision_create',
+            topic: 'test_dc.mediawiki.revision-create',
             message: JSON.stringify(common.eventWithProperties('mediawiki.revision_create', {
                 page_title: 'User:Pchelolo/Test'
             }))

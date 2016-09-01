@@ -163,7 +163,7 @@ spec: &spec
                     redirect: false
 
               page_edit:
-                topic: mediawiki.revision_create
+                topic: mediawiki.revision-create
                 retry_on:
                   status:
                     - '5xx'
@@ -179,62 +179,62 @@ spec: &spec
                     redirect: false
 
               revision_visibility_change:
-                topic: mediawiki.revision_visibility_set
+                topic: mediawiki.revision-visibility-set
                 ignore:
                   status:
                     - 403 # When the revision is hidden 403 will be returned by RESTBase, it's a valid situation
                     - 412
                 exec:
                   method: get
-                  uri: 'https://{{message.meta.domain}}/api/rest_v1/page/revision/{{message.revision_id}}'
+                  uri: 'https://{{message.meta.domain}}/api/rest_v1/page/revision/{{message.rev_id}}'
                   headers:
                     cache-control: no-cache
                   query:
                     redirect: false
 
               page_delete:
-                topic: mediawiki.page_delete
+                topic: mediawiki.page-delete
                 ignore:
                   status:
                     - 404 # 404 is a normal response for page deletion
                     - 412
                 exec:
                   method: get
-                  uri: 'https://{{message.meta.domain}}/api/rest_v1/page/title/{message.title}'
+                  uri: 'https://{{message.meta.domain}}/api/rest_v1/page/title/{message.page_title}'
                   headers:
                     cache-control: no-cache
                   query:
                     redirect: false
 
               page_restore:
-                topic: mediawiki.page_restore
+                topic: mediawiki.page-undelete
                 exec:
                   method: get
-                  uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{message.title}'
+                  uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{message.page_title}'
                   headers:
                     cache-control: no-cache
                   query:
                     redirect: false
 
               page_move:
-                topic: mediawiki.page_move
+                topic: mediawiki.page-move
                 exec:
                   - method: get
-                    uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{message.new_title}/{{message.new_revision_id}}'
+                    uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{message.page_title}/{{message.rev_id}}'
                     headers:
                       cache-control: no-cache
                       if-unmodified-since: '{{date(message.meta.dt)}}'
                     query:
                       redirect: false
                   - method: get
-                    uri: 'https://{{message.meta.domain}}/api/rest_v1/page/title/{message.old_title}'
+                    uri: 'https://{{message.meta.domain}}/api/rest_v1/page/title/{message.prior_state.page_title}'
                     headers:
                       cache-control: no-cache
                     query:
                       redirect: false
 
               transclusion_update:
-                topic: mediawiki.revision_create
+                topic: mediawiki.revision-create
                 # Test-only. We use undefined rev_parent_id to test backlinks so we
                 # don't want transclusions to interfere with backlinks test
                 match_not:
@@ -262,7 +262,7 @@ spec: &spec
 
               # ORES caching updates
               ores_cache:
-                topic: mediawiki.revision_create
+                topic: mediawiki.revision-create
                 concurrency: 10
                 ignore:
                   status:
@@ -472,7 +472,7 @@ spec: &spec
 
               # This is not yet used in production
               process_redlinks:
-                topic: mediawiki.revision_create
+                topic: mediawiki.revision-create
                 retry_limit: 0
                 match:
                   rev_parent_id: undefined
@@ -494,12 +494,11 @@ spec: &spec
                     cache-control: no-cache
 
               wikidata_description:
-                topic: mediawiki.revision_create
+                topic: mediawiki.revision-create
                 match:
                   meta:
                     domain: www.wikidata.org
-                match_not:
-                  page_title: /:/
+                  page_namespace: 0
                 exec:
                   method: 'post'
                   uri: '/sys/links/wikidata_descriptions'
