@@ -413,7 +413,7 @@ describe('RESTBase update rules', function() {
         .finally(() => nock.cleanAll());
     });
 
-    it('Should update RESTBase summary on wikidata description change', () => {
+    it('Should update RESTBase summary and mobile-sections on wikidata description change', () => {
         const wikidataAPI = nock('https://www.wikidata.org')
         .post('/w/api.php', {
             format: 'json',
@@ -450,6 +450,9 @@ describe('RESTBase update rules', function() {
             }
         })
         .get('/api/rest_v1/page/summary/%D0%9F%D1%91%D1%82%D1%80')
+        .query({ redirect: false })
+        .reply(200, { })
+        .get('/api/rest_v1/page/mobile-sections/%D0%9F%D1%91%D1%82%D1%80')
         .query({ redirect: false })
         .reply(200, { });
 
