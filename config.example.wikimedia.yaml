@@ -271,7 +271,8 @@ spec: &spec
                   - match:
                       meta:
                         domain: ar.wikipedia.org
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/arwiki/'
                       query:
@@ -281,7 +282,8 @@ spec: &spec
                   - match:
                       meta:
                         domain: cs.wikipedia.org
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/cswiki/'
                       query:
@@ -291,7 +293,8 @@ spec: &spec
                   - match:
                       meta:
                         domain: en.wikipedia.org
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/enwiki/'
                       query:
@@ -301,7 +304,8 @@ spec: &spec
                   - match:
                       meta:
                         domain: en.wiktionary.org
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/enwiktionary/'
                       query:
@@ -311,7 +315,8 @@ spec: &spec
                   - match:
                       meta:
                         domain: es.wikipedia.org
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/eswiki/'
                       query:
@@ -321,7 +326,8 @@ spec: &spec
                   - match:
                       meta:
                         domain: et.wikipedia.org
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/etwiki/'
                       query:
@@ -331,7 +337,8 @@ spec: &spec
                   - match:
                       meta:
                         domain: fa.wikipedia.org
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/fawiki/'
                       query:
@@ -341,7 +348,8 @@ spec: &spec
                   - match:
                       meta:
                         domain: fr.wikipedia.org
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/frwiki/'
                       query:
@@ -351,7 +359,8 @@ spec: &spec
                   - match:
                       meta:
                         domain: he.wikipedia.org
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/hewiki/'
                       query:
@@ -361,7 +370,8 @@ spec: &spec
                   - match:
                       meta:
                         domain: hu.wikipedia.org
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/huwiki/'
                       query:
@@ -371,7 +381,8 @@ spec: &spec
                   - match:
                       meta:
                         domain: id.wikipedia.org
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/idwiki/'
                       query:
@@ -381,7 +392,8 @@ spec: &spec
                   - match:
                       meta:
                         domain: it.wikipedia.org
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/itwiki/'
                       query:
@@ -391,7 +403,8 @@ spec: &spec
                   - match:
                       meta:
                         domain: nl.wikipedia.org
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/nlwiki/'
                       query:
@@ -401,7 +414,8 @@ spec: &spec
                   - match:
                       meta:
                         domain: pl.wikipedia.org
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/plwiki/'
                       query:
@@ -411,7 +425,8 @@ spec: &spec
                   - match:
                       meta:
                         domain: pt.wikipedia.org
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/ptwiki/'
                       query:
@@ -421,7 +436,8 @@ spec: &spec
                   - match:
                       meta:
                         domain: ru.wikipedia.org
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/ruwiki/'
                       query:
@@ -431,7 +447,8 @@ spec: &spec
                   - match:
                       meta:
                         domain: tr.wikipedia.org
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/trwiki/'
                       query:
@@ -441,7 +458,8 @@ spec: &spec
                   - match:
                       meta:
                         domain: uk.wikipedia.org
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/ukwiki/'
                       query:
@@ -451,7 +469,8 @@ spec: &spec
                   - match:
                       meta:
                         domain: vi.wikipedia.org
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/viwiki/'
                       query:
@@ -462,7 +481,8 @@ spec: &spec
                       meta:
                         domain: wikidata.org
                       page_namespace: 0
-                      rev_by_bot: false
+                      performer:
+                        user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/wikidatawiki/'
                       query:

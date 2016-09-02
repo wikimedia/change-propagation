@@ -407,7 +407,9 @@ describe('RESTBase update rules', function() {
                 rev_id: 1234,
                 rev_timestamp: new Date().toISOString(),
                 rev_parent_id: 1233,
-                rev_by_bot: false
+                performer: {
+                    user_is_bot: false
+                }
             })
         })
         .then(() => common.checkAPIDone(oresService))
