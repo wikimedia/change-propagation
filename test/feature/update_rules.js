@@ -671,14 +671,11 @@ describe('RESTBase update rules', function() {
         .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Transcluded_Here')
         .reply(200);
 
-        return producer.sendAsync([{
+        return producer.produceAsync({
             topic: 'test_dc.mediawiki.revision_create',
-            messages: [
-                JSON.stringify(common.eventWithProperties('mediawiki.revision_create', { page_title: 'Test_Page' }))
-            ]
-        }])
-        .delay(common.REQUEST_CHECK_DELAY)
-        .then(() => mwAPI.done())
+            message: JSON.stringify(common.eventWithProperties('mediawiki.revision_create', { page_title: 'Test_Page' }))
+        })
+        .then(() => common.checkAPIDone(mwAPI, 50))
         .finally(() => nock.cleanAll());
     });
 
