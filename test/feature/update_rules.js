@@ -10,14 +10,14 @@ const assert = require('assert');
 process.env.UV_THREADPOOL_SIZE = 128;
 
 describe('RESTBase update rules', function() {
-    this.timeout(15000);
+    this.timeout(30000);
 
     const changeProp = new ChangeProp('config.example.wikimedia.yaml');
     let producer;
 
     before(function() {
         // Setting up might take some tome, so disable the timeout
-        this.timeout(20000);
+        this.timeout(50000);
         return changeProp.start()
         .then(() =>  common.factory.createProducer())
         .then((result) => producer = result);
@@ -567,7 +567,7 @@ describe('RESTBase update rules', function() {
             format: 'json',
             action: 'query',
             list: 'imageusage',
-            iutitle: 'File:Test.jpg',
+            iutitle: 'File:Pchelolo/Test.jpg',
             iulimit: '500',
             formatversion: '2'
         })
@@ -578,19 +578,19 @@ describe('RESTBase update rules', function() {
                 continue: '-||'
             },
             query: {
-                imageusage: common.arrayWithLinks('Some_Page', 2)
+                imageusage: common.arrayWithLinks('File_Transcluded_Page', 2)
             }
         })
-        .get('/api/rest_v1/page/html/Some_Page')
+        .get('/api/rest_v1/page/html/File_Transcluded_Page')
         .query({redirect: false})
-        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Some_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/File_Transcluded_Page')
         .times(2)
         .reply(200)
         .post('/w/api.php', {
             format: 'json',
             action: 'query',
             list: 'imageusage',
-            iutitle: 'File:Test.jpg',
+            iutitle: 'File:Pchelolo/Test.jpg',
             iulimit: '500',
             iucontinue: '1|2272',
             formatversion: '2'
@@ -598,19 +598,19 @@ describe('RESTBase update rules', function() {
         .reply(200, {
             batchcomplete: '',
             query: {
-                imageusage: common.arrayWithLinks('Some_Page', 1)
+                imageusage: common.arrayWithLinks('File_Transcluded_Page', 1)
             }
         })
-        .get('/api/rest_v1/page/html/Some_Page')
+        .get('/api/rest_v1/page/html/File_Transcluded_Page')
         .query({redirect: false})
-        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Some_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/File_Transcluded_Page')
         .reply(200);
 
         return producer.produceAsync({
             topic: 'test_dc.mediawiki.revision_create',
-            message: JSON.stringify(common.eventWithProperties('mediawiki.revision_create', { page_title: 'File:Test.jpg' }))
+            message: JSON.stringify(common.eventWithProperties('mediawiki.revision_create', { page_title: 'File:Pchelolo/Test.jpg' }))
         })
-        .then(() => common.checkAPIDone(mwAPI))
+        .then(() => common.checkAPIDone(mwAPI, 50))
         .finally(() => nock.cleanAll());
     });
 
@@ -665,7 +665,7 @@ describe('RESTBase update rules', function() {
             format: 'json',
             action: 'query',
             list: 'backlinks',
-            bltitle: 'Main_Page',
+            bltitle: 'User:Pchelolo/Test',
             blfilterredir: 'nonredirects',
             bllimit: '500',
             formatversion: '2'
@@ -688,7 +688,7 @@ describe('RESTBase update rules', function() {
             format: 'json',
             action: 'query',
             list: 'backlinks',
-            bltitle: 'Main_Page',
+            bltitle: 'User:Pchelolo/Test',
             blfilterredir: 'nonredirects',
             bllimit: '500',
             blcontinue: '1|2272',
@@ -706,9 +706,9 @@ describe('RESTBase update rules', function() {
 
         return producer.produceAsync({
             topic: 'test_dc.mediawiki.revision_create',
-            message: JSON.stringify(common.eventWithProperties('mediawiki.revision_create', {title: 'Main_Page'}))
+            message: JSON.stringify(common.eventWithProperties('mediawiki.revision_create', {page_title: 'User:Pchelolo/Test'}))
         })
-        .then(() => common.checkAPIDone(mwAPI))
+        .then(() => common.checkAPIDone(mwAPI, 50))
         .finally(() => nock.cleanAll());
     });
 

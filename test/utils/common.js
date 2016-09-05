@@ -81,12 +81,13 @@ common.EN_SITE_INFO_RESPONSE = {
     }
 };
 
-common.checkAPIDone = (api) => {
+common.checkAPIDone = (api, maxAttempts) => {
+    maxAttempts = maxAttempts || 20;
     let attempts = 0;
     const check = () => {
         if (api.isDone()) {
             return;
-        } else if (attempts++ < 20) {
+        } else if (attempts++ < maxAttempts) {
             return P.delay(500).then(check);
         } else {
             return api.done();

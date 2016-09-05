@@ -145,7 +145,7 @@ class DependencyProcessor {
                     exec: [
                         {
                             method: 'post',
-                            uri: '/sys/links/backlinks/{message.original_event.title}',
+                            uri: '/sys/links/backlinks/{message.original_event.page_title}',
                             body: '{{globals.message}}'
                         }
                     ]

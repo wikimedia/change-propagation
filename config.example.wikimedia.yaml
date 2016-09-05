@@ -235,7 +235,7 @@ spec: &spec
                 topic: mediawiki.revision_create
                 exec:
                   method: 'post'
-                  uri: '/sys/links/transcludes/{{message.page_title}}'
+                  uri: '/sys/links/transcludes/{message.page_title}'
                   body: '{{globals.message}}'
 
               transclusion_updates:
@@ -470,7 +470,7 @@ spec: &spec
                   rev_parent_id: undefined
                 exec:
                   method: post
-                  uri: '/sys/links/backlinks/{message.title}'
+                  uri: '/sys/links/backlinks/{message.page_title}'
                   body: '{{globals.message}}'
 
               rerender_restbase:
