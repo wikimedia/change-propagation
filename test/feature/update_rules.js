@@ -608,7 +608,10 @@ describe('RESTBase update rules', function() {
 
         return producer.produceAsync({
             topic: 'test_dc.mediawiki.revision_create',
-            message: JSON.stringify(common.eventWithProperties('mediawiki.revision_create', { page_title: 'File:Pchelolo/Test.jpg' }))
+            message: JSON.stringify(common.eventWithProperties('mediawiki.revision_create', {
+                page_title: 'File:Pchelolo/Test.jpg',
+                rev_parent_id: 12345 // Needed to avoid backlinks updates firing and interfering
+            }))
         })
         .then(() => common.checkAPIDone(mwAPI, 50))
         .finally(() => nock.cleanAll());
@@ -659,7 +662,7 @@ describe('RESTBase update rules', function() {
         });
     });
 
-    it.skip('Should process backlinks', () => {
+    it('Should process backlinks', () => {
         const mwAPI = nock('https://en.wikipedia.org')
         .post('/w/api.php', {
             format: 'json',
@@ -706,7 +709,9 @@ describe('RESTBase update rules', function() {
 
         return producer.produceAsync({
             topic: 'test_dc.mediawiki.revision_create',
-            message: JSON.stringify(common.eventWithProperties('mediawiki.revision_create', {page_title: 'User:Pchelolo/Test'}))
+            message: JSON.stringify(common.eventWithProperties('mediawiki.revision_create', {
+                page_title: 'User:Pchelolo/Test'
+            }))
         })
         .then(() => common.checkAPIDone(mwAPI, 50))
         .finally(() => nock.cleanAll());
