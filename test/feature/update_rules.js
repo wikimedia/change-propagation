@@ -659,7 +659,7 @@ describe('RESTBase update rules', function() {
         });
     });
 
-    it('Should process backlinks', () => {
+    it.skip('Should process backlinks', () => {
         const mwAPI = nock('https://en.wikipedia.org')
         .post('/w/api.php', {
             format: 'json',
