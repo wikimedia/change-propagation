@@ -302,6 +302,11 @@ class DependencyProcessor {
                     namespaces: res.body.query.namespaces,
                     namespacealiases: res.body.query.namespacealiases
                 };
+            })
+            .catch((e) => {
+                hyper.log('error/site_info', e);
+                delete this.siteInfoCache[domain];
+                throw e;
             });
         }
         return this.siteInfoCache[domain];
