@@ -662,7 +662,7 @@ describe('RESTBase update rules', function() {
         })
         .get('/api/rest_v1/page/html/Transcluded_Here')
         .query({redirect: false})
-        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Transcluded_Here')
+        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Transcluded_Here')
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
         .times(2)
         .reply(200)
@@ -689,15 +689,15 @@ describe('RESTBase update rules', function() {
         })
         .get('/api/rest_v1/page/html/Transcluded_Here')
         .query({redirect: false})
-        .matchHeader('x-triggered-by', 'mediawiki.revision_create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Transcluded_Here')
+        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Transcluded_Here')
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
         .reply(200);
 
         return producer.produceAsync({
-            topic: 'test_dc.mediawiki.revision_create',
+            topic: 'test_dc.mediawiki.revision-create',
             message: JSON.stringify({
                 meta: {
-                    topic: 'mediawiki.revision_create',
+                    topic: 'mediawiki.revision-create',
                     schema_uri: 'schema/1',
                     uri: '/sample/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
@@ -805,7 +805,7 @@ describe('RESTBase update rules', function() {
 
         return producer.produceAsync({
             topic: 'test_dc.mediawiki.revision-create',
-            message: JSON.stringify(common.eventWithProperties('mediawiki.revision_create', {
+            message: JSON.stringify(common.eventWithProperties('mediawiki.revision-create', {
                 page_title: 'User:Pchelolo/Test'
             }))
         })
