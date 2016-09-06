@@ -699,7 +699,8 @@ describe('RESTBase update rules', function() {
                     dt: '1990-02-20T19:31:13+00:00',
                     domain: 'en.wikipedia.org'
                 },
-                page_title: 'Test_Page'
+                page_title: 'Test_Page',
+                rev_parent_id: 12345 // Needed to avoid backlinks updates firing and interfering
             })
         })
         .then(() => common.checkAPIDone(mwAPI, 50))
