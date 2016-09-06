@@ -101,6 +101,8 @@ spec: &spec
                 match:
                   meta:
                     uri: '/^(?<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>[^/]+)$/'
+                  tags:
+                    - restbase
                 exec:
                   method: get
                   uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{{match.meta.uri.title}}'
