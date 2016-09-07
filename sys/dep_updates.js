@@ -8,6 +8,7 @@ const Title = require('mediawiki-title').Title;
 
 const BACKLINKS_CONTINUE_TOPIC_NAME = 'change-prop.backlinks.continue';
 const TRANSCLUDES_CONTINUE_TOPIC_NAME = 'change-prop.transcludes.continue';
+const DEDUPE_LOG_SIZE = 100;
 
 function createBackLinksTemplate(options) {
     return {
@@ -134,6 +135,7 @@ class DependencyProcessor {
                 siprop: 'general|namespaces|namespacealiases'
             }
         }));
+        this.latestMessages = [];
     }
 
     setup(hyper) {
@@ -177,6 +179,43 @@ class DependencyProcessor {
         });
     }
 
+    _isDuplicate(message) {
+        if (!message.continue) {
+            // Not a continuation event, don't deduplicate
+            return false;
+        }
+
+        const currEventInfo = {
+            domain: message.meta.domain,
+            title: message.original_event.page_title,
+            id: message.original_event.meta.id,
+            sequence_num: message.sequence_num
+        };
+
+        // Don't know the seq_num, probably old event, can't deduplicate
+        if (currEventInfo.sequence_num === undefined) {
+            return false;
+        }
+
+        if (this.latestMessages.some((oldEvent) => {
+                return oldEvent.domain === currEventInfo.domain
+                    && oldEvent.title === currEventInfo.title
+                        // This represents forking - we've consumed some continuation twice,
+                        // so we've got exact same event processed recently
+                    && (oldEvent.id === currEventInfo.id && oldEvent.sequence_num === currEventInfo.sequence_num
+                        // This represents deduplication on rapid consequent template changes
+                        || oldEvent.id !== currEventInfo.id && oldEvent.sequence_num <= currEventInfo.sequence_num);
+            })) {
+            return true;
+        }
+
+        this.latestMessages.push(currEventInfo);
+        if (this.latestMessages.length > DEDUPE_LOG_SIZE) {
+            this.latestMessages = this.latestMessages.slice(1);
+        }
+        return false;
+    }
+
     processTranscludes(hyper, req) {
         const message = req.body;
         const context = {
@@ -184,6 +223,12 @@ class DependencyProcessor {
             message: message
         };
         const originalEvent = req.body.original_event || req.body;
+
+        if (this._isDuplicate(message)) {
+            hyper.metrics.increment('transclusions_continue_deduplicate');
+            // Skip if duplication detected
+            return { status: 200 };
+        }
         return this._getSiteInfo(hyper, message)
         .then((siteInfo) => {
             const title = Title.newFromText(req.params.title, siteInfo);
@@ -238,13 +283,14 @@ class DependencyProcessor {
                     this._sendContinueEvent(hyper,
                         requestTemplate.continueTopic,
                         originalEvent,
-                        requestTemplate.getContinueToken(res)));
+                        requestTemplate.getContinueToken(res),
+                        context.message.sequence_num));
             }
             return actions.thenReturn({ status: 200 });
         });
     }
 
-    _sendContinueEvent(hyper, topic, origEvent, continueToken) {
+    _sendContinueEvent(hyper, topic, origEvent, continueToken, sequenceNum) {
         return hyper.post({
             uri: '/sys/queue/events',
             body: [{
@@ -258,7 +304,8 @@ class DependencyProcessor {
                 },
                 triggered_by: utils.triggeredBy(origEvent),
                 original_event: origEvent,
-                continue: continueToken
+                continue: continueToken,
+                sequence_num: (sequenceNum || 0) + 1
             }]
         });
     }
