@@ -79,6 +79,8 @@ class Kafka {
             }
         });
         return P.all(messages.map((message) => {
+            hyper.metrics.increment(`produce_${hyper.metrics.normalizeName(message.meta.topic)}`);
+
             const now = new Date();
             message.meta.id = message.meta.id || uuid.fromDate(now).toString();
             message.meta.dt = message.meta.dt || now.toISOString();
