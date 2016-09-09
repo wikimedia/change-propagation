@@ -34,7 +34,6 @@ ChangeProp.prototype.start = function() {
     }
 
     this.port = this._config.services[0].conf.port;
-    this.hostPort = 'http://localhost:' + this.port;
 
     return this._runner.start(this._config)
     .tap(() => this._running = true)
