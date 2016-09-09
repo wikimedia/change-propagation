@@ -728,7 +728,7 @@ describe('RESTBase update rules', function() {
         });
         udpServer.bind(4321);
 
-        return producer.produceAsync({
+        producer.produceAsync({
             topic: 'test_dc.resource_change',
             message: JSON.stringify({
                 meta: {
@@ -747,8 +747,9 @@ describe('RESTBase update rules', function() {
         .finally(() => {
             if (!closed) {
                 udpServer.close();
-                done(new Error('Timeout!'));
+                throw new Error('Timeout!');
             }
+            done();
         });
     });
 
