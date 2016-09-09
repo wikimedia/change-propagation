@@ -718,13 +718,11 @@ describe('RESTBase update rules', function() {
                         'http://en.wikipedia.beta.wmflabs.org/api/rest_v1/page/html/User%3APchelolo%2FTest/331536')
                     udpServer.close();
                     closed = true;
-                    console.log('DONE 1', msg);
                     done();
                 }
             } catch (e) {
                 udpServer.close();
                 closed = true;
-                console.log('DONE 2', msg);
                 done(e);
             }
         });
@@ -749,10 +747,8 @@ describe('RESTBase update rules', function() {
         .finally(() => {
             if (!closed) {
                 udpServer.close();
-                throw new Error('Timeout!');
+                done(new Error('Timeout!'));
             }
-            console.log('DONE 3');
-            done();
         });
     });
 

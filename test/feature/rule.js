@@ -23,7 +23,7 @@ describe('Rule', function() {
             topic: 'nono',
             exec: {uri: 'a/b/c'}
         });
-        assert.ok(Array.isArray(r.getExec(0)), 'exec is expected to be an array!');
+        assert.ok(Array.isArray(r.getHandler(0).exec), 'exec is expected to be an array!');
     });
 
     it('simple rule - multiple requests', function() {
@@ -34,7 +34,7 @@ describe('Rule', function() {
                 {uri: 'e/f/g/h'}
             ]
         });
-        assert.equal(r.getExec(0).length, 2, 'exec is expected to have 2 elements!');
+        assert.equal(r.getHandler(0).exec.length, 2, 'exec is expected to have 2 elements!');
     });
 
     describe('Matching', function() {
@@ -158,7 +158,7 @@ describe('Rule', function() {
                 exec: {uri: 'a/{match.meta.uri[1]}/c'},
                 match: { meta: { uri: "/\\/fake\\/([^\\/]+)/" }, number: 1 }
             });
-            var exp = r.expand(r.test(msg), msg);
+            var exp = r.getHandler(r.test(msg)).expand(msg);
             assert.deepEqual(exp.meta.uri, /\/fake\/([^\/]+)/.exec(msg.meta.uri));
         });
 
@@ -168,7 +168,7 @@ describe('Rule', function() {
                 exec: {uri: 'a/{match.meta.uri.element}/c'},
                 match: { meta: { uri: "/\\/fake\\/(?<element>[^\\/]+)/" }, number: 1 }
             });
-            var exp = r.expand(r.test(msg), msg);
+            var exp = r.getHandler(r.test(msg)).expand(msg);
             assert.deepEqual(exp.meta.uri, { element: 'uri' });
         });
 
