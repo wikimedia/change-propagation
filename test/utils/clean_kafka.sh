@@ -60,4 +60,6 @@ createTopic "test_dc.mediawiki.page-undelete"
 createTopic "test_dc.change-prop.retry.mediawiki.page-undelete"
 createTopic "test_dc.mediawiki.revision-visibility-set"
 createTopic "test_dc.change-prop.retry.mediawiki.revision-visibility-set"
+createTopic "test_dc.change-prop.transcludes.resource-change"
+createTopic "test_dc.change-prop.retry.change-prop.transcludes.resource-change"
 sleep 5

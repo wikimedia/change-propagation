@@ -246,7 +246,7 @@ spec: &spec
                   body: '{{globals.message}}'
 
               on_transclusion_update:
-                topic: resource_change
+                topic: change-prop.transcludes.resource-change
                 match:
                   meta:
                     uri: '/https:\/\/[^\/]+\/wiki\/(?<title>.+)/'
@@ -502,7 +502,7 @@ spec: &spec
                   body: '{{globals.message}}'
 
               rerender_restbase:
-                topic: resource_change
+                topic: change-prop.transcludes.resource-change
                 match:
                   meta:
                     uri: '/https:\/\/[^\/]+\/wiki\/(?<title>.+)/'
@@ -525,7 +525,7 @@ spec: &spec
                   body: '{{globals.message}}'
 
               on_wikidata_description_change:
-                topic: resource_change
+                topic: change-prop.transcludes.resource-change
                 match:
                   meta:
                     uri: '/https:\/\/[^\/]+\/wiki\/(?<title>.+)/'

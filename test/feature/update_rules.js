@@ -449,7 +449,7 @@ describe('RESTBase update rules', function() {
                 'cache-control': 'no-cache',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
                 'user-agent': 'SampleChangePropInstance',
-                'x-triggered-by': 'mediawiki.revision-create:/rev/uri,resource_change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80'
+                'x-triggered-by': 'mediawiki.revision-create:/rev/uri,change-prop.transcludes.resource-change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80'
             }
         })
         .get('/api/rest_v1/page/summary/%D0%9F%D1%91%D1%82%D1%80')
@@ -589,7 +589,7 @@ describe('RESTBase update rules', function() {
         })
         .get('/api/rest_v1/page/html/File_Transcluded_Page')
         .query({redirect: false})
-        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/File_Transcluded_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/File_Transcluded_Page')
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
         .times(2)
         .reply(200)
@@ -610,7 +610,7 @@ describe('RESTBase update rules', function() {
         })
         .get('/api/rest_v1/page/html/File_Transcluded_Page')
         .query({redirect: false})
-        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/File_Transcluded_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/File_Transcluded_Page')
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
         .reply(200);
 
@@ -662,7 +662,7 @@ describe('RESTBase update rules', function() {
         })
         .get('/api/rest_v1/page/html/Transcluded_Here')
         .query({redirect: false})
-        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Transcluded_Here')
+        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/Transcluded_Here')
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
         .times(2)
         .reply(200)
@@ -689,7 +689,7 @@ describe('RESTBase update rules', function() {
         })
         .get('/api/rest_v1/page/html/Transcluded_Here')
         .query({redirect: false})
-        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Transcluded_Here')
+        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/Transcluded_Here')
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
         .reply(200);
 
@@ -780,7 +780,7 @@ describe('RESTBase update rules', function() {
             }
         })
         .get('/api/rest_v1/page/html/Some_Page')
-        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Some_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/Some_Page')
         .times(2)
         .reply(200)
         .post('/w/api.php', {
@@ -800,7 +800,7 @@ describe('RESTBase update rules', function() {
             }
         })
         .get('/api/rest_v1/page/html/Some_Page')
-        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,resource_change:https://en.wikipedia.org/wiki/Some_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/Some_Page')
         .reply(200);
 
         return producer.produceAsync({
