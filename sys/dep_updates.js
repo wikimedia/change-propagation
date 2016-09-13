@@ -327,7 +327,7 @@ class DependencyProcessor {
                         dt: originalEvent.meta.dt
                     },
                     triggered_by: utils.triggeredBy(originalEvent),
-                    tags: [ 'change-prop', tag ]
+                    tags: [ tag ]
                 };
             })
         });
