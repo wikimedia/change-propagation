@@ -43,60 +43,49 @@ spec: &spec
             concurrency: 250
             templates:
 
-              summary_rerender: &summary_rerender_spec
+              summary_definition_rerender: &summary_definition_rerender_spec
                 topic: resource_change
                 retry_limit: 2
                 retry_delay: 500
                 retry_on:
                   status:
                     - '5xx'
-                match:
-                  meta:
-                    uri: '/^(?<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>[^/]+)$/'
-                  tags:
-                    - restbase
-                match_not:
-                  meta:
-                    domain: '/wiktionary.org$/'
-                exec:
-                  method: get
-                  # Don't encode title since it should be already encoded
-                  uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/summary/{{match.meta.uri.title}}'
-                  query:
-                    redirect: false
-                  headers:
-                    cache-control: no-cache
+                cases: # Non wiktionary domains - rerender summary
+                  - match:
+                      meta:
+                        uri: '/^(?<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>[^/]+)$/'
+                      tags:
+                        - restbase
+                    match_not:
+                      meta:
+                        domain: '/wiktionary.org$/'
+                    exec:
+                      method: get
+                      # Don't encode title since it should be already encoded
+                      uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/summary/{{match.meta.uri.title}}'
+                      query:
+                        redirect: false
+                      headers:
+                        cache-control: no-cache
+                  - match: # Wiktionary domains - rerender definitions
+                      meta:
+                        # These URIs are coming from RESTBase, so we know that article titles will be normalized
+                        # and main namespace articles will not have : (uri-encoded, so %3a or %3A)
+                        uri: '/^(?<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>(?:(?!%3a|%3A|\/).)+)$/'
+                        domain: '/^en.wiktionary.org$/'
+                      tags:
+                        - restbase
+                    exec:
+                      method: get
+                      # Don't encode title since it should be already encoded
+                      uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/definition/{{match.meta.uri.title}}'
+                      query:
+                        redirect: false
+                      headers:
+                        cache-control: no-cache
 
-              summary_rerender_transcludes:
-                <<: *summary_rerender_spec
-                topic: change-prop.transcludes.resource-change
-
-              definition_rerender: &definition_rerender_spec
-                topic: resource_change
-                retry_limit: 2
-                retry_delay: 500
-                retry_on:
-                  status:
-                    - '5xx'
-                match:
-                  meta:
-                    # These URIs are coming from RESTBase, so we know that article titles will be normalized
-                    # and main namespace articles will not have : (uri-encoded, so %3a or %3A)
-                    uri: '/^(?<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>(?:(?!%3a|%3A|\/).)+)$/'
-                    domain: '/^en.wiktionary.org$/'
-                  tags:
-                    - restbase
-                exec:
-                  method: get
-                  # Don't encode title since it should be already encoded
-                  uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/definition/{{match.meta.uri.title}}'
-                  query:
-                    redirect: false
-                  headers:
-                    cache-control: no-cache
-
-              definition_rerender_transcludes:
-                <<: *definition_rerender_spec
+              summary_definition_rerender_transcludes:
+                <<: *summary_definition_rerender_spec
                 topic: change-prop.transcludes.resource-change
 
               mobile_rerender: &mobile_rerender_spec
