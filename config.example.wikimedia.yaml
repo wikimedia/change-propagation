@@ -9,6 +9,33 @@ spec: &spec
               user-agent: true
   title: The Change Propagation root
   paths:
+    /sys/ores:
+      x-modules:
+        - path: sys/ores.js
+          options:
+            uri: https://ores.wikimedia.org
+            models:
+              arwiki: 'reverted'
+              cswiki: 'reverted'
+              enwiki: 'reverted|damaging|goodfaith'
+              enwiktionary: 'reverted'
+              eswiki: 'reverted'
+              etwiki: 'reverted'
+              fawiki: 'reverted|damaging|goodfaith'
+              frwiki: 'reverted'
+              hewiki: 'reverted'
+              huwiki: 'reverted'
+              idwiki: 'reverted'
+              itwiki: 'reverted'
+              nlwiki: 'reverted|damaging|goodfaith'
+              plwiki: 'reverted|damaging|goodfaith'
+              ptwiki: 'reverted|damaging|goodfaith'
+              ruwiki: 'reverted|damaging|goodfaith'
+              trwiki: 'reverted|damaging|goodfaith'
+              ukwiki: 'reverted'
+              viwiki: 'reverted'
+              wikidatawiki: 'reverted|damaging|goodfaith'
+
     /sys/purge:
       x-modules:
         - path: sys/purge.js
@@ -294,226 +321,23 @@ spec: &spec
                     - 503
                 cases:
                   - match:
-                      meta:
-                        domain: ar.wikipedia.org
+                      database: '/^(:?(:?ar|cs|en|es|et|fa|fr|he|hu|id|it|nl|pl|pt|ru|tr|uk|vi|wi)wiki|enwiktionary)$/'
                       performer:
                         user_is_bot: false
                     exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/arwiki/'
-                      query:
-                        models: 'reverted'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: cs.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/cswiki/'
-                      query:
-                        models: 'reverted'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: en.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/enwiki/'
-                      query:
-                        models: 'reverted|damaging|goodfaith'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: en.wiktionary.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/enwiktionary/'
-                      query:
-                        models: 'reverted'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: es.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/eswiki/'
-                      query:
-                        models: 'reverted'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: et.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/etwiki/'
-                      query:
-                        models: 'reverted'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: fa.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/fawiki/'
-                      query:
-                        models: 'reverted|damaging|goodfaith'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: fr.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/frwiki/'
-                      query:
-                        models: 'reverted'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: he.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/hewiki/'
-                      query:
-                        models: 'reverted'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: hu.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/huwiki/'
-                      query:
-                        models: 'reverted'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: id.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/idwiki/'
-                      query:
-                        models: 'reverted'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: it.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/itwiki/'
-                      query:
-                        models: 'reverted'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: nl.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/nlwiki/'
-                      query:
-                        models: 'reverted|damaging|goodfaith'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: pl.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/plwiki/'
-                      query:
-                        models: 'reverted|damaging|goodfaith'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: pt.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/ptwiki/'
-                      query:
-                        models: 'reverted|damaging|goodfaith'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: ru.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/ruwiki/'
-                      query:
-                        models: 'reverted|damaging|goodfaith'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: tr.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/trwiki/'
-                      query:
-                        models: 'reverted|damaging|goodfaith'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: uk.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/ukwiki/'
-                      query:
-                        models: 'reverted'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: vi.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/viwiki/'
-                      query:
-                        models: 'reverted'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
+                      method: post
+                      uri: '/sys/ores/'
+                      body: '{{globals.message}}'
+                  - match: # For wikidata only follow main namespace
                       meta:
                         domain: wikidata.org
                       page_namespace: 0
                       performer:
                         user_is_bot: false
                     exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/wikidatawiki/'
-                      query:
-                        models: 'reverted|damaging|goodfaith'
-                        revids: '{{message.rev_id}}'
-                        precache: true
+                      method: post
+                      uri: '/sys/ores/'
+                      body: '{{globals.message}}'
 
               # This is not yet used in production
               process_redlinks:

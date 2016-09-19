@@ -409,7 +409,8 @@ describe('RESTBase update rules', function() {
                 rev_parent_id: 1233,
                 performer: {
                     user_is_bot: false
-                }
+                },
+                database: 'enwiki'
             })
         })
         .then(() => common.checkAPIDone(oresService))
