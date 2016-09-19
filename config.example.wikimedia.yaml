@@ -123,7 +123,7 @@ spec: &spec
                 <<: *mobile_rerender_spec
                 topic: change-prop.transcludes.resource-change
 
-              purge_varnish:
+              purge_varnish: &purge_varnish_spec
                 topic: resource_change
                 match:
                   meta:
@@ -136,6 +136,10 @@ spec: &spec
                   body:
                     - meta:
                         uri: '//{{message.meta.domain}}/api/rest_v1/{{match.meta.uri.title}}'
+
+              purge_varnish_transcludes:
+                <<: *purge_varnish_spec
+                topic: change-prop.transcludes.resource-change
 
               # RESTBase update jobs
               mw_purge:
