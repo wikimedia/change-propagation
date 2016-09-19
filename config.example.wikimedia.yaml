@@ -67,6 +67,30 @@ spec: &spec
                   headers:
                     cache-control: no-cache
 
+              summary_rerender_transcludes:
+                topic: change-prop.transcludes.resource-change
+                retry_limit: 2
+                retry_delay: 500
+                retry_on:
+                  status:
+                    - '5xx'
+                match:
+                  meta:
+                    uri: '/^(?<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>[^/]+)$/'
+                  tags:
+                    - restbase
+                match_not:
+                  meta:
+                    domain: '/wiktionary.org$/'
+                exec:
+                  method: get
+                  # Don't encode title since it should be already encoded
+                  uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/summary/{{match.meta.uri.title}}'
+                  query:
+                    redirect: false
+                  headers:
+                    cache-control: no-cache
+
               definition_rerender:
                 topic: resource_change
                 retry_limit: 2
@@ -91,8 +115,52 @@ spec: &spec
                   headers:
                     cache-control: no-cache
 
+              definition_rerender_transcludes:
+                topic: change-prop.transcludes.resource-change
+                retry_limit: 2
+                retry_delay: 500
+                retry_on:
+                  status:
+                    - '5xx'
+                match:
+                  meta:
+                    # These URIs are coming from RESTBase, so we know that article titles will be normalized
+                    # and main namespace articles will not have : (uri-encoded, so %3a or %3A)
+                    uri: '/^(?<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>(?:(?!%3a|%3A|\/).)+)$/'
+                    domain: '/^en.wiktionary.org$/'
+                  tags:
+                    - restbase
+                exec:
+                  method: get
+                  # Don't encode title since it should be already encoded
+                  uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/definition/{{match.meta.uri.title}}'
+                  query:
+                    redirect: false
+                  headers:
+                    cache-control: no-cache
+
               mobile_rerender:
                 topic: resource_change
+                retry_limit: 2
+                retry_delay: 500
+                retry_on:
+                  status:
+                    - '5xx'
+                match:
+                  meta:
+                    uri: '/^(?<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>[^/]+)$/'
+                  tags:
+                    - restbase
+                exec:
+                  method: get
+                  uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{{match.meta.uri.title}}'
+                  query:
+                    redirect: false
+                  headers:
+                    cache-control: no-cache
+
+              mobile_rerender_transcludes:
+                topic: change-prop.transcludes.resource-change
                 retry_limit: 2
                 retry_delay: 500
                 retry_on:
