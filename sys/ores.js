@@ -1,6 +1,7 @@
 "use strict";
 
 const utils = require('../lib/utils');
+const HTTPError = require('hyperswitch').HTTPError;
 
 class OresUpdater {
     constructor(options) {
@@ -14,10 +15,12 @@ class OresUpdater {
         const wiki = req.body.database;
         const rev_id = req.body.rev_id;
         if (!this.options.models[wiki]) {
-            hyper.log('warn/ores', {
-                message: `ORES precache request for unmodified wiki ${wiki}`
+            throw new HTTPError({
+                status: 200,
+                body: {
+                    message: `ORES precache request for unmodified wiki ${wiki}`
+                }
             });
-            return { status: 200 };
         }
 
         return hyper.get(utils.augmentRequest({
