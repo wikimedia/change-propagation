@@ -1,6 +1,6 @@
 {
   "name": "change-propagation",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Listens to events from Kafka and delivers them",
   "main": "server.js",
   "repository": {
