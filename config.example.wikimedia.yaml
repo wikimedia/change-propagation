@@ -210,6 +210,9 @@ spec: &spec
                       cache-control: no-cache
                     query:
                       redirect: false
+                  # For page deletion RESTBase doesn't emit resource_change events, and to go through
+                  # the normal purge chain (html update -> html resource_change -> summary update -> summary resource_change)
+                  # we need to add many workarounds/shortcurst in RESTBase. So having this list here is an OK compromise.
                   - method: post
                     uri: '/sys/purge/'
                     body:
