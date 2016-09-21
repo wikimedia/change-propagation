@@ -16,7 +16,7 @@ class OresUpdater {
         const rev_id = req.body.rev_id;
         if (!this.options.models[wiki]) {
             throw new HTTPError({
-                status: 200,
+                status: 400,
                 body: {
                     message: `ORES precache request for unmodified wiki ${wiki}`
                 }
