@@ -26,7 +26,7 @@ function createBackLinksTemplate(options) {
         })),
         getContinueToken: (res) => res.body.continue && res.body.continue.blcontinue,
         continueTopic: BACKLINKS_CONTINUE_TOPIC_NAME,
-        resourceChangeTag: 'backlinks',
+        resourceChangeTags: [ 'backlinks' ],
         extractResults: (res) => res.body.query.backlinks
     };
 }
@@ -47,7 +47,7 @@ function createImageUsageTemplate(options) {
         })),
         getContinueToken: (res) => res.body.continue && res.body.continue.iucontinue,
         continueTopic: TRANSCLUDES_CONTINUE_TOPIC_NAME,
-        resourceChangeTag: 'transcludes',
+        resourceChangeTags: [ 'transcludes', 'files' ],
         extractResults: (res) =>  res.body.query.imageusage
     };
 }
@@ -69,7 +69,7 @@ function createTranscludeInTemplate(options) {
         })),
         getContinueToken: (res) => res.body.continue && res.body.continue.ticontinue,
         continueTopic: TRANSCLUDES_CONTINUE_TOPIC_NAME,
-        resourceChangeTag: 'transcludes',
+        resourceChangeTags: [ 'transcludes', 'templates' ],
         extractResults: (res) => {
             return res.body.query.pages[Object.keys(res.body.query.pages)[0]].transcludedin;
         }
@@ -88,7 +88,7 @@ function createWikidataTemplate(options) {
                 normalize: true
             }
         })),
-        resourceChangeTag: 'wikidata',
+        resourceChangeTags: [ 'wikidata' ],
         shouldProcess: (res) => {
             if (!(res && res.body && !!res.body.success)) {
                 return false;
@@ -251,7 +251,7 @@ class DependencyProcessor {
             if (this.wikidataRequest.shouldProcess(res)) {
                 const items = this.wikidataRequest.extractResults(res);
                 return this._sendResourceChanges(hyper, items, req.body,
-                    this.wikidataRequest.resourceChangeTag);
+                    this.wikidataRequest.resourceChangeTags);
             } else if (res.body && res.body.error) {
                 this.log('warn/wikidata_description', {
                     msg: 'Could not extract items',
@@ -277,7 +277,7 @@ class DependencyProcessor {
                 return { status: 200 };
             }
             let actions = this._sendResourceChanges(hyper, titles,
-                originalEvent, requestTemplate.resourceChangeTag);
+                originalEvent, requestTemplate.resourceChangeTags);
             if (res.body.continue) {
                 actions = actions.then(() =>
                     this._sendContinueEvent(hyper,
@@ -310,7 +310,7 @@ class DependencyProcessor {
         });
     }
 
-    _sendResourceChanges(hyper, items, originalEvent, tag) {
+    _sendResourceChanges(hyper, items, originalEvent, tags) {
         return hyper.post({
             uri: '/sys/queue/events',
             body: items.map((item) => {
@@ -327,7 +327,7 @@ class DependencyProcessor {
                         dt: originalEvent.meta.dt
                     },
                     triggered_by: utils.triggeredBy(originalEvent),
-                    tags: [ tag ]
+                    tags: tags
                 };
             })
         });

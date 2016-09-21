@@ -591,6 +591,7 @@ describe('RESTBase update rules', function() {
         .query({redirect: false})
         .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/File_Transcluded_Page')
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
+        .matchHeader('x-restbase-mode', 'files')
         .times(2)
         .reply(200)
         .post('/w/api.php', {
@@ -612,6 +613,7 @@ describe('RESTBase update rules', function() {
         .query({redirect: false})
         .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/File_Transcluded_Page')
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
+        .matchHeader('x-restbase-mode', 'files')
         .reply(200);
 
         return producer.produceAsync({
@@ -664,6 +666,7 @@ describe('RESTBase update rules', function() {
         .query({redirect: false})
         .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/Transcluded_Here')
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
+        .matchHeader('x-restbase-mode', 'templates')
         .times(2)
         .reply(200)
         .post('/w/api.php', {
@@ -691,6 +694,7 @@ describe('RESTBase update rules', function() {
         .query({redirect: false})
         .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/Transcluded_Here')
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
+        .matchHeader('x-restbase-mode', 'templates')
         .reply(200);
 
         return producer.produceAsync({

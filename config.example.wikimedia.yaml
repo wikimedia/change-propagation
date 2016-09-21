@@ -282,6 +282,7 @@ spec: &spec
                   headers:
                     cache-control: no-cache
                     if-unmodified-since: '{{date(message.meta.dt)}}'
+                    x-restbase-mode: '{{message.tags[1]}}'
                   query:
                     redirect: false
 
