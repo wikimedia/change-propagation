@@ -81,7 +81,7 @@ spec: &spec
 num_workers: 0
 logging:
   name: changeprop
-  level: info
+  level: trace
 services:
   - name: changeprop
     module: hyperswitch
