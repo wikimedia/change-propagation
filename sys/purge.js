@@ -1,8 +1,7 @@
 "use strict";
 
-var Purger    = require('htcp-purge');
-var HTTPError = require('hyperswitch').HTTPError;
-var uuid = require('cassandra-uuid').TimeUuid;
+const Purger    = require('htcp-purge');
+const HTTPError = require('hyperswitch').HTTPError;
 
 class PurgeService {
     constructor(options) {
@@ -31,11 +30,11 @@ class PurgeService {
             if (!event.meta || !event.meta.uri || !/^\/\//.test(event.meta.uri)) {
                 hyper.log('error/events/purge', {
                     message: 'Invalid event URI',
-                    event: event
+                    event
                 });
-            } else {
-                return 'http:' + event.meta.uri;
+                return undefined;
             }
+            return `http:${event.meta.uri}`;
         }).filter((event) => !!event))
         .thenReturn({ status: 201 })
         .catch((e) => {
@@ -47,8 +46,8 @@ class PurgeService {
     }
 }
 
-module.exports = function(options) {
-    var ps = new PurgeService(options);
+module.exports = (options) => {
+    const ps = new PurgeService(options);
 
     return {
         spec: {

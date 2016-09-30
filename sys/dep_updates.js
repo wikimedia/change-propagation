@@ -120,7 +120,7 @@ function createWikidataTemplate(options) {
 class DependencyProcessor {
     constructor(options) {
         this.options = options;
-        this.log = options.log || function() { };
+        this.log = options.log || (() => { });
         this.siteInfoCache = {};
         this.backLinksRequest = createBackLinksTemplate(options);
         this.imageLinksRequest = createImageUsageTemplate(options);
@@ -198,14 +198,16 @@ class DependencyProcessor {
         }
 
         if (this.latestMessages.some((oldEvent) => {
-                return oldEvent.domain === currEventInfo.domain
+            return oldEvent.domain === currEventInfo.domain
                     && oldEvent.title === currEventInfo.title
                         // This represents forking - we've consumed some continuation twice,
                         // so we've got exact same event processed recently
-                    && (oldEvent.id === currEventInfo.id && oldEvent.sequence_num === currEventInfo.sequence_num
+                    && (oldEvent.id === currEventInfo.id
+                            && oldEvent.sequence_num === currEventInfo.sequence_num
                         // This represents deduplication on rapid consequent template changes
-                        || oldEvent.id !== currEventInfo.id && oldEvent.sequence_num <= currEventInfo.sequence_num);
-            })) {
+                        || oldEvent.id !== currEventInfo.id
+                            && oldEvent.sequence_num <= currEventInfo.sequence_num);
+        })) {
             return true;
         }
 
@@ -220,7 +222,7 @@ class DependencyProcessor {
         const message = req.body;
         const context = {
             request: req,
-            message: message
+            message
         };
         const originalEvent = req.body.original_event || req.body;
 
@@ -252,7 +254,9 @@ class DependencyProcessor {
                 const items = this.wikidataRequest.extractResults(res);
                 return this._sendResourceChanges(hyper, items, req.body,
                     this.wikidataRequest.resourceChangeTags);
-            } else if (res.body && res.body.error) {
+            }
+
+            if (res.body && res.body.error) {
                 this.log('warn/wikidata_description', {
                     msg: 'Could not extract items',
                     event: context.message,
@@ -295,7 +299,7 @@ class DependencyProcessor {
             uri: '/sys/queue/events',
             body: [{
                 meta: {
-                    topic: topic,
+                    topic,
                     schema_uri: 'continue/1',
                     uri: origEvent.meta.uri,
                     request_id: origEvent.meta.request_id,
@@ -327,7 +331,7 @@ class DependencyProcessor {
                         dt: originalEvent.meta.dt
                     },
                     triggered_by: utils.triggeredBy(originalEvent),
-                    tags: tags
+                    tags
                 };
             })
         });
@@ -337,7 +341,7 @@ class DependencyProcessor {
         const domain = message.meta.domain;
         if (!this.siteInfoCache[domain]) {
             this.siteInfoCache[domain] = hyper.post(this.siteInfoRequest.expand({
-                message: message
+                message
             }))
             .then((res) => {
                 return {

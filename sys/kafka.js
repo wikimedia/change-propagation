@@ -19,7 +19,7 @@ const RetryExecutor = require('../lib/retry_executor');
 class Kafka {
     constructor(options) {
         this.options = options;
-        this.log = options.log || function() { };
+        this.log = options.log || (() => { });
         this.kafkaFactory = new KafkaFactory(options);
         this.staticRules = options.templates || {};
         this.ruleExecutors = {};
