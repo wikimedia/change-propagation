@@ -80,7 +80,7 @@ describe('RESTBase update rules', function() {
                     dt: new Date().toISOString(),
                     domain: 'en.wikipedia.org'
                 },
-                tags: [ 'pageimages' ]
+                tags: [ 'page_image' ]
             })
         })
         .then(() => common.checkAPIDone(mwAPI))

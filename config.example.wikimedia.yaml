@@ -578,7 +578,7 @@ spec: &spec
                   meta:
                     uri: '/^https?:\/\/[^\/]+\/wiki\/(?<title>.+)$/'
                   tags:
-                    - pageimages
+                    - page_image
                 exec:
                   method: get
                   uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{{match.meta.uri.title}}'
