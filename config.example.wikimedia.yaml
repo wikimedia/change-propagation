@@ -570,6 +570,22 @@ spec: &spec
                     query:
                       redirect: false
 
+              # Rerender summary when pageimages page property change
+              # This is a temporary workaround until we get a complete page properties change event.
+              page_images:
+                topic: resource_change
+                match:
+                  meta:
+                    uri: '/^https?:\/\/[^\/]+\/wiki\/(?<title>.+)$/'
+                  tags:
+                    - pageimages
+                exec:
+                  method: get
+                  uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{{match.meta.uri.title}}'
+                  headers:
+                    cache-control: no-cache
+                  query:
+                    redirect: false
 
 num_workers: 0
 logging:
