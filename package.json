@@ -1,6 +1,6 @@
 {
   "name": "change-propagation",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Listens to events from Kafka and delivers them",
   "main": "server.js",
   "repository": {
@@ -37,8 +37,8 @@
     "bluebird": "^3.4.6",
     "cassandra-uuid": "^0.0.2",
     "extend": "^3.0.0",
-    "hyperswitch": "^0.7.0",
-    "service-runner": "^2.1.1",
+    "hyperswitch": "^0.8.2",
+    "service-runner": "^2.1.7",
     "json-stable-stringify": "^1.0.1",
     "htcp-purge": "^0.1.2",
     "mediawiki-title": "^0.5.5",
@@ -57,6 +57,9 @@
     "ajv": "^4.7.0",
     "mocha-eslint":"^3.0.1",
     "eslint-config-node-services": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=4"
   },
   "deploy": {
     "node": "4.4.6",
