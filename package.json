@@ -76,7 +76,8 @@
           "packages": [
             "librdkafka-dev"
           ]
-        }
+        },
+        "libsasl2-dev"
       ]
     }
   }
