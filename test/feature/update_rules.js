@@ -59,7 +59,7 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': 'resource_change:https://en.wikipedia.org/wiki/Some_Page',
+                'x-triggered-by': 'mediawiki.page-properties-change:https://en.wikipedia.org/wiki/Some_Page',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
                 'user-agent': 'SampleChangePropInstance'
             }
@@ -69,18 +69,20 @@ describe('RESTBase update rules', function() {
         .reply(200, { });
 
         return producer.produceAsync({
-            topic: 'test_dc.resource_change',
+            topic: 'test_dc.mediawiki.page-properties-change',
             message: JSON.stringify({
                 meta: {
-                    topic: 'resource_change',
-                    schema_uri: 'resource_change/1',
+                    topic: 'mediawiki.page-properties-change',
+                    schema_uri: 'mediawiki/page/properties-change/1',
                     uri: 'https://en.wikipedia.org/wiki/Some_Page',
                     request_id: common.SAMPLE_REQUEST_ID,
                     id: uuid.now(),
                     dt: new Date().toISOString(),
                     domain: 'en.wikipedia.org'
                 },
-                tags: [ 'page_image' ]
+                page_properties: {
+                    page_image: 'Test.jpg'
+                }
             })
         })
         .then(() => common.checkAPIDone(mwAPI))
