@@ -80,7 +80,7 @@ describe('RESTBase update rules', function() {
                     dt: new Date().toISOString(),
                     domain: 'en.wikipedia.org'
                 },
-                page_properties: {
+                added_properties: {
                     page_image: 'Test.jpg'
                 }
             })

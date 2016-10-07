@@ -594,9 +594,8 @@ spec: &spec
                   - match:
                       meta:
                         uri: '/^https?:\/\/[^\/]+\/wiki\/(?<title>.+)$/'
-                      prior_state:
-                        page_properties:
-                          page_image: '/.+/' # Regex that matches anything just to check the prop is set
+                      added_properties:
+                        page_image: '/.+/' # Regex that matches anything just to check the prop is set
                     exec:
                       method: get
                       uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{{match.meta.uri.title}}'
@@ -607,7 +606,7 @@ spec: &spec
                   - match:
                       meta:
                         uri: '/^https?:\/\/[^\/]+\/wiki\/(?<title>.+)$/'
-                      page_properties:
+                      removed_properties:
                         page_image: '/.+/' # Regex that matches anything just to check the prop is set
                     exec:
                       method: get
