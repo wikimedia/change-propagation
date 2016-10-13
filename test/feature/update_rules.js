@@ -506,7 +506,73 @@ describe('RESTBase update rules', function() {
                     domain: 'www.wikidata.org'
                 },
                 page_title: 'Q1',
-                page_namespace: 0
+                page_namespace: 0,
+                comment: "/* wbeditentity-update:0| */ add [it] label"
+            })
+        })
+        .delay(common.REQUEST_CHECK_DELAY)
+        .then(() => common.checkAPIDone(wikidataAPI))
+        .then(() => common.checkAPIDone(restbase))
+        .finally(() => nock.cleanAll());
+    });
+
+    it('Should update RESTBase summary and mobile-sections on wikidata revision visibility change', () => {
+        const wikidataAPI = nock('https://www.wikidata.org')
+        .post('/w/api.php', {
+            format: 'json',
+            formatversion: '2',
+            action: 'wbgetentities',
+            ids: 'Q2',
+            props: 'sitelinks/urls',
+            normalize: 'true'
+        })
+        .reply(200, {
+            "success": 1,
+            "entities": {
+                "Q2": {
+                    "type": "item",
+                    "id": "Q2",
+                    "sitelinks": {
+                        "enwiki": {
+                            "site": "ruwiki",
+                            "title": "Пётр",
+                            "badges": [],
+                            "url": "https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80"
+                        }
+                    }
+                }
+            }
+        });
+
+        const restbase = nock('https://ru.wikipedia.org', {
+            reqheaders: {
+                'cache-control': 'no-cache',
+                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'user-agent': 'SampleChangePropInstance',
+                'x-triggered-by': 'mediawiki.revision-visibility-change:/rev/uri,change-prop.transcludes.resource-change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80'
+            }
+        })
+        .get('/api/rest_v1/page/summary/%D0%9F%D1%91%D1%82%D1%80')
+        .query({ redirect: false })
+        .reply(200, { })
+        .get('/api/rest_v1/page/mobile-sections/%D0%9F%D1%91%D1%82%D1%80')
+        .query({ redirect: false })
+        .reply(200, { });
+
+        return producer.produceAsync({
+            topic: 'test_dc.mediawiki.revision-visibility-change',
+            message: JSON.stringify({
+                meta: {
+                    topic: 'mediawiki.revision-visibility-change',
+                    schema_uri: 'revision-visibility-change/1',
+                    uri: '/rev/uri',
+                    request_id: common.SAMPLE_REQUEST_ID,
+                    id: uuid.now(),
+                    dt: new Date().toISOString(),
+                    domain: 'www.wikidata.org'
+                },
+                page_title: 'Q2',
+                page_namespace: 0,
             })
         })
         .delay(common.REQUEST_CHECK_DELAY)
@@ -593,7 +659,8 @@ describe('RESTBase update rules', function() {
                     domain: 'www.wikidata.org'
                 },
                 page_title: 'Q2',
-                page_namespace: 0
+                page_namespace: 0,
+                comment: "/* wbeditentity-update:0| */ add [it] label"
             })
         })
         .delay(common.REQUEST_CHECK_DELAY)

@@ -539,8 +539,22 @@ spec: &spec
                   headers:
                     cache-control: no-cache
 
-              wikidata_description:
+              wikidata_description_on_edit:
                 topic: mediawiki.revision-create
+                match:
+                  meta:
+                    domain: www.wikidata.org
+                  page_namespace: 0
+                  # It's impossible to modify a comment in wikidata while editing the entity.
+                  # TODO: This is a temp solution until we get a more general fragment support T148079
+                  comment: '/wbeditentity/'
+                exec:
+                  method: 'post'
+                  uri: '/sys/links/wikidata_descriptions'
+                  body: '{{globals.message}}'
+
+              wikidata_description_on_revision_visibility_change:
+                topic: mediawiki.revision-visibility-change
                 match:
                   meta:
                     domain: www.wikidata.org
