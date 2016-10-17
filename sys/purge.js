@@ -1,7 +1,9 @@
 "use strict";
 
-const Purger    = require('htcp-purge');
-const HTTPError = require('hyperswitch').HTTPError;
+const Purger      = require('htcp-purge');
+const HyperSwitch = require('hyperswitch');
+const HTTPError   = HyperSwitch.HTTPError;
+const lifecicle   = HyperSwitch.lifecycle;
 
 class PurgeService {
     constructor(options) {
@@ -13,6 +15,11 @@ class PurgeService {
             log: this.options.log,
             routes: [ this.options ]
         });
+        lifecicle.on('close', () => this.purger.close());
+    }
+
+    init() {
+        return this.purger.bind().thenReturn({ status: 201 });
     }
 
     purge(hyper, req) {
@@ -56,11 +63,20 @@ module.exports = (options) => {
                     post: {
                         operationId: 'purge'
                     }
+                },
+                '/init': {
+                    put: {
+                        operationId: 'init'
+                    }
                 }
             }
         },
         operations: {
+            init: ps.init.bind(ps),
             purge: ps.purge.bind(ps)
-        }
+        },
+        resources: [{
+            uri: '/sys/purge/init'
+        }]
     };
 };
