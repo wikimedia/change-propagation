@@ -583,25 +583,7 @@ spec: &spec
                       cache-control: no-cache
                     query:
                       redirect: false
-
-              # Rerender summary when pageimages page property change
-              # This is a temporary workaround until we get a complete page properties change event.
               page_images:
-                topic: resource_change
-                match:
-                  meta:
-                    uri: '/^https?:\/\/[^\/]+\/wiki\/(?<title>.+)$/'
-                  tags:
-                    - page_image
-                exec:
-                  method: get
-                  uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{{match.meta.uri.title}}'
-                  headers:
-                    cache-control: no-cache
-                  query:
-                    redirect: false
-
-              page_images_change:
                 topic: mediawiki.page-properties-change
                 # We don't support 'OR' in the match section, so workaround it by 2 cases with identical exec
                 cases:
@@ -619,12 +601,18 @@ spec: &spec
                       removed_properties:
                         page_image: '/.+/' # Regex that matches anything just to check the prop is set
                     exec:
-                      method: get
-                      uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{message.page_title}'
-                      headers:
-                        cache-control: no-cache
-                      query:
-                        redirect: false
+                      - method: get
+                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{message.page_title}'
+                        headers:
+                          cache-control: no-cache
+                        query:
+                          redirect: false
+                      - method: get
+                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{message.page_title}'
+                        headers:
+                          cache-control: no-cache
+                        query:
+                          redirect: false
 
 num_workers: 0
 logging:
