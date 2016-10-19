@@ -1,6 +1,6 @@
 {
   "name": "change-propagation",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "Listens to events from Kafka and delivers them",
   "main": "server.js",
   "repository": {
@@ -62,7 +62,7 @@
     "node": ">=4"
   },
   "deploy": {
-    "node": "4.4.6",
+    "node": "4.6.0",
     "target": "debian",
     "env": {
       "BUILD_LIBRDKAFKA": "0"
