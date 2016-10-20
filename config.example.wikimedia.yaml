@@ -591,12 +591,18 @@ spec: &spec
                       added_properties:
                         page_image: '/.+/' # Regex that matches anything just to check the prop is set
                     exec:
-                      method: get
-                      uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{message.page_title}'
-                      headers:
-                        cache-control: no-cache
-                      query:
-                        redirect: false
+                      - method: get
+                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{message.page_title}'
+                        headers:
+                          cache-control: no-cache
+                        query:
+                          redirect: false
+                      - method: get
+                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{message.page_title}'
+                        headers:
+                          cache-control: no-cache
+                        query:
+                          redirect: false
                   - match:
                       removed_properties:
                         page_image: '/.+/' # Regex that matches anything just to check the prop is set
