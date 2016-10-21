@@ -344,6 +344,9 @@ class DependencyProcessor {
                 message
             }))
             .then((res) => {
+                if (!res || !res.body || !res.body.query || !res.body.query.general) {
+                    throw new Error(`SiteInfo is unavailable for ${message.meta.domain}`);
+                }
                 return {
                     general: {
                         lang: res.body.query.general.lang,
