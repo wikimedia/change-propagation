@@ -40,7 +40,8 @@ in the `exec` part of the rule. Capture groups could be named, using the `(?<nam
 the captured value would be accessible under `match.property_name.capture_name` within the `exec` part.
 Named and unnamed captures can not be mixed together.
 - **match_not** An optional predicate which must not match for a rule to be executed. It doesn't capture values
-and doesn't make them accessible to the `exec` part of the rule.
+and doesn't make them accessible to the `exec` part of the rule. The `match_not` may be an array with the semantics
+of logical OR - if any of the array items match, the `match_not` matches.
 - **exec** An array of HTTP request templates, that will be executed sequentially if the rule matched.
 The template follows [request templating syntax](https://github.com/wikimedia/swagger-router#request-templating).
 The template is evaluated with a `context` that has `message` global property with an original message,

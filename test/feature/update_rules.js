@@ -281,6 +281,35 @@ describe('RESTBase update rules', function() {
         .finally(() => nock.cleanAll());
     });
 
+
+    it('Should not update RESTBase on revision create for wikidata', () => {
+        const mwAPI = nock('https://www.wikidata.org')
+        .get('/api/rest_v1/page/html/Q1/1234')
+        .query({ redirect: false })
+        .reply(200, { });
+
+        return producer.produceAsync({
+            topic: 'test_dc.mediawiki.revision-create',
+            message: JSON.stringify({
+                meta: {
+                    topic: 'mediawiki.revision-create',
+                    schema_uri: 'revision-create/1',
+                    uri: '/edit/uri',
+                    request_id: common.SAMPLE_REQUEST_ID,
+                    id: uuid.now(),
+                    dt: new Date(1000).toISOString(),
+                    domain: 'www.wikidata.org'
+                },
+                page_title: 'Q1',
+                rev_id: 1234,
+                rev_timestamp: new Date().toISOString(),
+                rev_parent_id: 1233
+            })
+        })
+        .then(() => common.checkPendingMocks(mwAPI, 1))
+        .finally(() => nock.cleanAll());
+    });
+
     it('Should update RESTBase on page delete', () => {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {

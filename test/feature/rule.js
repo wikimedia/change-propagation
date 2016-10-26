@@ -133,6 +133,28 @@ describe('Rule', function() {
             assert.equal(r.test(msg), 0, 'Expected the rule to match the given message!');
         });
 
+        it('match_not array', () => {
+            var r = new Rule('rule', {
+                topic: 'nono',
+                exec: {uri: 'a/b/c'},
+                match_not: [
+                    {meta: {uri: '/my-url/'}},
+                    {meta: {uri: '/my-other-url/'}}
+                ]
+            });
+            assert.equal(r.test(msg), 0, 'Expected the rule to match the given message!');
+            assert.equal(r.test({
+                meta: {
+                    uri: '/my-url/'
+                }
+            }), -1, 'Expected the rule not to match the given message!');
+            assert.equal(r.test({
+                meta: {
+                    uri: '/my-other-url/'
+                }
+            }), -1, 'Expected the rule not to match the given message!');
+        });
+
         it('matches match and match_not', function() {
             var r = new Rule('rule', {
                 topic: 'nono',

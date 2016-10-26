@@ -3,6 +3,7 @@
 const uuid         = require('cassandra-uuid').TimeUuid;
 const P            = require('bluebird');
 const KafkaFactory = require('../../lib/kafka_factory');
+const assert       = require('assert');
 
 const common = {};
 
@@ -97,17 +98,7 @@ common.checkAPIDone = (api, maxAttempts) => {
 };
 
 common.checkPendingMocks = (api, num) => {
-    let attempts = 0;
-    const check = () => {
-        if (api.pendingMocks().length === num) {
-            return;
-        } else if (attempts++ < 20) {
-            return P.delay(500).then(check);
-        } else {
-            assert.equal(api.pendingMocks().length, 1);
-        }
-    };
-    return check();
+    return P.delay(2000).then(() =>  assert.equal(api.pendingMocks().length, num));
 };
 
 common.factory = new KafkaFactory({

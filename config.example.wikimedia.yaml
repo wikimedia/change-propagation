@@ -57,8 +57,10 @@ spec: &spec
                       tags:
                         - restbase
                     match_not:
-                      meta:
-                        domain: '/wiktionary.org$/'
+                      - meta:
+                          domain: '/wiktionary.org$/'
+                      - meta:
+                          domain: www.wikidata.org
                     exec:
                       method: get
                       # Don't encode title since it should be already encoded
@@ -100,6 +102,9 @@ spec: &spec
                     uri: '/^(?<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>[^/]+)$/'
                   tags:
                     - restbase
+                match_not:
+                  meta:
+                    domain: www.wikidata.org
                 exec:
                   method: get
                   uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{{match.meta.uri.title}}'
@@ -119,6 +124,9 @@ spec: &spec
                     uri: '/^https?:\/\/[^\/]+\/api\/rest_v1\/(?<title>.+)$/'
                   tags:
                     - restbase
+                match_not:
+                  meta:
+                    domain: www.wikidata.org
                 exec:
                   method: post
                   uri: '/sys/purge/'
@@ -138,6 +146,9 @@ spec: &spec
                     uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
                   tags:
                     - purge
+                match_not:
+                  meta:
+                    domain: www.wikidata.org
                 exec:
                   method: get
                   uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{{match.meta.uri.title}}'
@@ -158,6 +169,9 @@ spec: &spec
                     uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
                   tags:
                     - null_edit
+                match_not:
+                  meta:
+                    domain: www.wikidata.org
                 exec:
                   method: get
                   uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{{match.meta.uri.title}}'
@@ -173,6 +187,9 @@ spec: &spec
                   status:
                     - '5xx'
                     - 404 # Sometimes occasional 404s happen because of the mysql replication lag, so retry
+                match_not:
+                  meta:
+                    domain: www.wikidata.org
                 exec:
                   method: get
                   uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{message.page_title}/{{message.rev_id}}'
@@ -189,6 +206,9 @@ spec: &spec
                   status:
                     - 403 # When the revision is hidden 403 will be returned by RESTBase, it's a valid situation
                     - 412
+                match_not:
+                  meta:
+                    domain: www.wikidata.org
                 exec:
                   method: get
                   uri: 'https://{{message.meta.domain}}/api/rest_v1/page/revision/{{message.rev_id}}'
@@ -203,6 +223,9 @@ spec: &spec
                   status:
                     - 404 # 404 is a normal response for page deletion
                     - 412
+                match_not:
+                  meta:
+                    domain: www.wikidata.org
                 exec:
                   - method: get
                     uri: 'https://{{message.meta.domain}}/api/rest_v1/page/title/{message.page_title}'
@@ -233,6 +256,9 @@ spec: &spec
 
               page_restore:
                 topic: mediawiki.page-undelete
+                match_not:
+                  meta:
+                    domain: www.wikidata.org
                 exec:
                   method: get
                   uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{message.page_title}'
@@ -243,6 +269,9 @@ spec: &spec
 
               page_move:
                 topic: mediawiki.page-move
+                match_not:
+                  meta:
+                    domain: www.wikidata.org
                 exec:
                   - method: get
                     uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{message.page_title}/{{message.rev_id}}'
@@ -263,7 +292,9 @@ spec: &spec
                 # Test-only. We use undefined rev_parent_id to test backlinks so we
                 # don't want transclusions to interfere with backlinks test
                 match_not:
-                  rev_parent_id: undefined
+                  - rev_parent_id: undefined
+                  - meta:
+                      domain: www.wikidata.org
                 # end of test-only config
                 exec:
                   method: 'post'
@@ -505,7 +536,7 @@ spec: &spec
                         precache: true
                   - match:
                       meta:
-                        domain: wikidata.org
+                        domain: www.wikidata.org
                       page_namespace: 0
                       performer:
                         user_is_bot: false
@@ -522,6 +553,9 @@ spec: &spec
                 retry_limit: 0
                 match:
                   rev_parent_id: undefined
+                match_not:
+                  meta:
+                    domain: www.wikidata.org
                 exec:
                   method: post
                   uri: '/sys/links/backlinks/{message.page_title}'
@@ -590,6 +624,9 @@ spec: &spec
                   - match:
                       added_properties:
                         page_image: '/.+/' # Regex that matches anything just to check the prop is set
+                    match_not:
+                      meta:
+                        domain: www.wikidata.org
                     exec:
                       - method: get
                         uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{message.page_title}'
@@ -606,6 +643,9 @@ spec: &spec
                   - match:
                       removed_properties:
                         page_image: '/.+/' # Regex that matches anything just to check the prop is set
+                      match_not:
+                        meta:
+                          domain: www.wikidata.org
                     exec:
                       - method: get
                         uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{message.page_title}'
