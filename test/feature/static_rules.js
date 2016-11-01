@@ -61,7 +61,7 @@ describe('Basic rule management', function() {
             'test_field_name': 'test_field_value',
             'derived_field': 'test',
             'random_field': random
-        }).reply({});
+        }).reply(200, {});
 
         return P.each([
             JSON.stringify(common.eventWithMessageAndRandom('this_will_not_match', random)),
@@ -312,7 +312,7 @@ describe('Basic rule management', function() {
             'derived_field': 'test'
         })
         .matchHeader('x-triggered-by', 'test_dc.kafka_producing_rule:/sample/uri,simple_test_rule:/sample/uri')
-        .times(2).reply({});
+        .times(2).reply(200, {});
 
         return producer.produceAsync({
             topic: 'test_dc.kafka_producing_rule',
@@ -355,6 +355,71 @@ describe('Basic rule management', function() {
 
             return check();
         });
+    });
+
+    it('Should authenticate request to private wiki', () => {
+        const service = nock('http://secure.org')
+        .post('/w/api.php', {
+            action: 'query',
+            meta: 'tokens',
+            type: 'login',
+            formatversion: '2',
+            format: 'json'
+        })
+        .reply(200, {
+            batchcomplete: true,
+            query: {
+                tokens: {
+                    logintoken: 'test_token+\\\\'
+                }
+            }
+        }, {
+            'set-cookie': [
+                'secureWikiSession=blablabla; path=/; secure; httponly',
+                'forceHTTPS=true; path=/; httponly' ]
+        })
+        .post('/w/api.php', {
+            action: 'login',
+            lgname: 'SOME_USER_WILL_BE_HERE',
+            lgpassword: 'SOME_PASSWORD_WILL_BE_HERE',
+            formatversion: '2',
+            format: 'json',
+            lgtoken: 'test_token+\\\\',
+        })
+        .matchHeader('cookie', 'secureWikiSession=blablabla; forceHTTPS=true')
+        .reply(200, {
+            login: {
+                result: 'Success',
+                lguserid: 111,
+                lgusername: 'SOME_USER_WILL_BE_HERE',
+                cookieprefix: 'secureWiki',
+                sessionid: 'some_session_id'
+            }
+        }, {
+            'set-cookie': [
+                'securewikiSession=some_session_id; path=/; secure; httponly',
+                'securewikiUserID=111; expires=Fri, 29-Sep-2017 21:36:35 GMT; Max-Age=31536000; path=/; secure; httponly',
+                'securewikiUserName=SOME_USER_WILL_BE_HERE; expires=Fri, 29-Sep-2017 21:36:35 GMT; Max-Age=31536000; path=/; secure; httponly',
+                'securewikiToken=123; expires=Fri, 29-Sep-2017 21:36:35 GMT; Max-Age=31536000; path=/; secure; httponly',
+                'forceHTTPS=true; expires=Sat, 29-Oct-2016 21:36:35 GMT; Max-Age=2592000; path=/; httponly']
+        })
+        .get('/test')
+        .matchHeader('Cookie', 'securewikiSession=some_session_id; securewikiUserID=111; securewikiUserName=SOME_USER_WILL_BE_HERE; securewikiToken=123; forceHTTPS=true')
+        .reply(200, {})
+        .get('/test')
+        .matchHeader('Cookie', 'securewikiSession=some_session_id; securewikiUserID=111; securewikiUserName=SOME_USER_WILL_BE_HERE; securewikiToken=123; forceHTTPS=true')
+        .reply(200, {});
+
+        const event = common.eventWithMessage('TEST');
+        event.meta.uri = '/secure/uri';
+        event.meta.domain = 'secure.org';
+
+        return P.each([JSON.stringify(event), JSON.stringify(event)], (msg) => producer.produceAsync({
+            message: msg,
+            topic: 'test_dc.simple_test_rule'
+        }))
+        .then(() => common.checkAPIDone(service))
+        .finally(() => nock.cleanAll());
     });
 
     after(() => changeProp.stop());

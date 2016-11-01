@@ -1,5 +1,17 @@
 spec: &spec
   x-sub-request-filters:
+    - path: lib/auth_http_filter.js
+      options:
+        username: 'SOME_USER_WILL_BE_HERE'
+        password: 'SOME_PASSWORD_WILL_BE_HERE'
+        hosts:
+          - /^https?:\/\/secure.org/ # Private wiki
+        templates:
+          mw_api:
+            method: 'post'
+            uri: 'http://{{request.params.domain}}/w/api.php'
+            headers:
+              host: '{{request.params.domain}}'
     - type: default
       name: http
       options:
@@ -7,6 +19,7 @@ spec: &spec
           - pattern: /^https?:\/\//
             forward_headers:
               user-agent: true
+
   title: The Change Propagation root
   paths:
     /sys/queue:
@@ -78,10 +91,19 @@ spec: &spec
                       message: 'test'
                       triggered_by: '{{message.meta.topic}}:{{message.meta.uri}}'
 
+              secure_rule:
+                topic: simple_test_rule
+                match:
+                  meta:
+                    uri: '/secure/uri'
+                exec:
+                  method: get
+                  uri: 'http://secure.org/test'
+
 num_workers: 0
 logging:
   name: changeprop
-  level: info
+  level: trace
 services:
   - name: changeprop
     module: hyperswitch

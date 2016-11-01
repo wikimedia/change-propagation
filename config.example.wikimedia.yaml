@@ -1,5 +1,17 @@
 spec: &spec
   x-sub-request-filters:
+    - path: lib/auth_http_filter.js
+      options:
+        username: 'SOME_USER_WILL_BE_HERE'
+        password: 'SOME_PASSWORD_WILL_BE_HERE'
+        hosts:
+          - /^https?:\/\/office.wikimedia.org/ # Office wiki
+        templates:
+          mw_api:
+            method: 'post'
+            uri: 'https://{{request.params.domain}}/w/api.php'
+            headers:
+              host: '{{request.params.domain}}'
     - type: default
       name: http
       options:
@@ -7,6 +19,7 @@ spec: &spec
           - pattern: /^https?:\/\//
             forward_headers:
               user-agent: true
+
   title: The Change Propagation root
   paths:
     /sys/purge:
