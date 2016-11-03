@@ -124,9 +124,6 @@ spec: &spec
                     uri: '/^https?:\/\/[^\/]+\/api\/rest_v1\/(?<title>.+)$/'
                   tags:
                     - restbase
-                match_not:
-                  meta:
-                    domain: /\.wikidata\.org$/
                 exec:
                   method: post
                   uri: '/sys/purge/'
@@ -146,9 +143,6 @@ spec: &spec
                     uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
                   tags:
                     - purge
-                match_not:
-                  meta:
-                    domain: /\.wikidata\.org$/
                 exec:
                   method: get
                   uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{{match.meta.uri.title}}'
@@ -169,9 +163,6 @@ spec: &spec
                     uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
                   tags:
                     - null_edit
-                match_not:
-                  meta:
-                    domain: /\.wikidata\.org$/
                 exec:
                   method: get
                   uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{{match.meta.uri.title}}'
@@ -188,8 +179,12 @@ spec: &spec
                     - '5xx'
                     - 404 # Sometimes occasional 404s happen because of the mysql replication lag, so retry
                 match_not:
-                  meta:
-                    domain: /\.wikidata\.org$/
+                  - meta:
+                      domain: /\.wikidata\.org$/
+                    page_namespace: 0
+                  - meta:
+                      domain: /\.wikidata\.org$/
+                    page_namespace: 120
                 exec:
                   method: get
                   uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{message.page_title}/{{message.rev_id}}'
@@ -207,8 +202,12 @@ spec: &spec
                     - 403 # When the revision is hidden 403 will be returned by RESTBase, it's a valid situation
                     - 412
                 match_not:
-                  meta:
-                    domain: /\.wikidata\.org$/
+                  - meta:
+                      domain: /\.wikidata\.org$/
+                    page_namespace: 0
+                  - meta:
+                      domain: /\.wikidata\.org$/
+                    page_namespace: 120
                 exec:
                   method: get
                   uri: 'https://{{message.meta.domain}}/api/rest_v1/page/revision/{{message.rev_id}}'
@@ -224,8 +223,12 @@ spec: &spec
                     - 404 # 404 is a normal response for page deletion
                     - 412
                 match_not:
-                  meta:
-                    domain: /\.wikidata\.org$/
+                  - meta:
+                      domain: /\.wikidata\.org$/
+                    page_namespace: 0
+                  - meta:
+                      domain: /\.wikidata\.org$/
+                    page_namespace: 120
                 exec:
                   - method: get
                     uri: 'https://{{message.meta.domain}}/api/rest_v1/page/title/{message.page_title}'
@@ -257,8 +260,12 @@ spec: &spec
               page_restore:
                 topic: mediawiki.page-undelete
                 match_not:
-                  meta:
-                    domain: /\.wikidata\.org$/
+                  - meta:
+                      domain: /\.wikidata\.org$/
+                    page_namespace: 0
+                  - meta:
+                      domain: /\.wikidata\.org$/
+                    page_namespace: 120
                 exec:
                   method: get
                   uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{message.page_title}'
@@ -270,8 +277,12 @@ spec: &spec
               page_move:
                 topic: mediawiki.page-move
                 match_not:
-                  meta:
-                    domain: /\.wikidata\.org$/
+                  - meta:
+                      domain: /\.wikidata\.org$/
+                    page_namespace: 0
+                  - meta:
+                      domain: /\.wikidata\.org$/
+                    page_namespace: 120
                 exec:
                   - method: get
                     uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{message.page_title}/{{message.rev_id}}'
@@ -295,6 +306,10 @@ spec: &spec
                   - rev_parent_id: undefined
                   - meta:
                       domain: /\.wikidata\.org$/
+                    page_namespace: 0
+                  - meta:
+                      domain: /\.wikidata\.org$/
+                    page_namespace: 120
                 # end of test-only config
                 exec:
                   method: post
@@ -554,8 +569,12 @@ spec: &spec
                 match:
                   rev_parent_id: undefined
                 match_not:
-                  meta:
-                    domain: /\.wikidata\.org$/
+                  - meta:
+                      domain: /\.wikidata\.org$/
+                    page_namespace: 0
+                  - meta:
+                      domain: /\.wikidata\.org$/
+                    page_namespace: 120
                 exec:
                   method: post
                   uri: '/sys/links/backlinks/{message.page_title}'
@@ -625,8 +644,12 @@ spec: &spec
                       added_properties:
                         page_image: '/.+/' # Regex that matches anything just to check the prop is set
                     match_not:
-                      meta:
-                        domain: /\.wikidata\.org$/
+                      - meta:
+                          domain: /\.wikidata\.org$/
+                        page_namespace: 0
+                      - meta:
+                          domain: /\.wikidata\.org$/
+                        page_namespace: 120
                     exec:
                       - method: get
                         uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{message.page_title}'
