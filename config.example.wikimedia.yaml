@@ -74,7 +74,7 @@ spec: &spec
                         # These URIs are coming from RESTBase, so we know that article titles will be normalized
                         # and main namespace articles will not have : (uri-encoded, so %3a or %3A)
                         uri: '/^(?<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>(?:(?!%3a|%3A|\/).)+)$/'
-                        domain: '/^en.wiktionary.org$/'
+                        domain: '/^en\.wiktionary\.org$/'
                       tags:
                         - restbase
                     exec:
@@ -297,7 +297,7 @@ spec: &spec
                       domain: www.wikidata.org
                 # end of test-only config
                 exec:
-                  method: 'post'
+                  method: post
                   uri: '/sys/links/transcludes/{message.page_title}'
                   body: '{{globals.message}}'
 
@@ -305,7 +305,7 @@ spec: &spec
                 topic: change-prop.transcludes.resource-change
                 match:
                   meta:
-                    uri: '/https:\/\/[^\/]+\/wiki\/(?<title>.+)/'
+                    uri: '/https?:\/\/[^\/]+\/wiki\/(?<title>.+)/'
                   tags: [ 'transcludes' ]
                 exec:
                   method: get
@@ -583,7 +583,7 @@ spec: &spec
                   # TODO: This is a temp solution until we get a more general fragment support T148079
                   comment: '/wbeditentity|wbsetdescription/'
                 exec:
-                  method: 'post'
+                  method: post
                   uri: '/sys/links/wikidata_descriptions'
                   body: '{{globals.message}}'
 
@@ -594,7 +594,7 @@ spec: &spec
                     domain: www.wikidata.org
                   page_namespace: 0
                 exec:
-                  method: 'post'
+                  method: post
                   uri: '/sys/links/wikidata_descriptions'
                   body: '{{globals.message}}'
 
@@ -643,9 +643,9 @@ spec: &spec
                   - match:
                       removed_properties:
                         page_image: '/.+/' # Regex that matches anything just to check the prop is set
-                      match_not:
-                        meta:
-                          domain: www.wikidata.org
+                    match_not:
+                      meta:
+                        domain: www.wikidata.org
                     exec:
                       - method: get
                         uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{message.page_title}'
