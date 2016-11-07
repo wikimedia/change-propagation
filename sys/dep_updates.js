@@ -259,7 +259,7 @@ class DependencyProcessor {
             if (res.body && res.body.error) {
                 this.log('warn/wikidata_description', {
                     msg: 'Could not extract items',
-                    event: context.message,
+                    event: JSON.stringify(context.message),
                     error: res.body.error
                 });
             }
