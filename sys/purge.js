@@ -4,6 +4,7 @@ const Purger      = require('htcp-purge');
 const HyperSwitch = require('hyperswitch');
 const HTTPError   = HyperSwitch.HTTPError;
 const lifecicle   = HyperSwitch.lifecycle;
+const utils       = require('../lib/utils');
 
 class PurgeService {
     constructor(options) {
@@ -37,7 +38,7 @@ class PurgeService {
             if (!event.meta || !event.meta.uri || !/^\/\//.test(event.meta.uri)) {
                 hyper.log('error/events/purge', {
                     message: 'Invalid event URI',
-                    event: JSON.stringify(event)
+                    event: utils.stringify(event)
                 });
                 return undefined;
             }
