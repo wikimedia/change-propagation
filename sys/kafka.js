@@ -26,7 +26,7 @@ class Kafka {
     }
 
     setup(hyper) {
-        return this.kafkaFactory.createProducer()
+        return this.kafkaFactory.createGuaranteedProducer()
         .then((producer) => {
             this.producer = producer;
             HyperSwitch.lifecycle.on('close', () => this.producer.disconnect());
@@ -73,12 +73,15 @@ class Kafka {
         }
         // Check whether all messages contain the topic
         messages.forEach((message) => {
+            const now = new Date();
+            message.meta.id = message.meta.id || uuid.fromDate(now).toString();
+            message.meta.dt = message.meta.dt || now.toISOString();
             if (!message || !message.meta || !message.meta.topic) {
                 throw new HTTPError({
                     status: 400,
                     body: {
                         type: 'bad_request',
-                        detail: 'Event must have a meta.topic property',
+                        detail: 'Event must have a meta.topic and meta.id properties',
                         event: message
                     }
                 });
@@ -88,11 +91,9 @@ class Kafka {
             const topicName = message.meta.topic.replace(/\./g, '_');
             hyper.metrics.increment(`produce_${hyper.metrics.normalizeName(topicName)}`);
 
-            const now = new Date();
-            message.meta.id = message.meta.id || uuid.fromDate(now).toString();
-            message.meta.dt = message.meta.dt || now.toISOString();
             return this.producer.produce(`${this.kafkaFactory.produceDC}.${message.meta.topic}`, 0,
-                Buffer.from(JSON.stringify(message)));
+                Buffer.from(JSON.stringify(message)),
+                message.meta.id);
         }))
         .thenReturn({ status: 201 });
     }
