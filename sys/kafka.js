@@ -26,7 +26,7 @@ class Kafka {
     }
 
     setup(hyper) {
-        return this.kafkaFactory.createGuaranteedProducer()
+        return this.kafkaFactory.createGuaranteedProducer(this.log)
         .then((producer) => {
             this.producer = producer;
             HyperSwitch.lifecycle.on('close', () => this.producer.disconnect());
