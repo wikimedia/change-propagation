@@ -42,7 +42,8 @@
     "json-stable-stringify": "^1.0.1",
     "htcp-purge": "^0.2.0",
     "mediawiki-title": "^0.5.5",
-    "node-rdkafka": "^0.6.0"
+    "node-rdkafka": "^0.6.0",
+    "node-rdkafka-statsd": "git+https://gerrit.wikimedia.org/r/node-rdkafka-statsd#refs/changes/71/319671/16"
   },
   "devDependencies": {
     "istanbul": "^0.4.5",

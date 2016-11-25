@@ -82,6 +82,10 @@ num_workers: 0
 logging:
   name: changeprop
   level: info
+metrics: # To also examine the metrics code paths, don't care that UDP goes to nowhere
+  type: statsd
+  host: localhost
+  port: 8125
 services:
   - name: changeprop
     module: hyperswitch
