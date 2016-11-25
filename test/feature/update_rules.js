@@ -518,7 +518,7 @@ describe('RESTBase update rules', function() {
         .finally(() => nock.cleanAll());
     });
 
-    it('Should update RESTBase summary and mobile-sections on wikidata revision visibility change', () => {
+    it('Should update RESTBase summary and mobile-sections on wikidata undelete', () => {
         const wikidataAPI = nock('https://www.wikidata.org')
         .post('/w/api.php', {
             format: 'json',
@@ -551,7 +551,7 @@ describe('RESTBase update rules', function() {
                 'cache-control': 'no-cache',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
                 'user-agent': 'SampleChangePropInstance',
-                'x-triggered-by': 'mediawiki.revision-visibility-change:/rev/uri,change-prop.transcludes.resource-change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80'
+                'x-triggered-by': 'mediawiki.page-undelete:/rev/uri,change-prop.transcludes.resource-change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80'
             }
         })
         .get('/api/rest_v1/page/summary/%D0%9F%D1%91%D1%82%D1%80')
@@ -561,11 +561,11 @@ describe('RESTBase update rules', function() {
         .query({ redirect: false })
         .reply(200, { });
 
-        return P.try(() => producer.produce('test_dc.mediawiki.revision-visibility-change', 0,
+        return P.try(() => producer.produce('test_dc.mediawiki.page-undelete', 0,
             Buffer.from(JSON.stringify({
                 meta: {
-                    topic: 'mediawiki.revision-visibility-change',
-                    schema_uri: 'revision-visibility-change/1',
+                    topic: 'mediawiki.page-undelete',
+                    schema_uri: 'page-undelet/1',
                     uri: '/rev/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
                     id: uuid.now(),
