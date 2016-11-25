@@ -606,6 +606,17 @@ spec: &spec
                   uri: '/sys/links/wikidata_descriptions'
                   body: '{{globals.message}}'
 
+              wikidata_description_on_edit:
+                topic: mediawiki.page-delete
+                match:
+                  meta:
+                    domain: www.wikidata.org
+                  page_namespace: 0
+                exec:
+                  method: post
+                  uri: '/sys/links/wikidata_descriptions'
+                  body: '{{globals.message}}'
+
               wikidata_description_on_revision_visibility_change:
                 topic: mediawiki.revision-visibility-change
                 match:
