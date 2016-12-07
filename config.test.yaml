@@ -81,13 +81,11 @@ spec: &spec
                     - meta:
                         topic: '{{message.produce_to_topic}}'
                         uri: '{{message.meta.uri}}'
-                        request_id: '{{message.meta.request_id}}'
                       message: 'test'
                       triggered_by: '{{message.meta.topic}}:{{message.meta.uri}}'
                     - meta:
                         topic: '{{message.produce_to_topic}}'
                         uri: '{{message.meta.uri}}'
-                        request_id: '{{message.meta.request_id}}'
                       message: 'test'
                       triggered_by: '{{message.meta.topic}}:{{message.meta.uri}}'
 

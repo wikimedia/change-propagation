@@ -11,6 +11,7 @@ const HyperSwitch = require('hyperswitch');
 const HTTPError = HyperSwitch.HTTPError;
 const uuid = require('cassandra-uuid').TimeUuid;
 
+const utils = require('../lib/utils');
 const Rule = require('../lib/rule');
 const KafkaFactory = require('../lib/kafka_factory');
 const RuleSubscriber = require('../lib/rule_subscriber');
@@ -71,6 +72,7 @@ class Kafka {
             const now = new Date();
             message.meta.id = message.meta.id || uuid.fromDate(now).toString();
             message.meta.dt = message.meta.dt || now.toISOString();
+            message.meta.request_id = message.meta.request_id || utils.requestId();
             if (!message || !message.meta || !message.meta.topic) {
                 throw new HTTPError({
                     status: 400,
