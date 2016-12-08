@@ -90,7 +90,7 @@ function createWikidataTemplate(options) {
             }
         })),
         resourceChangeTags: [ 'wikidata' ],
-        leafTopicName: 'change-prop.transcludes.resource-change',
+        leafTopicName: 'change-prop.wikidata.resource-change',
         shouldProcess: (res) => {
             if (!(res && res.body && !!res.body.success)) {
                 return false;
