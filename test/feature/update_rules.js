@@ -487,7 +487,7 @@ describe('RESTBase update rules', function() {
                 'cache-control': 'no-cache',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
                 'user-agent': 'SampleChangePropInstance',
-                'x-triggered-by': 'mediawiki.revision-create:/rev/uri,change-prop.transcludes.resource-change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80'
+                'x-triggered-by': 'mediawiki.revision-create:/rev/uri,change-prop.wikidata.resource-change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80'
             }
         })
         .get('/api/rest_v1/page/summary/%D0%9F%D1%91%D1%82%D1%80')
@@ -551,7 +551,7 @@ describe('RESTBase update rules', function() {
                 'cache-control': 'no-cache',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
                 'user-agent': 'SampleChangePropInstance',
-                'x-triggered-by': 'mediawiki.page-undelete:/rev/uri,change-prop.transcludes.resource-change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80'
+                'x-triggered-by': 'mediawiki.page-undelete:/rev/uri,change-prop.wikidata.resource-change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80'
             }
         })
         .get('/api/rest_v1/page/summary/%D0%9F%D1%91%D1%82%D1%80')
