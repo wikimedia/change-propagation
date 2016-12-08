@@ -6,9 +6,6 @@ const Template = HyperSwitch.Template;
 const utils = require('../lib/utils');
 const Title = require('mediawiki-title').Title;
 
-// TODO: needed only in transition period, to be removed
-const BACKLINKS_CONTINUE_TOPIC_NAME = 'change-prop.backlinks.continue';
-const TRANSCLUDES_CONTINUE_TOPIC_NAME = 'change-prop.transcludes.continue';
 const DEDUPE_LOG_SIZE = 100;
 
 function createBackLinksTemplate(options) {
@@ -138,35 +135,6 @@ class DependencyProcessor {
             }
         }));
         this.latestMessages = [];
-    }
-
-    // TODO: needed only in transition period, to be removed
-    setup(hyper) {
-        return hyper.post({
-            uri: '/sys/queue/subscriptions',
-            body: {
-                backlinks_continue: {
-                    topic: BACKLINKS_CONTINUE_TOPIC_NAME,
-                    exec: [
-                        {
-                            method: 'post',
-                            uri: '/sys/links/backlinks/{message.original_event.page_title}',
-                            body: '{{globals.message}}'
-                        }
-                    ]
-                },
-                transclusions_continue: {
-                    topic: TRANSCLUDES_CONTINUE_TOPIC_NAME,
-                    exec: [
-                        {
-                            method: 'post',
-                            uri: '/sys/links/transcludes/{message.original_event.page_title}',
-                            body: '{{globals.message}}'
-                        }
-                    ]
-                }
-            }
-        });
     }
 
     processBackLinks(hyper, req) {
@@ -377,13 +345,6 @@ module.exports = (options) => {
     return {
         spec: {
             paths: {
-                // TODO: needed only in transition period, to be removed
-                '/setup': {
-                    put: {
-                        summary: 'setup the module',
-                        operationId: 'setup'
-                    }
-                },
                 '/backlinks/{title}': {
                     post: {
                         summary: 'set up the kafka listener',
@@ -408,13 +369,7 @@ module.exports = (options) => {
         operations: {
             process_backlinks: processor.processBackLinks.bind(processor),
             process_transcludes: processor.processTranscludes.bind(processor),
-            process_wikidata: processor.processWikidata.bind(processor),
-            // TODO: needed only in transition period, to be removed
-            setup: processor.setup.bind(processor)
-        },
-        // TODO: needed only in transition period, to be removed
-        resources: [{
-            uri: '/sys/links/setup'
-        }]
+            process_wikidata: processor.processWikidata.bind(processor)
+        }
     };
 };
