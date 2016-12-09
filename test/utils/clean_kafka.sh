@@ -5,8 +5,8 @@ source "$(dirname "$0")"/../../node_modules/kafka-test-tools/clean_kafka.sh
 check 2181 "Zookeeper"
 check 9092 "Kafka"
 
-# Don't need to clean anything in Jenkins
-if [ "x$JENKINS_URL" = "x" ]; then
+# Don't need to clean anything in Jenkins or Travis
+if [ "x$JENKINS_URL" = "x"  ] || [ ${CI} = true ]; then
   dropTopics "test_dc"
   sleep 5
 fi
