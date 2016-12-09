@@ -6,7 +6,7 @@ check 2181 "Zookeeper"
 check 9092 "Kafka"
 
 # Don't need to clean anything in Jenkins or Travis
-if [ "x$JENKINS_URL" = "x"  ] || [ ${CI} = true ]; then
+if [ "x$JENKINS_URL" = "x"  ] || [ "$CI" = "true" ]; then
   dropTopics "test_dc"
   sleep 5
 fi
