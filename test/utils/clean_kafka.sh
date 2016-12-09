@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. node_modules/kafka-test-tools/clean_kafka.sh
+. $(cd $(dirname $0) && pwd)/../../node_modules/kafka-test-tools/clean_kafka.sh
 
 check 2181 "Zookeeper"
 check 9092 "Kafka"
