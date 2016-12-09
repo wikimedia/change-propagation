@@ -8,16 +8,16 @@ node_js:
 env:
   - KAFKA_HOME=../kafka KAFKA_VERSION=0.9.0.1 CXX=g++-4.8
 
-before_install:
-- npm run install-kafka
-- npm run start-kafka
-
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
     packages:
       - g++-4.8
+
+before_script:
+- npm run install-kafka
+- npm run start-kafka
 
 script: npm run coverage && (npm run coveralls || exit 0)
 
