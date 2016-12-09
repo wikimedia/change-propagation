@@ -6,13 +6,12 @@ node_js:
   - "6"
 
 env:
-  - KAFKA_HOME=../kafka CXX=g++-4.8
+  - KAFKA_HOME=../kafka KAFKA_VERSION=0.9.0.1 CXX=g++-4.8
 
 before_install:
-- wget http://www.us.apache.org/dist/kafka/0.9.0.1/kafka_2.10-0.9.0.1.tgz -O kafka.tgz
 - mkdir -p ${KAFKA_HOME} && tar xzf kafka.tgz -C ${KAFKA_HOME} --strip-components 1
 - echo 'delete.topic.enable=true' >> ${KAFKA_HOME}/config/server.properties
-- sh test/utils/start_kafka.sh start
+- npm run start-kafka
 
 addons:
   apt:
