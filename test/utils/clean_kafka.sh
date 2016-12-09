@@ -1,6 +1,9 @@
 #!/bin/bash
 
-source "$(dirname "$0")"/../../node_modules/kafka-test-tools/clean_kafka.sh
+printenv
+
+echo "${BASH_SOURCE%/*}"/../../node_modules/kafka-test-tools/clean_kafka.sh
+. "${BASH_SOURCE%/*}"/../../node_modules/kafka-test-tools/clean_kafka.sh
 
 check 2181 "Zookeeper"
 check 9092 "Kafka"
