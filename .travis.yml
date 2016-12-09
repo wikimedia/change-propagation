@@ -21,4 +21,4 @@ before_script:
 
 script: npm run coverage && (npm run coveralls || exit 0)
 
-after_script: sh test/utils/start_kafka.sh kill
+after_script: sh node_modules/kafka-test-tools/start_kafka.sh kill
