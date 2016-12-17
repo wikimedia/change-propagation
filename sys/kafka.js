@@ -26,7 +26,7 @@ class Kafka {
     }
 
     setup(hyper) {
-        return this.kafkaFactory.createGuaranteedProducer(this.log)
+        return this.kafkaFactory.createGuaranteedProducer()
         .then((producer) => {
             this.producer = producer;
             HyperSwitch.lifecycle.on('close', () => this.producer.disconnect());
@@ -92,7 +92,8 @@ class Kafka {
             hyper.metrics.increment(`produce_${hyper.metrics.normalizeName(topicName)}`);
 
             return this.producer.produce(`${this.kafkaFactory.produceDC}.${message.meta.topic}`, 0,
-                Buffer.from(JSON.stringify(message)));
+                Buffer.from(JSON.stringify(message)),
+                message.meta.id);
         }))
         .thenReturn({ status: 201 });
     }
