@@ -145,7 +145,9 @@ spec: &spec
                     - purge
                 exec:
                   method: get
-                  uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{{match.meta.uri.title}}'
+                  # This even comes directly from MediaWiki, so title is encoded in MW-specific way.
+                  # Re-encode the title in standard `encodeURIComponent` encoding.
+                  uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{decode(match.meta.uri.title)}'
                   headers:
                     cache-control: no-cache
                     if-unmodified-since: '{{date(message.meta.dt)}}'
@@ -165,7 +167,9 @@ spec: &spec
                     - null_edit
                 exec:
                   method: get
-                  uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{{match.meta.uri.title}}'
+                  # This even comes directly from MediaWiki, so title is encoded in MW-specific way.
+                  # Re-encode the title in standard `encodeURIComponent` encoding.
+                  uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{decode(match.meta.uri.title)}'
                   headers:
                     cache-control: no-cache
                     if-unmodified-since: '{{date(message.meta.dt)}}'
