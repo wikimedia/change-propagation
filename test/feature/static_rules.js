@@ -169,13 +169,14 @@ describe('Basic rule management', function() {
                 Buffer.from(JSON.stringify(common.eventWithMessageAndRandom('test', random)))), 2000);
 
             function check() {
-                return retryConsumer.consumeAsync()
+                return retryConsumer.consumeAsync(1)
                 .catch(check)
-                .then((message) => {
-                    if (!message) {
+                .then((messages) => {
+                    if (!messages.length) {
                         return;
                     }
 
+                    const message = messages[0];
                     const ajv = new Ajv();
                     const validate = ajv.compile(retrySchema);
                     const msg = JSON.parse(message.value.toString());
@@ -303,16 +304,17 @@ describe('Basic rule management', function() {
                 producer.produce('test_dc.simple_test_rule', 0, Buffer.from('not_a_json_message')), 2000);
 
             function check() {
-                return errorConsumer.consumeAsync()
+                return errorConsumer.consumeAsync(1)
                 .catch(check)
-                .then((message) => {
-                    if (!message) {
+                .then((messages) => {
+                    if (!messages.length) {
                         return;
                     }
 
+                    const message = messages[0];
                     const ajv = new Ajv();
                     const validate = ajv.compile(errorSchema);
-                    var valid = validate(JSON.parse(message.value.toString()));
+                    const valid = validate(JSON.parse(message.value.toString()));
                     if (!valid) {
                         throw  new assert.AssertionError({
                             message: ajv.errorsText(validate.errors)
