@@ -26,31 +26,6 @@ spec: &spec
                     host: '{{message.meta.domain}}'
                   body:
                     formatversion: 2
-    /sys/metrics:
-      x-modules:
-        - path: sys/metrics.js
-    /sys/monitoring_queue:
-      x-modules:
-        - path: sys/kafka.js
-          options:
-            metadata_broker_list: 127.0.0.1:9092
-            dc_name: test_dc
-            startup_delay: 0
-            consumer:
-              # These options should not be copied to puppet config.
-              # We're using this config for testing, so need to configure
-              # for minimal latency
-              fetch.wait.max.ms: "1"
-              fetch.min.bytes: "1"
-              queue.buffering.max.ms: "1"
-            concurrency: 250
-            templates:
-              varnish_metrics_collect:
-                topic: webrequest_text
-                exec:
-                  method: post
-                  uri: '/sys/metrics/webrequest'
-                  body: '{{globals.message}}'
     /sys/queue:
       x-modules:
         - path: sys/kafka.js
