@@ -91,7 +91,8 @@ class Kafka {
             const topicName = message.meta.topic.replace(/\./g, '_');
             hyper.metrics.increment(`produce_${hyper.metrics.normalizeName(topicName)}`);
 
-            // TODO: This has to return a promise for guaranteed producer. This is a quick fix to be rewritten.
+            // TODO: This has to return a promise for guaranteed producer.
+            // TODO: This is a quick fix to be rewritten.
             this.producer.produce(`${this.kafkaFactory.produceDC}.${message.meta.topic}`, 0,
                 Buffer.from(JSON.stringify(message)));
             return this.producer.poll();
