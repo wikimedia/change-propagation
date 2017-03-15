@@ -93,9 +93,8 @@ class Kafka {
 
             // TODO: This has to return a promise for guaranteed producer.
             // TODO: This is a quick fix to be rewritten.
-            this.producer.produce(`${this.kafkaFactory.produceDC}.${message.meta.topic}`, 0,
+            return this.producer.produce(`${this.kafkaFactory.produceDC}.${message.meta.topic}`, 0,
                 Buffer.from(JSON.stringify(message)));
-            return this.producer.poll();
         }))
         .thenReturn({ status: 201 });
     }

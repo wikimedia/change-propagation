@@ -35,7 +35,7 @@ describe('RESTBase update rules', function() {
             });
         })
         .then((res) => siteInfoResponse = res.body)
-        .then(() =>  common.factory.createProducer())
+        .then(() => common.factory.createProducer(console.log.bind(console)))
         .then((result) => producer = result);
     });
 

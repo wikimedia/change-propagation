@@ -29,7 +29,7 @@ describe('Basic rule management', function() {
         .then((res) => retrySchema = yaml.safeLoad(res.body))
         .then(() => preq.get({ uri: 'https://raw.githubusercontent.com/wikimedia/mediawiki-event-schemas/master/jsonschema/error/1.yaml' }))
         .then((res) => errorSchema = yaml.safeLoad(res.body))
-        .then(common.factory.createProducer.bind(common.factory))
+        .then(() => common.factory.createProducer(console.log.bind(console)))
         .then((result) => producer = result);
     });
 

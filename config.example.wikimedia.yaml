@@ -40,6 +40,8 @@ spec: &spec
               fetch.wait.max.ms: "1"
               fetch.min.bytes: "1"
               queue.buffering.max.ms: "1"
+            producer:
+              queue.buffering.max.messages: "10"
             concurrency: 250
             templates:
 
