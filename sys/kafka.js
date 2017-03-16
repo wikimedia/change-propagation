@@ -92,7 +92,7 @@ class Kafka {
             hyper.metrics.increment(`produce_${hyper.metrics.normalizeName(topicName)}`);
 
             return this.producer.produce(`${this.kafkaFactory.produceDC}.${message.meta.topic}`, 0,
-                Buffer.from(JSON.stringify(message)), message.meta.id);
+                Buffer.from(JSON.stringify(message)));
         }))
         .thenReturn({ status: 201 });
     }
