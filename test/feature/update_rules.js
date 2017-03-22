@@ -39,11 +39,11 @@ describe('RESTBase update rules', function() {
         .then((result) => producer = result);
     });
 
-    it('Should update summary endpoint', () => {
+    function summaryEndpointTest(topic) {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': 'resource_change:https://en.wikipedia.org/api/rest_v1/page/html/Main_Page',
+                'x-triggered-by': `${topic}:https://en.wikipedia.org/api/rest_v1/page/html/Main_Page`,
                 'x-request-id': common.SAMPLE_REQUEST_ID,
                 'user-agent': 'SampleChangePropInstance'
             }
@@ -52,10 +52,10 @@ describe('RESTBase update rules', function() {
         .query({ redirect: false })
         .reply(200, { });
 
-        return P.try(() => producer.produce('test_dc.resource_change', 0,
+        return P.try(() => producer.produce(`test_dc.${topic}`, 0,
             Buffer.from(JSON.stringify({
                 meta: {
-                    topic: 'resource_change',
+                    topic: topic,
                     schema_uri: 'resource_change/1',
                     uri: 'https://en.wikipedia.org/api/rest_v1/page/html/Main_Page',
                     request_id: common.SAMPLE_REQUEST_ID,
@@ -67,6 +67,14 @@ describe('RESTBase update rules', function() {
             }))))
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
+    }
+
+    it('Should update summary endpoint', () => {
+        return summaryEndpointTest('resource_change');
+    });
+
+    it('Should update summary endpoint, transcludes topic', () => {
+        return summaryEndpointTest('change-prop.transcludes.resource-change');
     });
 
     it('Should update summary endpoint on page images change', () => {

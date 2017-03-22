@@ -39,7 +39,7 @@ createTopic "test_dc.change-prop.retry.change-prop.backlinks.resource-change"
 createTopic "test_dc.mediawiki.page-properties-change"
 createTopic "test_dc.change-prop.retry.mediawiki.page-properties-change"
 createTopic "test_dc.change-prop.wikidata.resource-change"
-createTopic "test_dc.change-prop.retry.test_dc.change-prop.wikidata.resource-change"
+createTopic "test_dc.change-prop.retry.change-prop.wikidata.resource-change"
 
 wait
 sleep 5

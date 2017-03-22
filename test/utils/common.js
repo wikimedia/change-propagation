@@ -83,7 +83,7 @@ common.EN_SITE_INFO_RESPONSE = {
 };
 
 common.checkAPIDone = (api, maxAttempts) => {
-    maxAttempts = maxAttempts || 20;
+    maxAttempts = maxAttempts || 50;
     let attempts = 0;
     const check = () => {
         if (api.isDone()) {

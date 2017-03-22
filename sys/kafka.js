@@ -13,8 +13,7 @@ const uuid = require('cassandra-uuid').TimeUuid;
 
 const Rule = require('../lib/rule');
 const KafkaFactory = require('../lib/kafka_factory');
-const RuleExecutor = require('../lib/rule_executor');
-const RetryExecutor = require('../lib/retry_executor');
+const RuleSubscriber = require('../lib/rule_subscriber');
 
 class Kafka {
     constructor(options) {
@@ -22,7 +21,9 @@ class Kafka {
         this.log = options.log || (() => { });
         this.kafkaFactory = new KafkaFactory(options);
         this.staticRules = options.templates || {};
-        this.ruleExecutors = {};
+
+        this.subscriber = new RuleSubscriber(options, this.kafkaFactory);
+        HyperSwitch.lifecycle.on('close', () => this.subscriber.unsubscribeAll());
     }
 
     setup(hyper) {
@@ -39,21 +40,10 @@ class Kafka {
         const activeRules = Object.keys(rules)
             .map((ruleName) => new Rule(ruleName, rules[ruleName]))
             .filter((rule) => !rule.noop);
-        return P.each(activeRules, (rule) => {
-            this.ruleExecutors[rule.name] = new RuleExecutor(rule,
-                this.kafkaFactory, hyper, this.log, this.options);
-            this.ruleExecutors[`${rule.name}_retry`] = new RetryExecutor(rule,
-                this.kafkaFactory, hyper, this.log, this.options);
-            return P.join(
-                    this.ruleExecutors[rule.name].subscribe(),
-                    this.ruleExecutors[`${rule.name}_retry`].subscribe());
-        })
-        .then(() => {
-            HyperSwitch.lifecycle.on('close', () =>
-                Object.keys(this.ruleExecutors).forEach((executorName) =>
-                    this.ruleExecutors[executorName].close()));
-            return { status: 201 };
-        });
+
+        return P.each(activeRules, (rule) =>
+            this.subscriber.subscribe(hyper, rule))
+        .thenReturn({ status: 201 });
     }
 
     subscribe(hyper, req) {
