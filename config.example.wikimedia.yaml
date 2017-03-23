@@ -46,7 +46,7 @@ spec: &spec
             templates:
 
               summary_definition_rerender: &summary_definition_rerender_spec
-                topic: '/^(:?change-prop\.transcludes\.)?resource[-_]change$/'
+                topic: '/^(?:change-prop\.transcludes\.)?resource[-_]change$/'
                 retry_limit: 2
                 retry_delay: 500
                 retry_on:
@@ -89,7 +89,7 @@ spec: &spec
                         cache-control: no-cache
 
               mobile_rerender: &mobile_rerender_spec
-                topic: '/^(:?change-prop\.transcludes\.)?resource[-_]change$/'
+                topic: '/^(?:change-prop\.transcludes\.)?resource[-_]change$/'
                 retry_limit: 2
                 retry_delay: 500
                 retry_on:
@@ -112,7 +112,7 @@ spec: &spec
                     cache-control: no-cache
 
               purge_varnish: &purge_varnish_spec
-                topic: '/^(:?change-prop\.transcludes\.)?resource[-_]change$/'
+                topic: '/^(?:change-prop\.transcludes\.)?resource[-_]change$/'
                 match:
                   meta:
                     uri: '/^https?:\/\/[^\/]+\/api\/rest_v1\/(?<title>.+)$/'
