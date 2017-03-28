@@ -38,7 +38,7 @@ class PurgeService {
             if (!event.meta || !event.meta.uri || !/^\/\//.test(event.meta.uri)) {
                 hyper.log('error/events/purge', () => ({
                     message: 'Invalid event URI',
-                    event: utils.stringify(event)
+                    event_str: utils.stringify(event)
                 }));
                 return undefined;
             }

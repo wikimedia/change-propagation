@@ -231,7 +231,7 @@ class DependencyProcessor {
             if (res.body && res.body.error) {
                 this.log('warn/wikidata_description', () => ({
                     msg: 'Could not extract items',
-                    event: utils.stringify(context.message),
+                    event_str: utils.stringify(context.message),
                     error: res.body.error
                 }));
             }

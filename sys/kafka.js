@@ -82,7 +82,7 @@ class Kafka {
                     body: {
                         type: 'bad_request',
                         detail: 'Event must have a meta.topic and meta.id properties',
-                        event: message
+                        event_str: message
                     }
                 });
             }
