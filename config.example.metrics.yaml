@@ -1,0 +1,58 @@
+spec: &spec
+  x-sub-request-filters:
+    - type: default
+      name: http
+      options:
+        allow:
+          - pattern: /^https?:\/\//
+            forward_headers:
+              user-agent: true
+  title: The Change Propagation metrics reporter root
+  paths:
+    /sys/metrics:
+      x-modules:
+        - path: sys/metrics.js
+          options:
+            templates:
+              spec_request:
+                  method: 'get'
+                  uri: 'https://{{message.uri_host}}/api/rest_v1/?spec'
+    /sys/queue:
+      x-modules:
+        - path: sys/kafka.js
+          options:
+            metadata_broker_list: 127.0.0.1:9092
+            dc_name: '' # VarnishKafka topics are not prefixed with a DC name
+            enable_retries: false
+            startup_delay: 0
+            consumer:
+              # These options should not be copied to puppet config.
+              # We're using this config for testing, so need to configure
+              # for minimal latency
+              fetch.wait.max.ms: "1"
+              fetch.min.bytes: "1"
+              queue.buffering.max.ms: "1"
+            concurrency: 250
+            templates:
+              varnish_metrics_collect:
+                topic: webrequest_text
+                match:
+                  uri_path: '/^\/api\/rest_v1/'
+                exec:
+                  method: post
+                  uri: '/sys/metrics/webrequest'
+                  body: '{{globals.message}}'
+
+num_workers: 0
+logging:
+  name: changeprop-metrics
+  level: trace
+metrics:
+  type: log
+services:
+  - name: changeprop-metrics
+    module: hyperswitch
+    conf:
+      port: 7273
+      user_agent: MetricsChangePropInstance
+      spec: *spec

@@ -40,13 +40,20 @@ class Kafka {
             .map((ruleName) => new Rule(ruleName, rules[ruleName]))
             .filter((rule) => !rule.noop);
         return P.each(activeRules, (rule) => {
-            this.ruleExecutors[rule.name] = new RuleExecutor(rule,
+            const actions = [];
+            const ruleExecutor = new RuleExecutor(rule,
                 this.kafkaFactory, hyper, this.log, this.options);
-            this.ruleExecutors[`${rule.name}_retry`] = new RetryExecutor(rule,
-                this.kafkaFactory, hyper, this.log, this.options);
-            return P.join(
-                    this.ruleExecutors[rule.name].subscribe(),
-                    this.ruleExecutors[`${rule.name}_retry`].subscribe());
+            this.ruleExecutors[rule.name] = ruleExecutor;
+            actions.push(ruleExecutor.subscribe());
+
+            if (this.options.enable_retries !== false) {
+                const retryExecutor = new RetryExecutor(rule,
+                    this.kafkaFactory, hyper, this.log, this.options);
+                this.ruleExecutors[`${rule.name}_retry`] = retryExecutor;
+                actions.push(retryExecutor.subscribe());
+            }
+
+            return P.all(actions);
         })
         .then(() => {
             HyperSwitch.lifecycle.on('close', () =>
@@ -91,7 +98,8 @@ class Kafka {
             const topicName = message.meta.topic.replace(/\./g, '_');
             hyper.metrics.increment(`produce_${hyper.metrics.normalizeName(topicName)}`);
 
-            return this.producer.produce(`${this.kafkaFactory.produceDC}.${message.meta.topic}`, 0,
+            return this.producer.produce(
+                this.kafkaFactory.prefixProduceTopic(message.meta.topic), 0,
                 Buffer.from(JSON.stringify(message)));
         }))
         .thenReturn({ status: 201 });
