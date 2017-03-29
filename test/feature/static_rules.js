@@ -21,8 +21,8 @@ describe('Basic rule management', function() {
     let errorSchema;
 
     before(function() {
-        // Setting up might tike some tome, so disable the timeout
-        this.timeout(20000);
+        // Setting up might take some tome, so disable the timeout
+        this.timeout(30000);
 
         return changeProp.start()
         .then(() => preq.get({ uri: 'https://raw.githubusercontent.com/wikimedia/mediawiki-event-schemas/master/jsonschema/change-prop/retry/1.yaml' }))
