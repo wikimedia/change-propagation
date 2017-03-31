@@ -43,7 +43,7 @@ class PurgeService {
                 return undefined;
             }
             return `http:${event.meta.uri}`;
-        }).filter((event) => !!event))
+        }).filter(event => !!event))
         .thenReturn({ status: 201 })
         .catch((e) => {
             throw new HTTPError({

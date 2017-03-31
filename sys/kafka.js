@@ -38,10 +38,10 @@ class Kafka {
 
     _subscribeRules(hyper, rules) {
         const activeRules = Object.keys(rules)
-            .map((ruleName) => new Rule(ruleName, rules[ruleName]))
-            .filter((rule) => !rule.noop);
+            .map(ruleName => new Rule(ruleName, rules[ruleName]))
+            .filter(rule => !rule.noop);
 
-        return P.each(activeRules, (rule) =>
+        return P.each(activeRules, rule =>
             this.subscriber.subscribe(hyper, rule))
         .thenReturn({ status: 201 });
     }

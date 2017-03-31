@@ -22,10 +22,10 @@ function createBackLinksTemplate(options) {
                 bllimit: 500
             }
         })),
-        getContinueToken: (res) => res.body.continue && res.body.continue.blcontinue,
+        getContinueToken: res => res.body.continue && res.body.continue.blcontinue,
         resourceChangeTags: [ 'backlinks' ],
         leafTopicName: 'change-prop.backlinks.resource-change',
-        extractResults: (res) => res.body.query.backlinks
+        extractResults: res => res.body.query.backlinks
     };
 }
 
@@ -43,10 +43,10 @@ function createImageUsageTemplate(options) {
                 // TODO: decide what do we want to do with redirects
             }
         })),
-        getContinueToken: (res) => res.body.continue && res.body.continue.iucontinue,
+        getContinueToken: res => res.body.continue && res.body.continue.iucontinue,
         leafTopicName: 'change-prop.transcludes.resource-change',
         resourceChangeTags: [ 'transcludes', 'files' ],
-        extractResults: (res) =>  res.body.query.imageusage
+        extractResults: res =>  res.body.query.imageusage
     };
 }
 
@@ -65,7 +65,7 @@ function createTranscludeInTemplate(options) {
                 tilimit: 500
             }
         })),
-        getContinueToken: (res) => res.body.continue && res.body.continue.ticontinue,
+        getContinueToken: res => res.body.continue && res.body.continue.ticontinue,
         leafTopicName: 'change-prop.transcludes.resource-change',
         resourceChangeTags: [ 'transcludes', 'templates' ],
         extractResults: (res) => {
