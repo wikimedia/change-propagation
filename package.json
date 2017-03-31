@@ -59,7 +59,9 @@
     "preq": "^0.5.2",
     "ajv": "^4.11.5",
     "mocha-eslint":"^3.0.1",
-    "eslint-config-node-services": "^2.0.2",
+    "eslint-config-node-services": "^2.1.0",
+    "eslint-plugin-jsdoc": "^3.0.0",
+    "eslint-plugin-json": "^1.2.0",
     "kafka-test-tools": "^0.1.2"
   },
   "engines": {
