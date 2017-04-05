@@ -45,7 +45,9 @@
     "mediawiki-title": "^0.5.6",
     "murmur-32": "^0.1.0",
     "node-rdkafka": "^1.0.0",
-    "node-rdkafka-statsd": "^0.1.0"
+    "node-rdkafka-statsd": "^0.1.0",
+    "ratelimit.js": "^1.8.0",
+    "redis": "^2.7.1"
   },
   "devDependencies": {
     "istanbul": "^0.4.5",

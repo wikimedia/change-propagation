@@ -9,6 +9,18 @@ spec: &spec
               user-agent: true
   title: The Change Propagation root
   paths:
+    /sys/limit:
+      x-modules:
+        - path: sys/rate_limiter.js
+          options:
+            redis:
+              host: localhost
+              port: 6379
+
+            limiters:
+              blacklist:
+                interval: 604800
+                limit: 100
     /sys/purge:
       x-modules:
         - path: sys/purge.js
