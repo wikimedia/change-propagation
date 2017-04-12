@@ -33,6 +33,7 @@ rules to workers equally.
 
 The rule can contain the following properties:
 - **topic** A name of the topic to subscribe to.
+- **parallel** Whether to run the executor steps sequentially or in parallel. Default: `false` 
 - **match** An optional predicate for a message. The rule is executed only if all of the `match`
 properties were satisfied by the message. Properties could be nested objects, constants
 or a regex. Regex could contain capture groups and captured values will later be accessible
