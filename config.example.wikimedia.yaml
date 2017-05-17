@@ -328,6 +328,7 @@ spec: &spec
               ores_cache:
                 topic: mediawiki.revision-create
                 concurrency: 10
+                parallel: true
                 ignore:
                   status:
                     - 503
