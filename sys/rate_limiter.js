@@ -3,7 +3,8 @@
 const Limiter = require('ratelimit.js').RateLimit;
 const redis = require('redis');
 const P = require('bluebird');
-const HTTPError = require('hyperswitch').HTTPError;
+const HyperSwitch = require('hyperswitch');
+const HTTPError = HyperSwitch.HTTPError;
 
 class RateLimiter {
     constructor(options) {
