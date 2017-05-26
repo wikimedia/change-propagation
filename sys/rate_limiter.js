@@ -12,6 +12,10 @@ class RateLimiter {
         this._log = this._options.log || (() => {});
 
         // TODO: verify and pass in the redis options
+
+        this._options.redis = Object.assign(this._options.redis, {
+            no_ready_check: true // Prevents sending unsupported info command to nutcracker
+        });
         this._client = redis.createClient(this._options.redis);
         HyperSwitch.lifecycle.on('close', () => this._client.quit());
 
