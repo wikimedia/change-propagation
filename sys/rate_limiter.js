@@ -12,6 +12,7 @@ class RateLimiter {
 
         // TODO: verify and pass in the redis options
         this._client = redis.createClient(this._options.redis);
+        HyperSwitch.lifecycle.on('close', () => this._client.quit());
 
         // TODO: configurable options
 
