@@ -181,7 +181,7 @@ spec: &spec
               page_edit:
                 topic: mediawiki.revision-create
                 limiters:
-                  blacklist: '{message.page_title}'
+                  blacklist: '{message.meta.uri}'
                 retry_on:
                   status:
                     - '5xx'
@@ -315,14 +315,14 @@ spec: &spec
 
               on_transclusion_update:
                 topic: change-prop.transcludes.resource-change
+                limiters:
+                  blacklist: '{message.meta.uri}'
                 cases:
                   - match:
                       meta:
                         schema_uri: 'resource_change/1'
                         uri: '/https?:\/\/[^\/]+\/wiki\/(?<title>.+)/'
                       tags: [ 'transcludes' ]
-                    limiters:
-                      blacklist: '{{match.meta.uri.title}}'
                     exec:
                       method: get
                       uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{{match.meta.uri.title}}'
