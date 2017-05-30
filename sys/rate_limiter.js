@@ -11,19 +11,34 @@ class RateLimiter {
         this._options = options;
         this._log = this._options.log || (() => {});
 
-        // TODO: verify and pass in the redis options
+        if (!this._options.redis) {
+            throw new Error('Redis options not provided to the rate_limiter');
+        }
+
+        if (!(this._options.redis.host && this._options.redis.port)
+                && !this._options.redis.path) {
+            throw new Error('Redis host:port or unix socket path must be specified');
+        }
 
         this._options.redis = Object.assign(this._options.redis, {
             no_ready_check: true // Prevents sending unsupported info command to nutcracker
         });
         this._client = redis.createClient(this._options.redis);
+        this._client.on('error', (e) => {
+            // If we can't connect to redis - don't worry and don't fail,
+            // just log it and ignore.
+            this._options.log('error/redis', e);
+        });
         HyperSwitch.lifecycle.on('close', () => this._client.quit());
-
-        // TODO: configurable options
 
         this._LIMITERS = new Map();
         Object.keys(this._options.limiters).forEach((type) => {
             const limiterOpts = this._options.limiters[type];
+
+            if (!limiterOpts.interval || !limiterOpts.limit) {
+                throw new Error(`Limiter ${type} is miconfigured`);
+            }
+
             this._LIMITERS.set(type, new Limiter(this._client, [
                 limiterOpts
             ], { prefix: `CPLimiter_${type}` }));
@@ -33,13 +48,17 @@ class RateLimiter {
     _execLimiterFun(fun, hyper, type, key) {
         const limiter = this._LIMITERS.get(type);
         if (!limiter) {
+            hyper.log('warn/ratelimit', {
+                msg: 'Unconfigured rate-limiter is used',
+                limiter_type: type
+            });
             return { status: 204 };
         }
 
         return new P((resolve, reject) => {
             limiter[fun](key, (err, isRateLimited) => {
                 if (err) {
-                    // TODO: log!
+                    hyper.log('error/ratelimit', err);
                     // In case we've got problems with limiting just allow everything
                     return resolve({ status: 200 });
                 }
