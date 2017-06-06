@@ -1,0 +1,246 @@
+spec: &spec
+  x-sub-request-filters:
+    - type: default
+      name: http
+      options:
+        allow:
+          - pattern: /^https?:\/\//
+            forward_headers:
+              user-agent: true
+  title: The Change Propagation root
+  paths:
+    /sys/links:
+      x-modules:
+        - path: sys/dep_updates.js
+          options:
+            templates:
+              mw_api:
+                  uri: '{env(MEDIAWIKI_URL)}/w/api.php'
+                  headers:
+                    host: '{{message.meta.domain}}'
+                  body:
+                    formatversion: 2
+    /sys/queue:
+      x-modules:
+        - path: sys/kafka.js
+          options:
+            metadata_broker_list: '{env(KAFKA_BROKER_LIST)}'
+            dc_name: eqiad
+            startup_delay: 0
+            concurrency: 250
+            templates:
+
+              summary_definition_rerender: &summary_definition_rerender_spec
+                topic: '/^(?:change-prop\.transcludes\.)?resource[-_]change$/'
+                retry_limit: 2
+                retry_delay: 500
+                retry_on:
+                  status:
+                    - '5xx'
+                match:
+                  meta:
+                    uri: '/^https?:\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>[^/]+)$/'
+                  tags:
+                    - restbase
+                match_not:
+                  - meta:
+                      domain: '/wiktionary.org$/'
+                  - meta:
+                      domain: /\.wikidata\.org$/
+                exec:
+                  method: get
+                  # Don't encode title since it should be already encoded
+                  uri: '{env(RESTBASE_URL)}/{{message.meta.domain}}/v1/page/summary/{{match.meta.uri.title}}'
+                  query:
+                    redirect: false
+                  headers:
+                    cache-control: no-cache
+
+              # RESTBase update jobs
+              mw_purge:
+                topic: resource_change
+                match:
+                  meta:
+                    uri: '/^https?:\/\/[^\/]+\/wiki\/(?<title>.+)$/'
+                  tags:
+                    - purge
+                exec:
+                  method: get
+                  # This even comes directly from MediaWiki, so title is encoded in MW-specific way.
+                  # Re-encode the title in standard `encodeURIComponent` encoding.
+                  uri: '{env(RESTBASE_URL)}/{{message.meta.domain}}/v1/page/html/{decode(match.meta.uri.title)}'
+                  headers:
+                    cache-control: no-cache
+                    if-unmodified-since: '{{date(message.meta.dt)}}'
+                  query:
+                    redirect: false
+
+              null_edit:
+                topic: resource_change
+                ignore:
+                  status:
+                    - 403 # Ignoring 403 since some of the pages with high number of null_edit events are blacklisted
+                    - 412
+                match:
+                  meta:
+                    uri: '/^https?:\/\/[^\/]+\/wiki\/(?<title>.+)$/'
+                  tags:
+                    - null_edit
+                exec:
+                  method: get
+                  # This even comes directly from MediaWiki, so title is encoded in MW-specific way.
+                  # Re-encode the title in standard `encodeURIComponent` encoding.
+                  uri: '{env(RESTBASE_URL)}/{{message.meta.domain}}/v1/page/html/{decode(match.meta.uri.title)}'
+                  headers:
+                    cache-control: no-cache
+                    if-unmodified-since: '{{date(message.meta.dt)}}'
+                  query:
+                    redirect: false
+
+              page_edit:
+                topic: mediawiki.revision-create
+                retry_on:
+                  status:
+                    - '5xx'
+                    - 404 # Sometimes occasional 404s happen because of the mysql replication lag, so retry
+                exec:
+                  - method: get
+                    uri: '{env(RESTBASE_URL)}/{{message.meta.domain}}/v1/page/html/{message.page_title}/{{message.rev_id}}'
+                    headers:
+                      cache-control: no-cache
+                      x-restbase-parentrevision: '{{message.rev_parent_id}}'
+                      if-unmodified-since: '{{date(message.meta.dt)}}'
+                    query:
+                      redirect: false
+                  - method: post
+                    uri: '/sys/links/transcludes/{message.page_title}'
+                    body: '{{globals.message}}'
+
+              revision_visibility_change:
+                topic: mediawiki.revision-visibility-change
+                ignore:
+                  status:
+                    - 403 # When the revision is hidden 403 will be returned by RESTBase, it's a valid situation
+                    - 412
+                exec:
+                  method: get
+                  uri: '{env(RESTBASE_URL)}/{{message.meta.domain}}/v1/page/revision/{{message.rev_id}}'
+                  headers:
+                    cache-control: no-cache
+                  query:
+                    redirect: false
+
+              page_delete:
+                topic: mediawiki.page-delete
+                ignore:
+                  status:
+                    - 404 # 404 is a normal response for page deletion
+                    - 412
+                exec:
+                  - method: get
+                    uri: '{env(RESTBASE_URL)}/{{message.meta.domain}}/v1/page/title/{message.page_title}'
+                    headers:
+                      cache-control: no-cache
+                    query:
+                      redirect: false
+
+              page_restore:
+                topic: mediawiki.page-undelete
+                exec:
+                  method: get
+                  uri: '{env(RESTBASE_URL)}/{{message.meta.domain}}/v1/page/title/{message.page_title}'
+                  headers:
+                    cache-control: no-cache
+                  query:
+                    redirect: false
+
+              page_move:
+                topic: mediawiki.page-move
+                exec:
+                  - method: get
+                    uri: '{env(RESTBASE_URL)}/{{message.meta.domain}}/v1/page/html/{message.page_title}/{{message.rev_id}}'
+                    headers:
+                      cache-control: no-cache
+                      if-unmodified-since: '{{date(message.meta.dt)}}'
+                    query:
+                      redirect: false
+                  - method: get
+                    uri: '{env(RESTBASE_URL)}/{{message.meta.domain}}/v1/page/title/{message.prior_state.page_title}'
+                    headers:
+                      cache-control: no-cache
+                    query:
+                      redirect: false
+
+              on_transclusion_update:
+                topic: change-prop.transcludes.resource-change
+                cases:
+                  - match:
+                      meta:
+                        schema_uri: 'resource_change/1'
+                        uri: '/https?:\/\/[^\/]+\/wiki\/(?<title>.+)/'
+                      tags: [ 'transcludes' ]
+                    exec:
+                      method: get
+                      uri: '{env(RESTBASE_URL)}/{{message.meta.domain}}/v1/page/html/{{match.meta.uri.title}}'
+                      headers:
+                        cache-control: no-cache
+                        if-unmodified-since: '{{date(message.meta.dt)}}'
+                        x-restbase-mode: '{{message.tags[1]}}'
+                      query:
+                        redirect: false
+                  - match:
+                      meta:
+                        schema_uri: 'continue/1'
+                    exec:
+                      method: post
+                      uri: '/sys/links/transcludes/{message.original_event.page_title}'
+                      body: '{{globals.message}}'
+
+              page_images:
+                topic: mediawiki.page-properties-change
+                # We don't support 'OR' in the match section, so workaround it by 2 cases with identical exec
+                cases:
+                  - match:
+                      added_properties:
+                        page_image: '/.+/' # Regex that matches anything just to check the prop is set
+                    exec:
+                      - method: get
+                        uri: '{env(RESTBASE_URL)}/{{message.meta.domain}}/v1/page/summary/{message.page_title}'
+                        headers:
+                          cache-control: no-cache
+                        query:
+                          redirect: false
+                      - method: get
+                        uri: '{env(RESTBASE_URL)}/{{message.meta.domain}}/v1/page/mobile-sections/{message.page_title}'
+                        headers:
+                          cache-control: no-cache
+                        query:
+                          redirect: false
+                  - match:
+                      removed_properties:
+                        page_image: '/.+/' # Regex that matches anything just to check the prop is set
+                    exec:
+                      - method: get
+                        uri: '{env(RESTBASE_URL)}/{{message.meta.domain}}/v1/page/summary/{message.page_title}'
+                        headers:
+                          cache-control: no-cache
+                        query:
+                          redirect: false
+                      - method: get
+                        uri: '{env(RESTBASE_URL)}/{{message.meta.domain}}/v1/page/mobile-sections/{message.page_title}'
+                        headers:
+                          cache-control: no-cache
+                        query:
+                          redirect: false
+
+num_workers: ncpu
+logging:
+  name: changeprop
+  level: info
+services:
+  - name: changeprop
+    module: hyperswitch
+    conf:
+      port: 7272
+      user_agent: SampleChangePropInstance
+      spec: *spec
