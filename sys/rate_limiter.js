@@ -52,6 +52,7 @@ class RateLimiter {
 
     _execLimiterFun(fun, hyper, type, key) {
         const limiter = this._LIMITERS.get(type);
+
         if (!limiter) {
             hyper.log('warn/ratelimit', {
                 msg: 'Unconfigured rate-limiter is used',
@@ -60,15 +61,19 @@ class RateLimiter {
             return { status: 204 };
         }
 
+        const startTime = Date.now();
+
         return new P((resolve, reject) => {
             limiter[fun](key, (err, isRateLimited) => {
                 if (err) {
                     hyper.log('error/ratelimit', err);
+                    hyper.metrics.endTiming(`ratelimit.${fun}.err`, startTime);
                     // In case we've got problems with limiting just allow everything
                     return resolve({ status: 200 });
                 }
 
                 if (isRateLimited) {
+                    hyper.metrics.endTiming(`ratelimit.${fun}.block`, startTime);
                     return reject(new HTTPError({
                         status: 429,
                         body: {
@@ -78,6 +83,8 @@ class RateLimiter {
                         }
                     }));
                 }
+
+                hyper.metrics.endTiming(`ratelimit.${fun}.allow`, startTime);
                 return resolve({ status: 201 });
             });
         });
