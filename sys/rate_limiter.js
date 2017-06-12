@@ -33,15 +33,20 @@ class RateLimiter {
 
         this._LIMITERS = new Map();
         Object.keys(this._options.limiters).forEach((type) => {
-            const limiterOpts = this._options.limiters[type];
+            let limiterOpts = this._options.limiters[type];
 
-            if (!limiterOpts.interval || !limiterOpts.limit) {
-                throw new Error(`Limiter ${type} is miconfigured`);
+            if (!Array.isArray(limiterOpts)) {
+                limiterOpts = [ limiterOpts ];
             }
 
-            this._LIMITERS.set(type, new Limiter(this._client, [
-                limiterOpts
-            ], { prefix: `CPLimiter_${type}` }));
+            limiterOpts.forEach((opt) => {
+                if (!opt.interval || !opt.limit) {
+                    throw new Error(`Limiter ${type} is miconfigured`);
+                }
+            });
+
+            this._LIMITERS.set(type, new Limiter(this._client, limiterOpts,
+                { prefix: `CPLimiter_${type}` }));
         });
     }
 

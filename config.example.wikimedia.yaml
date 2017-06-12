@@ -19,8 +19,15 @@ spec: &spec
 
             limiters:
               blacklist:
-                interval: 604800
-                limit: 100
+                # First, allow no more then 100 errors per week
+                # The precision parameter controls the step a sliding window moves by
+                - interval: 604800
+                  limit: 100
+                  precision: 86400
+                # Secondly to avoid bursts in case of outages, don't allow more then 10
+                # errors per hour
+                - interval: 3600
+                  limit: 10
     /sys/purge:
       x-modules:
         - path: sys/purge.js
