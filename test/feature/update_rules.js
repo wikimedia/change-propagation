@@ -30,7 +30,7 @@ describe('RESTBase update rules', function() {
                     format: 'json',
                     action: 'query',
                     meta: 'siteinfo',
-                    siprop: 'general|namespaces|namespacealiases'
+                    siprop: 'general|namespaces|namespacealiases|specialpagealiases'
                 }
             });
         })
@@ -762,7 +762,7 @@ describe('RESTBase update rules', function() {
             format: "json",
             action: "query",
             meta: "siteinfo",
-            siprop: "general|namespaces|namespacealiases"
+            siprop: "general|namespaces|namespacealiases|specialpagealiases"
         })
         .reply(200, siteInfoResponse)
         .post('/w/api.php', {
