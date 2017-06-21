@@ -131,7 +131,7 @@ class DependencyProcessor {
                 format: 'json',
                 action: 'query',
                 meta: 'siteinfo',
-                siprop: 'general|namespaces|namespacealiases'
+                siprop: 'general|namespaces|namespacealiases|specialpagealiases'
             }
         }));
         this.latestMessages = [];
@@ -327,7 +327,8 @@ class DependencyProcessor {
                         case: res.body.query.general.case
                     },
                     namespaces: res.body.query.namespaces,
-                    namespacealiases: res.body.query.namespacealiases
+                    namespacealiases: res.body.query.namespacealiases,
+                    specialpagealiases: res.body.query.specialpagealiases
                 };
             })
             .catch((e) => {
