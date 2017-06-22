@@ -39,6 +39,17 @@ describe('RESTBase update rules', function() {
         .then((result) => producer = result);
     });
 
+    const nockWithOptionalSiteInfo = () => nock('https://en.wikipedia.org')
+        .post('/w/api.php', {
+            formatversion: '2',
+            format: "json",
+            action: "query",
+            meta: "siteinfo",
+            siprop: "general|namespaces|namespacealiases|specialpagealiases"
+        })
+        .optionally()
+        .reply(200, siteInfoResponse);
+
     function summaryEndpointTest(topic) {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
@@ -69,13 +80,13 @@ describe('RESTBase update rules', function() {
         .finally(() => nock.cleanAll());
     }
 
-    it('Should update summary endpoint', () => {
-        return summaryEndpointTest('resource_change');
-    });
 
-    it('Should update summary endpoint, transcludes topic', () => {
-        return summaryEndpointTest('change-prop.transcludes.resource-change');
-    });
+
+    it('Should update summary endpoint', () =>
+        summaryEndpointTest('resource_change'));
+
+    it('Should update summary endpoint, transcludes topic', () =>
+        summaryEndpointTest('change-prop.transcludes.resource-change'));
 
     it('Should update summary endpoint on page images change', () => {
         const mwAPI = nock('https://en.wikipedia.org', {
@@ -753,18 +764,10 @@ describe('RESTBase update rules', function() {
     });
 
     it('Should rerender image usages on file update', () => {
-        const mwAPI = nock('https://en.wikipedia.org')
+        const mwAPI = nockWithOptionalSiteInfo()
         .get('/api/rest_v1/page/html/File%3APchelolo%2FTest.jpg/112233')
         .query({redirect: false})
         .reply(200)
-        .post('/w/api.php', {
-            formatversion: '2',
-            format: "json",
-            action: "query",
-            meta: "siteinfo",
-            siprop: "general|namespaces|namespacealiases|specialpagealiases"
-        })
-        .reply(200, siteInfoResponse)
         .post('/w/api.php', {
             format: 'json',
             action: 'query',
@@ -832,7 +835,7 @@ describe('RESTBase update rules', function() {
     });
 
     it('Should rerender transclusions on page update', () => {
-        const mwAPI = nock('https://en.wikipedia.org')
+        const mwAPI = nockWithOptionalSiteInfo()
         .get('/api/rest_v1/page/html/Test_Page/112233')
         .query({redirect: false})
         .reply(200)
@@ -914,6 +917,68 @@ describe('RESTBase update rules', function() {
         .finally(() => nock.cleanAll());
     });
 
+    function backlinksTest(page_title, topic) {
+        const mwAPI = nockWithOptionalSiteInfo()
+            .get(`/api/rest_v1/page/title/${page_title}`)
+            .query({ redirect: false })
+            .optionally()
+            .reply(200)
+            .post('/w/api.php', {
+                format: 'json',
+                action: 'query',
+                list: 'backlinks',
+                bltitle: page_title,
+                blfilterredir: 'nonredirects',
+                bllimit: '500',
+                formatversion: '2'
+            })
+            .reply(200, {
+                batchcomplete: '',
+                continue: {
+                    blcontinue: '1|2272',
+                    continue: '-||'
+                },
+                query: {
+                    backlinks: common.arrayWithLinks(`Linked_${page_title}`, 2)
+                }
+            })
+            .get(`/api/rest_v1/page/html/Linked_${page_title}`)
+            .times(2)
+            .query({ redirect: false })
+            .matchHeader('x-triggered-by', `${topic}:/sample/uri,change-prop.backlinks.resource-change:https://en.wikipedia.org/wiki/Linked_${page_title}`)
+            .reply(200)
+            .post('/w/api.php', {
+                format: 'json',
+                action: 'query',
+                list: 'backlinks',
+                bltitle: page_title,
+                blfilterredir: 'nonredirects',
+                bllimit: '500',
+                blcontinue: '1|2272',
+                formatversion: '2'
+            })
+            .reply(200, {
+                batchcomplete: '',
+                query: {
+                    backlinks: common.arrayWithLinks(`Linked_${page_title}`, 1)
+                }
+            })
+            .get(`/api/rest_v1/page/html/Linked_${page_title}`)
+            .query({ redirect: false })
+            .matchHeader('x-triggered-by', `${topic}:/sample/uri,change-prop.backlinks.resource-change:https://en.wikipedia.org/wiki/Linked_${page_title}`)
+            .reply(200);
+
+        return P.try(() => producer.produce(`test_dc.${topic}`, 0,
+            Buffer.from(JSON.stringify(common.eventWithProperties(topic, { page_title })))))
+            .then(() => common.checkAPIDone(mwAPI, 50))
+            .finally(() => nock.cleanAll());
+    }
+
+    it('Should process backlinks, on create', () => backlinksTest('On_Create', 'mediawiki.page-create'));
+    it('Should process backlinks, on delete', () => backlinksTest('On_Delete', 'mediawiki.page-delete'));
+    it('Should process backlinks, on undelete', () => backlinksTest('On_Undelete', 'mediawiki.page-undelete'));
+
+
     it('Should purge caches on resource_change coming from RESTBase', (done) => {
         var udpServer = dgram.createSocket('udp4');
         let closed = false;
@@ -948,66 +1013,13 @@ describe('RESTBase update rules', function() {
                 },
                 tags: ['restbase']
             }))))
-        .delay(common.REQUEST_CHECK_DELAY)
-        .finally(() => {
-            if (!closed) {
-                udpServer.close();
-                done(new Error('Timeout!'));
-            }
-        });
-    });
-
-    it('Should process backlinks', () => {
-        const mwAPI = nock('https://en.wikipedia.org')
-        .post('/w/api.php', {
-            format: 'json',
-            action: 'query',
-            list: 'backlinks',
-            bltitle: 'User:Pchelolo/Test',
-            blfilterredir: 'nonredirects',
-            bllimit: '500',
-            formatversion: '2'
-        })
-        .reply(200, {
-            batchcomplete: '',
-            continue: {
-                blcontinue: '1|2272',
-                continue: '-||'
-            },
-            query: {
-                backlinks: common.arrayWithLinks('Some_Page', 2)
-            }
-        })
-        .get('/api/rest_v1/page/html/Some_Page')
-        .matchHeader('x-triggered-by', 'mediawiki.page-create:/sample/uri,change-prop.backlinks.resource-change:https://en.wikipedia.org/wiki/Some_Page')
-        .times(2)
-        .reply(200)
-        .post('/w/api.php', {
-            format: 'json',
-            action: 'query',
-            list: 'backlinks',
-            bltitle: 'User:Pchelolo/Test',
-            blfilterredir: 'nonredirects',
-            bllimit: '500',
-            blcontinue: '1|2272',
-            formatversion: '2'
-        })
-        .reply(200, {
-            batchcomplete: '',
-            query: {
-                backlinks: common.arrayWithLinks('Some_Page', 1)
-            }
-        })
-        .get('/api/rest_v1/page/html/Some_Page')
-        .matchHeader('x-triggered-by', 'mediawiki.page-create:/sample/uri,change-prop.backlinks.resource-change:https://en.wikipedia.org/wiki/Some_Page')
-        .reply(200);
-
-        return P.try(() => producer.produce('test_dc.mediawiki.page-create', 0,
-            Buffer.from(JSON.stringify(common.eventWithProperties('mediawiki.page-create', {
-                page_title: 'User:Pchelolo/Test'
-            })))))
-        .then(() => common.checkAPIDone(mwAPI, 50))
-        .finally(() => nock.cleanAll());
+            .delay(common.REQUEST_CHECK_DELAY)
+            .finally(() => {
+                if (!closed) {
+                    udpServer.close();
+                    done(new Error('Timeout!'));
+                }
+            });
     });
 
     after(() => changeProp.stop());
