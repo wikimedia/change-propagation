@@ -347,6 +347,51 @@ spec: &spec
                       uri: '/sys/links/transcludes/{message.original_event.page_title}'
                       body: '{{globals.message}}'
 
+              page_create:
+                topic: mediawiki.page-create
+                retry_on:
+                  status:
+                    - '5xx'
+                    - 404 # Sometimes occasional 404s happen because of the mysql replication lag, so retry
+                match_not:
+                  - meta:
+                      domain: /\.wikidata\.org$/
+                    page_namespace: 0
+                  - meta:
+                      domain: /\.wikidata\.org$/
+                    page_namespace: 120
+                exec:
+                  - method: post
+                    uri: '/sys/links/backlinks/{message.page_title}'
+                    body: '{{globals.message}}'
+
+              on_backlinks_update:
+                topic: change-prop.backlinks.resource-change
+                limiters:
+                  blacklist: '{message.meta.uri}'
+                cases:
+                  - match:
+                      meta:
+                        schema_uri: 'resource_change/1'
+                        uri: '/https?:\/\/[^\/]+\/wiki\/(?<title>.+)/'
+                      tags: [ 'backlinks' ]
+                    exec:
+                      method: get
+                      uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{{match.meta.uri.title}}'
+                      headers:
+                        cache-control: no-cache
+                        if-unmodified-since: '{{date(message.meta.dt)}}'
+                        x-restbase-mode: '{{message.tags[1]}}'
+                      query:
+                        redirect: false
+                  - match:
+                      meta:
+                        schema_uri: 'continue/1'
+                    exec:
+                      method: post
+                      uri: '/sys/links/backlinks/{message.original_event.page_title}'
+                      body: '{{globals.message}}'
+
               # ORES caching updates
               ores_cache:
                 topic: mediawiki.revision-create

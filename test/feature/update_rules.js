@@ -979,7 +979,7 @@ describe('RESTBase update rules', function() {
             }
         })
         .get('/api/rest_v1/page/html/Some_Page')
-        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,change-prop.backlinks.resource-change:https://en.wikipedia.org/wiki/Some_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.page-create:/sample/uri,change-prop.backlinks.resource-change:https://en.wikipedia.org/wiki/Some_Page')
         .times(2)
         .reply(200)
         .post('/w/api.php', {
@@ -999,11 +999,11 @@ describe('RESTBase update rules', function() {
             }
         })
         .get('/api/rest_v1/page/html/Some_Page')
-        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,change-prop.backlinks.resource-change:https://en.wikipedia.org/wiki/Some_Page')
+        .matchHeader('x-triggered-by', 'mediawiki.page-create:/sample/uri,change-prop.backlinks.resource-change:https://en.wikipedia.org/wiki/Some_Page')
         .reply(200);
 
-        return P.try(() => producer.produce('test_dc.mediawiki.revision-create', 0,
-            Buffer.from(JSON.stringify(common.eventWithProperties('mediawiki.revision-create', {
+        return P.try(() => producer.produce('test_dc.mediawiki.page-create', 0,
+            Buffer.from(JSON.stringify(common.eventWithProperties('mediawiki.page-create', {
                 page_title: 'User:Pchelolo/Test'
             })))))
         .then(() => common.checkAPIDone(mwAPI, 50))
