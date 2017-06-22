@@ -6,8 +6,6 @@ const Template = HyperSwitch.Template;
 const utils = require('../lib/utils');
 const Title = require('mediawiki-title').Title;
 
-const DEDUPE_LOG_SIZE = 100;
-
 function createBackLinksTemplate(options) {
     return {
         template: new Template(extend(true, {}, options.templates.mw_api, {
@@ -116,6 +114,56 @@ function createWikidataTemplate(options) {
     };
 }
 
+function _sendContinueEvent(hyper, topic, originalEvent, continueToken) {
+    return hyper.post({
+        uri: '/sys/queue/events',
+        body: [{
+            meta: {
+                topic,
+                schema_uri: 'continue/1',
+                uri: originalEvent.meta.uri,
+                request_id: originalEvent.meta.request_id,
+                domain: originalEvent.meta.domain,
+                dt: originalEvent.meta.dt
+            },
+            triggered_by: utils.triggeredBy(originalEvent),
+            original_event: originalEvent,
+            continue: continueToken,
+            root_event: {
+                dt: originalEvent.dt,
+                signature: originalEvent.meta.uri
+            }
+        }]
+    });
+}
+
+function _sendResourceChanges(hyper, items, originalEvent, tags, topicName) {
+    return hyper.post({
+        uri: '/sys/queue/events',
+        body: items.map((item) => {
+            // TODO: need to check whether a wiki is http or https!
+            const resourceURI =
+                `https://${item.domain}/wiki/${encodeURIComponent(item.title)}`;
+            return {
+                meta: {
+                    topic: topicName,
+                    schema_uri: 'resource_change/1',
+                    uri: resourceURI,
+                    request_id: originalEvent.meta.request_id,
+                    domain: item.domain,
+                    dt: originalEvent.meta.dt
+                },
+                triggered_by: utils.triggeredBy(originalEvent),
+                tags,
+                root_event: {
+                    dt: originalEvent.dt,
+                    signature: originalEvent.meta.uri
+                }
+            };
+        })
+    });
+}
+
 class DependencyProcessor {
     constructor(options) {
         this.options = options;
@@ -134,7 +182,6 @@ class DependencyProcessor {
                 siprop: 'general|namespaces|namespacealiases'
             }
         }));
-        this.latestMessages = [];
     }
 
     processBackLinks(hyper, req) {
@@ -150,45 +197,6 @@ class DependencyProcessor {
         });
     }
 
-    _isDuplicate(message) {
-        if (!message.continue) {
-            // Not a continuation event, don't deduplicate
-            return false;
-        }
-
-        const currEventInfo = {
-            domain: message.meta.domain,
-            title: message.original_event.page_title,
-            id: message.original_event.meta.id,
-            sequence_num: message.sequence_num
-        };
-
-        // Don't know the seq_num, probably old event, can't deduplicate
-        if (currEventInfo.sequence_num === undefined) {
-            return false;
-        }
-
-        if (this.latestMessages.some((oldEvent) => {
-            return oldEvent.domain === currEventInfo.domain
-                    && oldEvent.title === currEventInfo.title
-                        // This represents forking - we've consumed some continuation twice,
-                        // so we've got exact same event processed recently
-                    && (oldEvent.id === currEventInfo.id
-                            && oldEvent.sequence_num === currEventInfo.sequence_num
-                        // This represents deduplication on rapid consequent template changes
-                        || oldEvent.id !== currEventInfo.id
-                            && oldEvent.sequence_num <= currEventInfo.sequence_num);
-        })) {
-            return true;
-        }
-
-        this.latestMessages.push(currEventInfo);
-        if (this.latestMessages.length > DEDUPE_LOG_SIZE) {
-            this.latestMessages = this.latestMessages.slice(1);
-        }
-        return false;
-    }
-
     processTranscludes(hyper, req) {
         const message = req.body;
         const context = {
@@ -197,11 +205,6 @@ class DependencyProcessor {
         };
         const originalEvent = req.body.original_event || req.body;
 
-        if (this._isDuplicate(message)) {
-            hyper.metrics.increment('transclusions_continue_deduplicate');
-            // Skip if duplication detected
-            return { status: 200 };
-        }
         return this._getSiteInfo(hyper, message)
         .then((siteInfo) => {
             const title = Title.newFromText(req.params.title, siteInfo);
@@ -223,7 +226,7 @@ class DependencyProcessor {
         .then((res) => {
             if (this.wikidataRequest.shouldProcess(res)) {
                 const items = this.wikidataRequest.extractResults(res);
-                return this._sendResourceChanges(hyper, items, req.body,
+                return _sendResourceChanges(hyper, items, req.body,
                     this.wikidataRequest.resourceChangeTags,
                     this.wikidataRequest.leafTopicName);
             }
@@ -252,61 +255,16 @@ class DependencyProcessor {
                 // the batch is complete or the list of transcluded titles is empty
                 return { status: 200 };
             }
-            let actions = this._sendResourceChanges(hyper, titles,
+            let actions = _sendResourceChanges(hyper, titles,
                 originalEvent, requestTemplate.resourceChangeTags,
                 requestTemplate.leafTopicName);
             if (res.body.continue) {
-                actions = actions.then(() =>
-                    this._sendContinueEvent(hyper,
+                actions = actions.then(() => _sendContinueEvent(hyper,
                         requestTemplate.leafTopicName,
                         originalEvent,
-                        requestTemplate.getContinueToken(res),
-                        context.message.sequence_num));
+                        requestTemplate.getContinueToken(res)));
             }
             return actions.thenReturn({ status: 200 });
-        });
-    }
-
-    _sendContinueEvent(hyper, topic, origEvent, continueToken, sequenceNum) {
-        return hyper.post({
-            uri: '/sys/queue/events',
-            body: [{
-                meta: {
-                    topic,
-                    schema_uri: 'continue/1',
-                    uri: origEvent.meta.uri,
-                    request_id: origEvent.meta.request_id,
-                    domain: origEvent.meta.domain,
-                    dt: origEvent.meta.dt
-                },
-                triggered_by: utils.triggeredBy(origEvent),
-                original_event: origEvent,
-                continue: continueToken,
-                sequence_num: (sequenceNum || 0) + 1
-            }]
-        });
-    }
-
-    _sendResourceChanges(hyper, items, originalEvent, tags, topicName) {
-        return hyper.post({
-            uri: '/sys/queue/events',
-            body: items.map((item) => {
-                // TODO: need to check whether a wiki is http or https!
-                const resourceURI =
-                    `https://${item.domain}/wiki/${encodeURIComponent(item.title)}`;
-                return {
-                    meta: {
-                        topic: topicName,
-                        schema_uri: 'resource_change/1',
-                        uri: resourceURI,
-                        request_id: originalEvent.meta.request_id,
-                        domain: item.domain,
-                        dt: originalEvent.meta.dt
-                    },
-                    triggered_by: utils.triggeredBy(originalEvent),
-                    tags
-                };
-            })
         });
     }
 
@@ -354,7 +312,15 @@ module.exports = (options) => {
                 '/transcludes/{title}': {
                     post: {
                         summary: 'check if the page is transcluded somewhere and update',
-                        operationId: 'process_transcludes'
+                        operationId: 'process_transcludes',
+                        'x-route-filters': [
+                            {
+                                path: './lib/deduplication_filter.js',
+                                options: {
+                                    name: 'transcludes'
+                                }
+                            }
+                        ]
                     }
                 },
                 '/wikidata_descriptions': {
