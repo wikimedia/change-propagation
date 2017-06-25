@@ -369,18 +369,6 @@ spec: &spec
                         format: 'json'
                   - match:
                       meta:
-                        domain: cs.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/cswiki/'
-                      query:
-                        models: 'reverted'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                        format: 'json'
-                  - match:
-                      meta:
                         domain: en.wiktionary.org
                       performer:
                         user_is_bot: false
@@ -405,11 +393,11 @@ spec: &spec
                         format: 'json'
                   - match:
                       meta:
-                        domain: et.wikipedia.org
+                        domain: es.wikibooks.org
                       performer:
                         user_is_bot: false
                     exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/etwiki/'
+                      uri: 'https://ores.wikimedia.org/v2/scores/eswikibooks/'
                       query:
                         models: 'reverted'
                         revids: '{{message.rev_id}}'
@@ -417,23 +405,11 @@ spec: &spec
                         format: 'json'
                   - match:
                       meta:
-                        domain: fr.wikipedia.org
+                        domain: de.wikipedia.org
                       performer:
                         user_is_bot: false
                     exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/frwiki/'
-                      query:
-                        models: 'reverted'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                        format: 'json'
-                  - match:
-                      meta:
-                        domain: he.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/hewiki/'
+                      uri: 'https://ores.wikimedia.org/v2/scores/dewiki/'
                       query:
                         models: 'reverted'
                         revids: '{{message.rev_id}}'
@@ -470,6 +446,54 @@ spec: &spec
                         user_is_bot: false
                     exec:
                       uri: 'https://ores.wikimedia.org/v2/scores/itwiki/'
+                      query:
+                        models: 'reverted'
+                        revids: '{{message.rev_id}}'
+                        precache: true
+                        format: 'json'
+                  - match:
+                      meta:
+                        domain: ko.wikipedia.org
+                      performer:
+                        user_is_bot: false
+                    exec:
+                      uri: 'https://ores.wikimedia.org/v2/scores/kowiki/'
+                      query:
+                        models: 'reverted'
+                        revids: '{{message.rev_id}}'
+                        precache: true
+                        format: 'json'
+                  - match:
+                      meta:
+                        domain: no.wikipedia.org
+                      performer:
+                        user_is_bot: false
+                    exec:
+                      uri: 'https://ores.wikimedia.org/v2/scores/nowiki/'
+                      query:
+                        models: 'reverted'
+                        revids: '{{message.rev_id}}'
+                        precache: true
+                        format: 'json'
+                  - match:
+                      meta:
+                        domain: ro.wikipedia.org
+                      performer:
+                        user_is_bot: false
+                    exec:
+                      uri: 'https://ores.wikimedia.org/v2/scores/rowiki/'
+                      query:
+                        models: 'reverted'
+                        revids: '{{message.rev_id}}'
+                        precache: true
+                        format: 'json'
+                  - match:
+                      meta:
+                        domain: sv.wikipedia.org
+                      performer:
+                        user_is_bot: false
+                    exec:
+                      uri: 'https://ores.wikimedia.org/v2/scores/svwiki/'
                       query:
                         models: 'reverted'
                         revids: '{{message.rev_id}}'

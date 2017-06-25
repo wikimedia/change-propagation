@@ -447,7 +447,7 @@ describe('RESTBase update rules', function() {
 
     it('Should update ORES on revision-create', () => {
         const oresService = nock('https://ores.wikimedia.org')
-        .get('/v2/scores/frwiki/')
+        .get('/v2/scores/eswiki/')
         .query({
             models: 'reverted',
             revids: 1234,
@@ -464,7 +464,7 @@ describe('RESTBase update rules', function() {
                     request_id: common.SAMPLE_REQUEST_ID,
                     id: uuid.now(),
                     dt: new Date(1000).toISOString(),
-                    domain: 'fr.wikipedia.org'
+                    domain: 'es.wikipedia.org'
                 },
                 page_title: 'TestPage',
                 rev_id: 1234,
