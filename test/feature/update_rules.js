@@ -294,7 +294,8 @@ describe('RESTBase update rules', function() {
                 page_title: 'User:Pchelolo/Test',
                 rev_id: 1234,
                 rev_timestamp: new Date().toISOString(),
-                rev_parent_id: 1233
+                rev_parent_id: 1233,
+                rev_content_changed: true
             }))))
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
@@ -322,7 +323,8 @@ describe('RESTBase update rules', function() {
                 rev_id: 1234,
                 rev_timestamp: new Date().toISOString(),
                 rev_parent_id: 1233,
-                page_namespace: 0
+                page_namespace: 0,
+                rev_content_changed: true
             }))))
         .then(() => common.checkPendingMocks(mwAPI, 1))
         .finally(() => nock.cleanAll());
@@ -545,7 +547,8 @@ describe('RESTBase update rules', function() {
                 },
                 page_title: 'Q1',
                 page_namespace: 0,
-                comment: "/* wbeditentity-update:0| */ add [it] label"
+                comment: "/* wbeditentity-update:0| */ add [it] label",
+                rev_content_changed: true
             }))))
         .delay(common.REQUEST_CHECK_DELAY)
         .then(() => common.checkAPIDone(wikidataAPI))
@@ -609,7 +612,8 @@ describe('RESTBase update rules', function() {
                 },
                 page_title: 'Q1',
                 page_namespace: 0,
-                comment: "/* undo */ Undo revision 440223057 by Mhollo"
+                comment: "/* undo */ Undo revision 440223057 by Mhollo",
+                rev_content_changed: true
             }))))
         .delay(common.REQUEST_CHECK_DELAY)
         .then(() => common.checkAPIDone(wikidataAPI))
@@ -716,7 +720,8 @@ describe('RESTBase update rules', function() {
                     domain: 'www.wikidata.org'
                 },
                 page_title: 'Property:P1',
-                page_namespace: 3
+                page_namespace: 3,
+                rev_content_changed: true
             }))))
         .delay(common.REQUEST_CHECK_DELAY)
         .then(() => common.checkPendingMocks(wikidataAPI, 1))
@@ -756,7 +761,8 @@ describe('RESTBase update rules', function() {
                 },
                 page_title: 'Q2',
                 page_namespace: 0,
-                comment: "/* wbeditentity-update:0| */ add [it] label"
+                comment: "/* wbeditentity-update:0| */ add [it] label",
+                rev_content_changed: true
             }))))
         .delay(common.REQUEST_CHECK_DELAY)
         .then(() => common.checkAPIDone(wikidataAPI))
@@ -828,7 +834,8 @@ describe('RESTBase update rules', function() {
                 },
                 page_title: 'File:Pchelolo/Test.jpg',
                 rev_parent_id: 12345, // Needed to avoid backlinks updates firing and interfering
-                rev_id: 112233
+                rev_id: 112233,
+                rev_content_changed: true
             }))))
         .then(() => common.checkAPIDone(mwAPI, 50))
         .finally(() => nock.cleanAll());
@@ -911,7 +918,8 @@ describe('RESTBase update rules', function() {
                 },
                 page_title: 'Test_Page',
                 rev_parent_id: 12345, // Needed to avoid backlinks updates firing and interfering
-                rev_id: 112233
+                rev_id: 112233,
+                rev_content_changed: true
             }))))
         .then(() => common.checkAPIDone(mwAPI, 50))
         .finally(() => nock.cleanAll());
