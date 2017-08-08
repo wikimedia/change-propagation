@@ -275,7 +275,6 @@ class DependencyProcessor {
                     topic,
                     schema_uri: 'continue/1',
                     uri: origEvent.meta.uri,
-                    request_id: origEvent.meta.request_id,
                     domain: origEvent.meta.domain,
                     dt: origEvent.meta.dt
                 },
@@ -299,7 +298,6 @@ class DependencyProcessor {
                         topic: topicName,
                         schema_uri: 'resource_change/1',
                         uri: resourceURI,
-                        request_id: originalEvent.meta.request_id,
                         domain: item.domain,
                         dt: originalEvent.meta.dt
                     },

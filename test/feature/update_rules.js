@@ -54,7 +54,7 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': `${topic}:https://en.wikipedia.org/api/rest_v1/page/html/Main_Page`,
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},${topic}:https://en.wikipedia.org/api/rest_v1/page/html/Main_Page`,
                 'x-request-id': common.SAMPLE_REQUEST_ID,
                 'user-agent': 'SampleChangePropInstance'
             }
@@ -92,8 +92,7 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': 'mediawiki.page-properties-change:https://en.wikipedia.org/wiki/Some_Page',
-                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},mediawiki.page-properties-change:https://en.wikipedia.org/wiki/Some_Page`,
                 'user-agent': 'SampleChangePropInstance'
             }
         })
@@ -125,8 +124,7 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wiktionary.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': 'resource_change:https://en.wiktionary.org/api/rest_v1/page/html/Main_Page',
-                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},resource_change:https://en.wiktionary.org/api/rest_v1/page/html/Main_Page`,
                 'user-agent': 'SampleChangePropInstance'
             }
         })
@@ -178,8 +176,7 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': 'resource_change:https://en.wikipedia.org/api/rest_v1/page/html/Main_Page',
-                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},resource_change:https://en.wikipedia.org/api/rest_v1/page/html/Main_Page`,
                 'user-agent': 'SampleChangePropInstance'
             }
         })
@@ -208,7 +205,6 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wiktionary.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-request-id': common.SAMPLE_REQUEST_ID,
                 'user-agent': 'SampleChangePropInstance'
             }
         })
@@ -238,8 +234,7 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': 'resource_change:https://en.wikipedia.org/wiki/Main_Page',
-                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},resource_change:https://en.wikipedia.org/wiki/Main_Page`,
                 'if-unmodified-since': 'Tue, 20 Feb 1990 19:31:13 +0000',
                 'user-agent': 'SampleChangePropInstance'
             }
@@ -269,8 +264,7 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': 'mediawiki.revision-create:/edit/uri',
-                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:/edit/uri`,
                 'x-restbase-parentrevision': '1233',
                 'if-unmodified-since': 'Thu, 01 Jan 1970 00:00:01 +0000',
                 'user-agent': 'SampleChangePropInstance'
@@ -334,8 +328,7 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': 'mediawiki.page-delete:/delete/uri',
-                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},mediawiki.page-delete:/delete/uri`,
                 'user-agent': 'SampleChangePropInstance'
             }
         })
@@ -364,8 +357,7 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': 'mediawiki.page-undelete:/restore/uri',
-                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},mediawiki.page-undelete:/restore/uri`,
                 'user-agent': 'SampleChangePropInstance'
             }
         })
@@ -394,8 +386,7 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-request-id': common.SAMPLE_REQUEST_ID,
-                'x-triggered-by': 'mediawiki.page-move:/move/uri',
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},mediawiki.page-move:/move/uri`,
                 'user-agent': 'SampleChangePropInstance'
             }
         })
@@ -432,8 +423,7 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': 'mediawiki.revision-visibility-change:/rev/uri',
-                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-visibility-change:/rev/uri`,
                 'user-agent': 'SampleChangePropInstance'
             }
         })
@@ -522,9 +512,8 @@ describe('RESTBase update rules', function() {
         const restbase = nock('https://ru.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-request-id': common.SAMPLE_REQUEST_ID,
                 'user-agent': 'SampleChangePropInstance',
-                'x-triggered-by': 'mediawiki.revision-create:/rev/uri,change-prop.wikidata.resource-change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80'
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:/rev/uri,change-prop.transcludes.resource-change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80`
             }
         })
         .get('/api/rest_v1/page/summary/%D0%9F%D1%91%D1%82%D1%80')
@@ -589,7 +578,7 @@ describe('RESTBase update rules', function() {
                 'cache-control': 'no-cache',
                 'x-request-id': common.SAMPLE_REQUEST_ID,
                 'user-agent': 'SampleChangePropInstance',
-                'x-triggered-by': 'mediawiki.revision-create:/rev/uri,change-prop.wikidata.resource-change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80'
+                'x-triggered-by': 'req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:/rev/uri,change-prop.wikidata.resource-change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80'
             }
         })
         .get('/api/rest_v1/page/summary/%D0%9F%D1%91%D1%82%D1%80')
@@ -652,9 +641,8 @@ describe('RESTBase update rules', function() {
         const restbase = nock('https://ru.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-request-id': common.SAMPLE_REQUEST_ID,
                 'user-agent': 'SampleChangePropInstance',
-                'x-triggered-by': 'mediawiki.page-undelete:/rev/uri,change-prop.wikidata.resource-change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80'
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},mediawiki.page-undelete:/rev/uri,change-prop.transcludes.resource-change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80`
             }
         })
         .get('/api/rest_v1/page/summary/%D0%9F%D1%91%D1%82%D1%80')
@@ -794,7 +782,7 @@ describe('RESTBase update rules', function() {
         })
         .get('/api/rest_v1/page/html/File_Transcluded_Page')
         .query({redirect: false})
-        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/File_Transcluded_Page')
+        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/File_Transcluded_Page`)
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
         .matchHeader('x-restbase-mode', 'files')
         .times(2)
@@ -816,7 +804,7 @@ describe('RESTBase update rules', function() {
         })
         .get('/api/rest_v1/page/html/File_Transcluded_Page')
         .query({redirect: false})
-        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/File_Transcluded_Page')
+        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/File_Transcluded_Page`)
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
         .matchHeader('x-restbase-mode', 'files')
         .reply(200);
@@ -872,7 +860,7 @@ describe('RESTBase update rules', function() {
         })
         .get('/api/rest_v1/page/html/Transcluded_Here')
         .query({redirect: false})
-        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/Transcluded_Here')
+        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/Transcluded_Here`)
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
         .matchHeader('x-restbase-mode', 'templates')
         .times(2)
@@ -900,7 +888,7 @@ describe('RESTBase update rules', function() {
         })
         .get('/api/rest_v1/page/html/Transcluded_Here')
         .query({redirect: false})
-        .matchHeader('x-triggered-by', 'mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/Transcluded_Here')
+        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/Transcluded_Here`)
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
         .matchHeader('x-restbase-mode', 'templates')
         .reply(200);
@@ -1021,13 +1009,66 @@ describe('RESTBase update rules', function() {
                 },
                 tags: ['restbase']
             }))))
-            .delay(common.REQUEST_CHECK_DELAY)
-            .finally(() => {
-                if (!closed) {
-                    udpServer.close();
-                    done(new Error('Timeout!'));
-                }
-            });
+        .delay(common.REQUEST_CHECK_DELAY)
+        .finally(() => {
+            if (!closed) {
+                udpServer.close();
+                done(new Error('Timeout!'));
+            }
+        });
+    });
+
+    it('Should process backlinks', () => {
+        const mwAPI = nock('https://en.wikipedia.org')
+        .post('/w/api.php', {
+            format: 'json',
+            action: 'query',
+            list: 'backlinks',
+            bltitle: 'User:Pchelolo/Test',
+            blfilterredir: 'nonredirects',
+            bllimit: '500',
+            formatversion: '2'
+        })
+        .reply(200, {
+            batchcomplete: '',
+            continue: {
+                blcontinue: '1|2272',
+                continue: '-||'
+            },
+            query: {
+                backlinks: common.arrayWithLinks('Some_Page', 2)
+            }
+        })
+        .get('/api/rest_v1/page/html/Some_Page')
+        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/Some_Page`)
+        .times(2)
+        .reply(200)
+        .post('/w/api.php', {
+            format: 'json',
+            action: 'query',
+            list: 'backlinks',
+            bltitle: 'User:Pchelolo/Test',
+            blfilterredir: 'nonredirects',
+            bllimit: '500',
+            blcontinue: '1|2272',
+            formatversion: '2'
+        })
+        .reply(200, {
+            batchcomplete: '',
+            query: {
+                backlinks: common.arrayWithLinks('Some_Page', 1)
+            }
+        })
+        .get('/api/rest_v1/page/html/Some_Page')
+        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/Some_Page`)
+        .reply(200);
+
+        return P.try(() => producer.produce('test_dc.mediawiki.revision-create', 0,
+            Buffer.from(JSON.stringify(common.eventWithProperties('mediawiki.revision-create', {
+                page_title: 'User:Pchelolo/Test'
+            })))))
+        .then(() => common.checkAPIDone(mwAPI, 50))
+        .finally(() => nock.cleanAll());
     });
 
     after(() => changeProp.stop());
