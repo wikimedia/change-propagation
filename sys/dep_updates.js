@@ -6,8 +6,6 @@ const Template = HyperSwitch.Template;
 const utils = require('../lib/utils');
 const Title = require('mediawiki-title').Title;
 
-const BACKLINKS_CONTINUE_TOPIC_NAME = 'change-prop.backlinks.continue';
-const TRANSCLUDES_CONTINUE_TOPIC_NAME = 'change-prop.transcludes.continue';
 const DEDUPE_LOG_SIZE = 100;
 
 function createBackLinksTemplate(options) {
@@ -24,10 +22,10 @@ function createBackLinksTemplate(options) {
                 bllimit: 500
             }
         })),
-        getContinueToken: (res) => res.body.continue && res.body.continue.blcontinue,
-        continueTopic: BACKLINKS_CONTINUE_TOPIC_NAME,
+        getContinueToken: res => res.body.continue && res.body.continue.blcontinue,
         resourceChangeTags: [ 'backlinks' ],
-        extractResults: (res) => res.body.query.backlinks
+        leafTopicName: 'change-prop.backlinks.resource-change',
+        extractResults: res => res.body.query.backlinks
     };
 }
 
@@ -45,10 +43,10 @@ function createImageUsageTemplate(options) {
                 // TODO: decide what do we want to do with redirects
             }
         })),
-        getContinueToken: (res) => res.body.continue && res.body.continue.iucontinue,
-        continueTopic: TRANSCLUDES_CONTINUE_TOPIC_NAME,
+        getContinueToken: res => res.body.continue && res.body.continue.iucontinue,
+        leafTopicName: 'change-prop.transcludes.resource-change',
         resourceChangeTags: [ 'transcludes', 'files' ],
-        extractResults: (res) =>  res.body.query.imageusage
+        extractResults: res =>  res.body.query.imageusage
     };
 }
 
@@ -67,8 +65,8 @@ function createTranscludeInTemplate(options) {
                 tilimit: 500
             }
         })),
-        getContinueToken: (res) => res.body.continue && res.body.continue.ticontinue,
-        continueTopic: TRANSCLUDES_CONTINUE_TOPIC_NAME,
+        getContinueToken: res => res.body.continue && res.body.continue.ticontinue,
+        leafTopicName: 'change-prop.transcludes.resource-change',
         resourceChangeTags: [ 'transcludes', 'templates' ],
         extractResults: (res) => {
             return res.body.query.pages[Object.keys(res.body.query.pages)[0]].transcludedin;
@@ -89,6 +87,7 @@ function createWikidataTemplate(options) {
             }
         })),
         resourceChangeTags: [ 'wikidata' ],
+        leafTopicName: 'change-prop.wikidata.resource-change',
         shouldProcess: (res) => {
             if (!(res && res.body && !!res.body.success)) {
                 return false;
@@ -132,38 +131,10 @@ class DependencyProcessor {
                 format: 'json',
                 action: 'query',
                 meta: 'siteinfo',
-                siprop: 'general|namespaces|namespacealiases'
+                siprop: 'general|namespaces|namespacealiases|specialpagealiases'
             }
         }));
         this.latestMessages = [];
-    }
-
-    setup(hyper) {
-        return hyper.post({
-            uri: '/sys/queue/subscriptions',
-            body: {
-                backlinks_continue: {
-                    topic: BACKLINKS_CONTINUE_TOPIC_NAME,
-                    exec: [
-                        {
-                            method: 'post',
-                            uri: '/sys/links/backlinks/{message.original_event.page_title}',
-                            body: '{{globals.message}}'
-                        }
-                    ]
-                },
-                transclusions_continue: {
-                    topic: TRANSCLUDES_CONTINUE_TOPIC_NAME,
-                    exec: [
-                        {
-                            method: 'post',
-                            uri: '/sys/links/transcludes/{message.original_event.page_title}',
-                            body: '{{globals.message}}'
-                        }
-                    ]
-                }
-            }
-        });
     }
 
     processBackLinks(hyper, req) {
@@ -253,15 +224,16 @@ class DependencyProcessor {
             if (this.wikidataRequest.shouldProcess(res)) {
                 const items = this.wikidataRequest.extractResults(res);
                 return this._sendResourceChanges(hyper, items, req.body,
-                    this.wikidataRequest.resourceChangeTags);
+                    this.wikidataRequest.resourceChangeTags,
+                    this.wikidataRequest.leafTopicName);
             }
 
             if (res.body && res.body.error) {
-                this.log('warn/wikidata_description', {
+                this.log('warn/wikidata_description', () => ({
                     msg: 'Could not extract items',
-                    event: utils.stringify(context.message),
+                    event_str: utils.stringify(context.message),
                     error: res.body.error
-                });
+                }));
             }
         })
         .thenReturn({ status: 200 });
@@ -281,11 +253,12 @@ class DependencyProcessor {
                 return { status: 200 };
             }
             let actions = this._sendResourceChanges(hyper, titles,
-                originalEvent, requestTemplate.resourceChangeTags);
+                originalEvent, requestTemplate.resourceChangeTags,
+                requestTemplate.leafTopicName);
             if (res.body.continue) {
                 actions = actions.then(() =>
                     this._sendContinueEvent(hyper,
-                        requestTemplate.continueTopic,
+                        requestTemplate.leafTopicName,
                         originalEvent,
                         requestTemplate.getContinueToken(res),
                         context.message.sequence_num));
@@ -313,7 +286,7 @@ class DependencyProcessor {
         });
     }
 
-    _sendResourceChanges(hyper, items, originalEvent, tags) {
+    _sendResourceChanges(hyper, items, originalEvent, tags, topicName) {
         return hyper.post({
             uri: '/sys/queue/events',
             body: items.map((item) => {
@@ -322,7 +295,7 @@ class DependencyProcessor {
                     `https://${item.domain}/wiki/${encodeURIComponent(item.title)}`;
                 return {
                     meta: {
-                        topic: 'change-prop.transcludes.resource-change',
+                        topic: topicName,
                         schema_uri: 'resource_change/1',
                         uri: resourceURI,
                         domain: item.domain,
@@ -352,7 +325,8 @@ class DependencyProcessor {
                         case: res.body.query.general.case
                     },
                     namespaces: res.body.query.namespaces,
-                    namespacealiases: res.body.query.namespacealiases
+                    namespacealiases: res.body.query.namespacealiases,
+                    specialpagealiases: res.body.query.specialpagealiases
                 };
             })
             .catch((e) => {
@@ -370,12 +344,6 @@ module.exports = (options) => {
     return {
         spec: {
             paths: {
-                '/setup': {
-                    put: {
-                        summary: 'setup the module',
-                        operationId: 'setup'
-                    }
-                },
                 '/backlinks/{title}': {
                     post: {
                         summary: 'set up the kafka listener',
@@ -400,11 +368,7 @@ module.exports = (options) => {
         operations: {
             process_backlinks: processor.processBackLinks.bind(processor),
             process_transcludes: processor.processTranscludes.bind(processor),
-            process_wikidata: processor.processWikidata.bind(processor),
-            setup: processor.setup.bind(processor)
-        },
-        resources: [{
-            uri: '/sys/links/setup'
-        }]
+            process_wikidata: processor.processWikidata.bind(processor)
+        }
     };
 };

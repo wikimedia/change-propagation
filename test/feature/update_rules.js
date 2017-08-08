@@ -7,6 +7,7 @@ const common     = require('../utils/common');
 const dgram      = require('dgram');
 const assert     = require('assert');
 const P          = require('bluebird');
+const preq       = require('preq');
 
 process.env.UV_THREADPOOL_SIZE = 128;
 
@@ -15,20 +16,46 @@ describe('RESTBase update rules', function() {
 
     const changeProp = new ChangeProp('config.example.wikimedia.yaml');
     let producer;
+    let siteInfoResponse;
 
     before(function() {
         // Setting up might take some tome, so disable the timeout
         this.timeout(50000);
         return changeProp.start()
-        .then(() =>  common.factory.createProducer())
+        .then(() => {
+            return preq.post({
+                uri: 'https://en.wikipedia.org/w/api.php',
+                body: {
+                    formatversion: '2',
+                    format: 'json',
+                    action: 'query',
+                    meta: 'siteinfo',
+                    siprop: 'general|namespaces|namespacealiases|specialpagealiases'
+                }
+            });
+        })
+        .then((res) => siteInfoResponse = res.body)
+        .then(() => common.factory.createProducer(console.log.bind(console)))
         .then((result) => producer = result);
     });
 
-    it('Should update summary endpoint', () => {
+    const nockWithOptionalSiteInfo = () => nock('https://en.wikipedia.org')
+        .post('/w/api.php', {
+            formatversion: '2',
+            format: "json",
+            action: "query",
+            meta: "siteinfo",
+            siprop: "general|namespaces|namespacealiases|specialpagealiases"
+        })
+        .optionally()
+        .reply(200, siteInfoResponse);
+
+    function summaryEndpointTest(topic) {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},resource_change:https://en.wikipedia.org/api/rest_v1/page/html/Main_Page`,
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},${topic}:https://en.wikipedia.org/api/rest_v1/page/html/Main_Page`,
+                'x-request-id': common.SAMPLE_REQUEST_ID,
                 'user-agent': 'SampleChangePropInstance'
             }
         })
@@ -36,10 +63,10 @@ describe('RESTBase update rules', function() {
         .query({ redirect: false })
         .reply(200, { });
 
-        return P.try(() => producer.produce('test_dc.resource_change', 0,
+        return P.try(() => producer.produce(`test_dc.${topic}`, 0,
             Buffer.from(JSON.stringify({
                 meta: {
-                    topic: 'resource_change',
+                    topic: topic,
                     schema_uri: 'resource_change/1',
                     uri: 'https://en.wikipedia.org/api/rest_v1/page/html/Main_Page',
                     request_id: common.SAMPLE_REQUEST_ID,
@@ -51,7 +78,15 @@ describe('RESTBase update rules', function() {
             }))))
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
-    });
+    }
+
+
+
+    it('Should update summary endpoint', () =>
+        summaryEndpointTest('resource_change'));
+
+    it('Should update summary endpoint, transcludes topic', () =>
+        summaryEndpointTest('change-prop.transcludes.resource-change'));
 
     it('Should update summary endpoint on page images change', () => {
         const mwAPI = nock('https://en.wikipedia.org', {
@@ -253,7 +288,8 @@ describe('RESTBase update rules', function() {
                 page_title: 'User:Pchelolo/Test',
                 rev_id: 1234,
                 rev_timestamp: new Date().toISOString(),
-                rev_parent_id: 1233
+                rev_parent_id: 1233,
+                rev_content_changed: true
             }))))
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
@@ -281,7 +317,8 @@ describe('RESTBase update rules', function() {
                 rev_id: 1234,
                 rev_timestamp: new Date().toISOString(),
                 rev_parent_id: 1233,
-                page_namespace: 0
+                page_namespace: 0,
+                rev_content_changed: true
             }))))
         .then(() => common.checkPendingMocks(mwAPI, 1))
         .finally(() => nock.cleanAll());
@@ -413,11 +450,12 @@ describe('RESTBase update rules', function() {
 
     it('Should update ORES on revision-create', () => {
         const oresService = nock('https://ores.wikimedia.org')
-        .get('/v2/scores/enwiki/')
+        .get('/v2/scores/eswiki/')
         .query({
-            models: 'reverted|damaging|goodfaith',
+            models: 'reverted',
             revids: 1234,
-            precache: true })
+            precache: true,
+            format: 'json' })
         .reply(200, { });
 
         return P.try(() => producer.produce('test_dc.mediawiki.revision-create', 0,
@@ -429,7 +467,7 @@ describe('RESTBase update rules', function() {
                     request_id: common.SAMPLE_REQUEST_ID,
                     id: uuid.now(),
                     dt: new Date(1000).toISOString(),
-                    domain: 'en.wikipedia.org'
+                    domain: 'es.wikipedia.org'
                 },
                 page_title: 'TestPage',
                 rev_id: 1234,
@@ -498,7 +536,73 @@ describe('RESTBase update rules', function() {
                 },
                 page_title: 'Q1',
                 page_namespace: 0,
-                comment: "/* wbeditentity-update:0| */ add [it] label"
+                comment: "/* wbeditentity-update:0| */ add [it] label",
+                rev_content_changed: true
+            }))))
+        .delay(common.REQUEST_CHECK_DELAY)
+        .then(() => common.checkAPIDone(wikidataAPI))
+        .then(() => common.checkAPIDone(restbase))
+        .finally(() => nock.cleanAll());
+    });
+
+    it('Should update RESTBase summary and mobile-sections on wikidata description revert', () => {
+        const wikidataAPI = nock('https://www.wikidata.org')
+        .post('/w/api.php', {
+            format: 'json',
+            formatversion: '2',
+            action: 'wbgetentities',
+            ids: 'Q1',
+            props: 'sitelinks/urls',
+            normalize: 'true'
+        })
+        .reply(200, {
+            "success": 1,
+            "entities": {
+                "Q1": {
+                    "type": "item",
+                    "id": "Q1",
+                    "sitelinks": {
+                        "enwiki": {
+                            "site": "ruwiki",
+                            "title": "Пётр",
+                            "badges": [],
+                            "url": "https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80"
+                        }
+                    }
+                }
+            }
+        });
+
+        const restbase = nock('https://ru.wikipedia.org', {
+            reqheaders: {
+                'cache-control': 'no-cache',
+                'x-request-id': common.SAMPLE_REQUEST_ID,
+                'user-agent': 'SampleChangePropInstance',
+                'x-triggered-by': 'req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:/rev/uri,change-prop.wikidata.resource-change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80'
+            }
+        })
+        .get('/api/rest_v1/page/summary/%D0%9F%D1%91%D1%82%D1%80')
+        .query({ redirect: false })
+        .reply(200, { })
+        .get('/api/rest_v1/page/mobile-sections/%D0%9F%D1%91%D1%82%D1%80')
+        .query({ redirect: false })
+        .reply(200, { });
+
+        return P.try(() => producer.produce('test_dc.mediawiki.revision-create', 0,
+            Buffer.from(JSON.stringify({
+                meta: {
+                    topic: 'mediawiki.revision-create',
+                    schema_uri: 'revision-create/1',
+                    uri: '/rev/uri',
+                    request_id: common.SAMPLE_REQUEST_ID,
+                    id: uuid.now(),
+                    dt: new Date().toISOString(),
+                    domain: 'www.wikidata.org'
+                },
+                page_title: 'Q1',
+                page_namespace: 0,
+                comment: "/* undo */ Undo revision 440223057 by Mhollo",
+                rev_content_changed: true
             }))))
         .delay(common.REQUEST_CHECK_DELAY)
         .then(() => common.checkAPIDone(wikidataAPI))
@@ -604,7 +708,8 @@ describe('RESTBase update rules', function() {
                     domain: 'www.wikidata.org'
                 },
                 page_title: 'Property:P1',
-                page_namespace: 3
+                page_namespace: 3,
+                rev_content_changed: true
             }))))
         .delay(common.REQUEST_CHECK_DELAY)
         .then(() => common.checkPendingMocks(wikidataAPI, 1))
@@ -644,7 +749,8 @@ describe('RESTBase update rules', function() {
                 },
                 page_title: 'Q2',
                 page_namespace: 0,
-                comment: "/* wbeditentity-update:0| */ add [it] label"
+                comment: "/* wbeditentity-update:0| */ add [it] label",
+                rev_content_changed: true
             }))))
         .delay(common.REQUEST_CHECK_DELAY)
         .then(() => common.checkAPIDone(wikidataAPI))
@@ -652,7 +758,10 @@ describe('RESTBase update rules', function() {
     });
 
     it('Should rerender image usages on file update', () => {
-        const mwAPI = nock('https://en.wikipedia.org')
+        const mwAPI = nockWithOptionalSiteInfo()
+        .get('/api/rest_v1/page/html/File%3APchelolo%2FTest.jpg/112233')
+        .query({redirect: false})
+        .reply(200)
         .post('/w/api.php', {
             format: 'json',
             action: 'query',
@@ -712,14 +821,19 @@ describe('RESTBase update rules', function() {
                     domain: 'en.wikipedia.org'
                 },
                 page_title: 'File:Pchelolo/Test.jpg',
-                rev_parent_id: 12345 // Needed to avoid backlinks updates firing and interfering
+                rev_parent_id: 12345, // Needed to avoid backlinks updates firing and interfering
+                rev_id: 112233,
+                rev_content_changed: true
             }))))
         .then(() => common.checkAPIDone(mwAPI, 50))
         .finally(() => nock.cleanAll());
     });
 
     it('Should rerender transclusions on page update', () => {
-        const mwAPI = nock('https://en.wikipedia.org')
+        const mwAPI = nockWithOptionalSiteInfo()
+        .get('/api/rest_v1/page/html/Test_Page/112233')
+        .query({redirect: false})
+        .reply(200)
         .post('/w/api.php', {
             format: 'json',
             formatversion: '2',
@@ -791,11 +905,75 @@ describe('RESTBase update rules', function() {
                     domain: 'en.wikipedia.org'
                 },
                 page_title: 'Test_Page',
-                rev_parent_id: 12345 // Needed to avoid backlinks updates firing and interfering
+                rev_parent_id: 12345, // Needed to avoid backlinks updates firing and interfering
+                rev_id: 112233,
+                rev_content_changed: true
             }))))
         .then(() => common.checkAPIDone(mwAPI, 50))
         .finally(() => nock.cleanAll());
     });
+
+    function backlinksTest(page_title, topic) {
+        const mwAPI = nockWithOptionalSiteInfo()
+            .get(`/api/rest_v1/page/title/${page_title}`)
+            .query({ redirect: false })
+            .optionally()
+            .reply(200)
+            .post('/w/api.php', {
+                format: 'json',
+                action: 'query',
+                list: 'backlinks',
+                bltitle: page_title,
+                blfilterredir: 'nonredirects',
+                bllimit: '500',
+                formatversion: '2'
+            })
+            .reply(200, {
+                batchcomplete: '',
+                continue: {
+                    blcontinue: '1|2272',
+                    continue: '-||'
+                },
+                query: {
+                    backlinks: common.arrayWithLinks(`Linked_${page_title}`, 2)
+                }
+            })
+            .get(`/api/rest_v1/page/html/Linked_${page_title}`)
+            .times(2)
+            .query({ redirect: false })
+            .matchHeader('x-triggered-by', `${topic}:/sample/uri,change-prop.backlinks.resource-change:https://en.wikipedia.org/wiki/Linked_${page_title}`)
+            .reply(200)
+            .post('/w/api.php', {
+                format: 'json',
+                action: 'query',
+                list: 'backlinks',
+                bltitle: page_title,
+                blfilterredir: 'nonredirects',
+                bllimit: '500',
+                blcontinue: '1|2272',
+                formatversion: '2'
+            })
+            .reply(200, {
+                batchcomplete: '',
+                query: {
+                    backlinks: common.arrayWithLinks(`Linked_${page_title}`, 1)
+                }
+            })
+            .get(`/api/rest_v1/page/html/Linked_${page_title}`)
+            .query({ redirect: false })
+            .matchHeader('x-triggered-by', `${topic}:/sample/uri,change-prop.backlinks.resource-change:https://en.wikipedia.org/wiki/Linked_${page_title}`)
+            .reply(200);
+
+        return P.try(() => producer.produce(`test_dc.${topic}`, 0,
+            Buffer.from(JSON.stringify(common.eventWithProperties(topic, { page_title })))))
+            .then(() => common.checkAPIDone(mwAPI, 50))
+            .finally(() => nock.cleanAll());
+    }
+
+    it('Should process backlinks, on create', () => backlinksTest('On_Create', 'mediawiki.page-create'));
+    it('Should process backlinks, on delete', () => backlinksTest('On_Delete', 'mediawiki.page-delete'));
+    it('Should process backlinks, on undelete', () => backlinksTest('On_Undelete', 'mediawiki.page-undelete'));
+
 
     it('Should purge caches on resource_change coming from RESTBase', (done) => {
         var udpServer = dgram.createSocket('udp4');

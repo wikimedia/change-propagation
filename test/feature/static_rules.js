@@ -19,30 +19,17 @@ describe('Basic rule management', function() {
     let producer;
     let retrySchema;
     let errorSchema;
-    let siteInfoResponse;
 
     before(function() {
-        // Setting up might tike some tome, so disable the timeout
-        this.timeout(20000);
+        // Setting up might take some tome, so disable the timeout
+        this.timeout(30000);
 
         return changeProp.start()
         .then(() => preq.get({ uri: 'https://raw.githubusercontent.com/wikimedia/mediawiki-event-schemas/master/jsonschema/change-prop/retry/1.yaml' }))
         .then((res) => retrySchema = yaml.safeLoad(res.body))
         .then(() => preq.get({ uri: 'https://raw.githubusercontent.com/wikimedia/mediawiki-event-schemas/master/jsonschema/error/1.yaml' }))
         .then((res) => errorSchema = yaml.safeLoad(res.body))
-        .then(() => {
-            preq.post({
-                uri: 'https://en.wikipedia.org/w/api.php',
-                body: {
-                    format: 'json',
-                    action: 'query',
-                    meta: 'siteinfo',
-                    siprop: 'general|namespaces|namespacealiases'
-                }
-            });
-        })
-        .then((res) => siteInfoResponse = res)
-        .then(common.factory.createProducer.bind(common.factory))
+        .then(() => common.factory.createProducer(console.log.bind(console)))
         .then((result) => producer = result);
     });
 
@@ -178,13 +165,14 @@ describe('Basic rule management', function() {
                 Buffer.from(JSON.stringify(common.eventWithMessageAndRandom('test', random)))), 2000);
 
             function check() {
-                return retryConsumer.consumeAsync()
+                return retryConsumer.consumeAsync(1)
                 .catch(check)
-                .then((message) => {
-                    if (!message) {
+                .then((messages) => {
+                    if (!messages.length) {
                         return;
                     }
 
+                    const message = messages[0];
                     const ajv = new Ajv();
                     const validate = ajv.compile(retrySchema);
                     const msg = JSON.parse(message.value.toString());
@@ -308,16 +296,17 @@ describe('Basic rule management', function() {
                 producer.produce('test_dc.simple_test_rule', 0, Buffer.from('not_a_json_message')), 2000);
 
             function check() {
-                return errorConsumer.consumeAsync()
+                return errorConsumer.consumeAsync(1)
                 .catch(check)
-                .then((message) => {
-                    if (!message) {
+                .then((messages) => {
+                    if (!messages.length) {
                         return;
                     }
 
+                    const message = messages[0];
                     const ajv = new Ajv();
                     const validate = ajv.compile(errorSchema);
-                    var valid = validate(JSON.parse(message.value.toString()));
+                    const valid = validate(JSON.parse(message.value.toString()));
                     if (!valid) {
                         throw  new assert.AssertionError({
                             message: ajv.errorsText(validate.errors)
@@ -328,6 +317,29 @@ describe('Basic rule management', function() {
 
             return check();
         });
+    });
+
+    it('Sampling should only propagate a stable subset', () => {
+        const service = nock('http://mock.com/')
+        .get('/en.wikipedia.org/N0ryO6Lrp')
+        .reply(200, {})
+        .get('/en.wikipedia.org/rpiwQuPlA')
+        .reply(200, {});
+
+        return P.try(() => producer.produce('test_dc.sample_test_rule', 0,
+            Buffer.from(JSON.stringify(
+                // en.wikipedia.org-N0ryO6Lrp hashes to lower 20% of hashspace (should pass)
+                common.eventWithProperties('test_dc.sample_test_rule', { page_title: 'N0ryO6Lrp', message: 'sampled' })
+            )))
+        )
+        .then(() => producer.produce('test_dc.sample_test_rule', 0,
+            Buffer.from(JSON.stringify(
+                // en.wikipedia.org-rpiwQuPlA hashes to upper 80% of hashspace (should fail)
+                common.eventWithProperties('test_dc.sample_test_rule', { page_title: 'rpiwQuPlA', message: 'sampled' })
+            )))
+        )
+        .then(() => common.checkPendingMocks(service, 1))
+        .finally(() => nock.cleanAll());
     });
 
     after(() => changeProp.stop());

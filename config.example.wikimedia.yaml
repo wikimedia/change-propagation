@@ -9,6 +9,25 @@ spec: &spec
               user-agent: true
   title: The Change Propagation root
   paths:
+    /sys/limit:
+      x-modules:
+        - path: sys/rate_limiter.js
+          options:
+            redis:
+              host: localhost
+              port: 6379
+
+            limiters:
+              blacklist:
+                # First, allow no more then 100 errors per week
+                # The precision parameter controls the step a sliding window moves by
+                - interval: 604800
+                  limit: 100
+                  precision: 86400
+                # Secondly to avoid bursts in case of outages, don't allow more then 10
+                # errors per hour
+                - interval: 3600
+                  limit: 10
     /sys/purge:
       x-modules:
         - path: sys/purge.js
@@ -40,16 +59,20 @@ spec: &spec
               fetch.wait.max.ms: "1"
               fetch.min.bytes: "1"
               queue.buffering.max.ms: "1"
+            producer:
+              queue.buffering.max.messages: "10"
             concurrency: 250
             templates:
 
               summary_definition_rerender: &summary_definition_rerender_spec
-                topic: resource_change
+                topic: '/^(?:change-prop\.transcludes\.)?resource[-_]change$/'
                 retry_limit: 2
                 retry_delay: 500
                 retry_on:
                   status:
                     - '5xx'
+                limiters:
+                  blacklist: 'summary:{message.meta.uri}'
                 cases: # Non wiktionary domains - rerender summary
                   - match:
                       meta:
@@ -86,17 +109,15 @@ spec: &spec
                       headers:
                         cache-control: no-cache
 
-              summary_definition_rerender_transcludes:
-                <<: *summary_definition_rerender_spec
-                topic: change-prop.transcludes.resource-change
-
               mobile_rerender: &mobile_rerender_spec
-                topic: resource_change
+                topic: '/^(?:change-prop\.transcludes\.)?resource[-_]change$/'
                 retry_limit: 2
                 retry_delay: 500
                 retry_on:
                   status:
                     - '5xx'
+                limiters:
+                  blacklist: 'mobile:{message.meta.uri}'
                 match:
                   meta:
                     uri: '/^(?<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>[^/]+)$/'
@@ -113,12 +134,8 @@ spec: &spec
                   headers:
                     cache-control: no-cache
 
-              mobile_rerender_transcludes:
-                <<: *mobile_rerender_spec
-                topic: change-prop.transcludes.resource-change
-
               purge_varnish: &purge_varnish_spec
-                topic: resource_change
+                topic: '/^(?:change-prop\.transcludes\.)?resource[-_]change$/'
                 match:
                   meta:
                     uri: '/^https?:\/\/[^\/]+\/api\/rest_v1\/(?<title>.+)$/'
@@ -131,10 +148,6 @@ spec: &spec
                     - meta:
                         uri: '//{{message.meta.domain}}/api/rest_v1/{{match.meta.uri.title}}'
 
-              purge_varnish_transcludes:
-                <<: *purge_varnish_spec
-                topic: change-prop.transcludes.resource-change
-
               # RESTBase update jobs
               mw_purge:
                 topic: resource_change
@@ -143,9 +156,13 @@ spec: &spec
                     uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
                   tags:
                     - purge
+                limiters:
+                  blacklist: 'html:{message.meta.uri}'
                 exec:
                   method: get
-                  uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{{match.meta.uri.title}}'
+                  # This even comes directly from MediaWiki, so title is encoded in MW-specific way.
+                  # Re-encode the title in standard `encodeURIComponent` encoding.
+                  uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{decode(match.meta.uri.title)}'
                   headers:
                     cache-control: no-cache
                     if-unmodified-since: '{{date(message.meta.dt)}}'
@@ -158,6 +175,8 @@ spec: &spec
                   status:
                     - 403 # Ignoring 403 since some of the pages with high number of null_edit events are blacklisted
                     - 412
+                limiters:
+                  blacklist: 'html:{message.meta.uri}'
                 match:
                   meta:
                     uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
@@ -165,7 +184,9 @@ spec: &spec
                     - null_edit
                 exec:
                   method: get
-                  uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{{match.meta.uri.title}}'
+                  # This even comes directly from MediaWiki, so title is encoded in MW-specific way.
+                  # Re-encode the title in standard `encodeURIComponent` encoding.
+                  uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{decode(match.meta.uri.title)}'
                   headers:
                     cache-control: no-cache
                     if-unmodified-since: '{{date(message.meta.dt)}}'
@@ -174,11 +195,19 @@ spec: &spec
 
               page_edit:
                 topic: mediawiki.revision-create
+                limiters:
+                  blacklist: 'html:{message.meta.uri}'
                 retry_on:
                   status:
                     - '5xx'
                     - 404 # Sometimes occasional 404s happen because of the mysql replication lag, so retry
+                match:
+                  rev_content_changed: true
                 match_not:
+                # Test-only. We use undefined rev_parent_id to test backlinks so we
+                # don't want transclusions to interfere with backlinks test
+                  - rev_parent_id: undefined
+                # end of test-only config
                   - meta:
                       domain: /\.wikidata\.org$/
                     page_namespace: 0
@@ -186,14 +215,17 @@ spec: &spec
                       domain: /\.wikidata\.org$/
                     page_namespace: 120
                 exec:
-                  method: get
-                  uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{message.page_title}/{{message.rev_id}}'
-                  headers:
-                    cache-control: no-cache
-                    x-restbase-parentrevision: '{{message.rev_parent_id}}'
-                    if-unmodified-since: '{{date(message.meta.dt)}}'
-                  query:
-                    redirect: false
+                  - method: get
+                    uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{message.page_title}/{{message.rev_id}}'
+                    headers:
+                      cache-control: no-cache
+                      x-restbase-parentrevision: '{{message.rev_parent_id}}'
+                      if-unmodified-since: '{{date(message.meta.dt)}}'
+                    query:
+                      redirect: false
+                  - method: post
+                    uri: '/sys/links/transcludes/{message.page_title}'
+                    body: '{{globals.message}}'
 
               revision_visibility_change:
                 topic: mediawiki.revision-visibility-change
@@ -236,6 +268,10 @@ spec: &spec
                       cache-control: no-cache
                     query:
                       redirect: false
+                  # The links to the deleted page should become red again
+                  - method: post
+                    uri: '/sys/links/backlinks/{message.page_title}'
+                    body: '{{globals.message}}'
                   # For page deletion RESTBase doesn't emit resource_change events, and to go through
                   # the normal purge chain (html update -> html resource_change -> summary update -> summary resource_change)
                   # we need to add many workarounds/shortcurst in RESTBase. So having this list here is an OK compromise.
@@ -267,12 +303,16 @@ spec: &spec
                       domain: /\.wikidata\.org$/
                     page_namespace: 120
                 exec:
-                  method: get
-                  uri: 'https://{{message.meta.domain}}/api/rest_v1/page/title/{message.page_title}'
-                  headers:
-                    cache-control: no-cache
-                  query:
-                    redirect: false
+                  - method: get
+                    uri: 'https://{{message.meta.domain}}/api/rest_v1/page/title/{message.page_title}'
+                    headers:
+                      cache-control: no-cache
+                    query:
+                      redirect: false
+                  # The links to the deleted page should become red again
+                  - method: post
+                    uri: '/sys/links/backlinks/{message.page_title}'
+                    body: '{{globals.message}}'
 
               page_move:
                 topic: mediawiki.page-move
@@ -298,39 +338,77 @@ spec: &spec
                     query:
                       redirect: false
 
-              transclusion_update:
-                topic: mediawiki.revision-create
-                # Test-only. We use undefined rev_parent_id to test backlinks so we
-                # don't want transclusions to interfere with backlinks test
+              on_transclusion_update:
+                topic: change-prop.transcludes.resource-change
+                limiters:
+                  blacklist: 'html:{message.meta.uri}'
+                cases:
+                  - match:
+                      meta:
+                        schema_uri: 'resource_change/1'
+                        uri: '/https?:\/\/[^\/]+\/wiki\/(?<title>.+)/'
+                      tags: [ 'transcludes' ]
+                    exec:
+                      method: get
+                      uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{{match.meta.uri.title}}'
+                      headers:
+                        cache-control: no-cache
+                        if-unmodified-since: '{{date(message.meta.dt)}}'
+                        x-restbase-mode: '{{message.tags[1]}}'
+                      query:
+                        redirect: false
+                  - match:
+                      meta:
+                        schema_uri: 'continue/1'
+                    exec:
+                      method: post
+                      uri: '/sys/links/transcludes/{message.original_event.page_title}'
+                      body: '{{globals.message}}'
+
+              page_create:
+                topic: mediawiki.page-create
+                retry_on:
+                  status:
+                    - '5xx'
+                    - 404 # Sometimes occasional 404s happen because of the mysql replication lag, so retry
                 match_not:
-                  - rev_parent_id: undefined
                   - meta:
                       domain: /\.wikidata\.org$/
                     page_namespace: 0
                   - meta:
                       domain: /\.wikidata\.org$/
                     page_namespace: 120
-                # end of test-only config
                 exec:
-                  method: post
-                  uri: '/sys/links/transcludes/{message.page_title}'
-                  body: '{{globals.message}}'
+                  - method: post
+                    uri: '/sys/links/backlinks/{message.page_title}'
+                    body: '{{globals.message}}'
 
-              on_transclusion_update:
-                topic: change-prop.transcludes.resource-change
-                match:
-                  meta:
-                    uri: '/https?:\/\/[^\/]+\/wiki\/(?<title>.+)/'
-                  tags: [ 'transcludes' ]
-                exec:
-                  method: get
-                  uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{{match.meta.uri.title}}'
-                  headers:
-                    cache-control: no-cache
-                    if-unmodified-since: '{{date(message.meta.dt)}}'
-                    x-restbase-mode: '{{message.tags[1]}}'
-                  query:
-                    redirect: false
+              on_backlinks_update:
+                topic: change-prop.backlinks.resource-change
+                limiters:
+                  blacklist: 'html:{message.meta.uri}'
+                cases:
+                  - match:
+                      meta:
+                        schema_uri: 'resource_change/1'
+                        uri: '/https?:\/\/[^\/]+\/wiki\/(?<title>.+)/'
+                      tags: [ 'backlinks' ]
+                    exec:
+                      method: get
+                      uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{{match.meta.uri.title}}'
+                      headers:
+                        cache-control: no-cache
+                        if-unmodified-since: '{{date(message.meta.dt)}}'
+                        x-restbase-mode: '{{message.tags[1]}}'
+                      query:
+                        redirect: false
+                  - match:
+                      meta:
+                        schema_uri: 'continue/1'
+                    exec:
+                      method: post
+                      uri: '/sys/links/backlinks/{message.original_event.page_title}'
+                      body: '{{globals.message}}'
 
               # ORES caching updates
               ores_cache:
@@ -351,28 +429,7 @@ spec: &spec
                         models: 'reverted'
                         revids: '{{message.rev_id}}'
                         precache: true
-                  - match:
-                      meta:
-                        domain: cs.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/cswiki/'
-                      query:
-                        models: 'reverted'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: en.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/enwiki/'
-                      query:
-                        models: 'reverted|damaging|goodfaith'
-                        revids: '{{message.rev_id}}'
-                        precache: true
+                        format: 'json'
                   - match:
                       meta:
                         domain: en.wiktionary.org
@@ -384,6 +441,7 @@ spec: &spec
                         models: 'reverted'
                         revids: '{{message.rev_id}}'
                         precache: true
+                        format: 'json'
                   - match:
                       meta:
                         domain: es.wikipedia.org
@@ -395,50 +453,31 @@ spec: &spec
                         models: 'reverted'
                         revids: '{{message.rev_id}}'
                         precache: true
+                        format: 'json'
                   - match:
                       meta:
-                        domain: et.wikipedia.org
+                        domain: es.wikibooks.org
                       performer:
                         user_is_bot: false
                     exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/etwiki/'
+                      uri: 'https://ores.wikimedia.org/v2/scores/eswikibooks/'
                       query:
                         models: 'reverted'
                         revids: '{{message.rev_id}}'
                         precache: true
+                        format: 'json'
                   - match:
                       meta:
-                        domain: fa.wikipedia.org
+                        domain: de.wikipedia.org
                       performer:
                         user_is_bot: false
                     exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/fawiki/'
-                      query:
-                        models: 'reverted|damaging|goodfaith'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-                  - match:
-                      meta:
-                        domain: fr.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/frwiki/'
+                      uri: 'https://ores.wikimedia.org/v2/scores/dewiki/'
                       query:
                         models: 'reverted'
                         revids: '{{message.rev_id}}'
                         precache: true
-                  - match:
-                      meta:
-                        domain: he.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/hewiki/'
-                      query:
-                        models: 'reverted'
-                        revids: '{{message.rev_id}}'
-                        precache: true
+                        format: 'json'
                   - match:
                       meta:
                         domain: hu.wikipedia.org
@@ -450,6 +489,7 @@ spec: &spec
                         models: 'reverted'
                         revids: '{{message.rev_id}}'
                         precache: true
+                        format: 'json'
                   - match:
                       meta:
                         domain: id.wikipedia.org
@@ -461,6 +501,7 @@ spec: &spec
                         models: 'reverted'
                         revids: '{{message.rev_id}}'
                         precache: true
+                        format: 'json'
                   - match:
                       meta:
                         domain: it.wikipedia.org
@@ -472,61 +513,55 @@ spec: &spec
                         models: 'reverted'
                         revids: '{{message.rev_id}}'
                         precache: true
+                        format: 'json'
                   - match:
                       meta:
-                        domain: nl.wikipedia.org
+                        domain: ko.wikipedia.org
                       performer:
                         user_is_bot: false
                     exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/nlwiki/'
+                      uri: 'https://ores.wikimedia.org/v2/scores/kowiki/'
                       query:
-                        models: 'reverted|damaging|goodfaith'
+                        models: 'reverted'
                         revids: '{{message.rev_id}}'
                         precache: true
+                        format: 'json'
                   - match:
                       meta:
-                        domain: pl.wikipedia.org
+                        domain: no.wikipedia.org
                       performer:
                         user_is_bot: false
                     exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/plwiki/'
+                      uri: 'https://ores.wikimedia.org/v2/scores/nowiki/'
                       query:
-                        models: 'reverted|damaging|goodfaith'
+                        models: 'reverted'
                         revids: '{{message.rev_id}}'
                         precache: true
+                        format: 'json'
                   - match:
                       meta:
-                        domain: pt.wikipedia.org
+                        domain: ro.wikipedia.org
                       performer:
                         user_is_bot: false
                     exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/ptwiki/'
+                      uri: 'https://ores.wikimedia.org/v2/scores/rowiki/'
                       query:
-                        models: 'reverted|damaging|goodfaith'
+                        models: 'reverted'
                         revids: '{{message.rev_id}}'
                         precache: true
+                        format: 'json'
                   - match:
                       meta:
-                        domain: ru.wikipedia.org
+                        domain: sv.wikipedia.org
                       performer:
                         user_is_bot: false
                     exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/ruwiki/'
+                      uri: 'https://ores.wikimedia.org/v2/scores/svwiki/'
                       query:
-                        models: 'reverted|damaging|goodfaith'
+                        models: 'reverted'
                         revids: '{{message.rev_id}}'
                         precache: true
-                  - match:
-                      meta:
-                        domain: tr.wikipedia.org
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/trwiki/'
-                      query:
-                        models: 'reverted|damaging|goodfaith'
-                        revids: '{{message.rev_id}}'
-                        precache: true
+                        format: 'json'
                   - match:
                       meta:
                         domain: uk.wikipedia.org
@@ -538,6 +573,7 @@ spec: &spec
                         models: 'reverted'
                         revids: '{{message.rev_id}}'
                         precache: true
+                        format: 'json'
                   - match:
                       meta:
                         domain: vi.wikipedia.org
@@ -549,48 +585,7 @@ spec: &spec
                         models: 'reverted'
                         revids: '{{message.rev_id}}'
                         precache: true
-                  - match:
-                      meta:
-                        domain: www.wikidata.org
-                      page_namespace: 0
-                      performer:
-                        user_is_bot: false
-                    exec:
-                      uri: 'https://ores.wikimedia.org/v2/scores/wikidatawiki/'
-                      query:
-                        models: 'reverted|damaging|goodfaith'
-                        revids: '{{message.rev_id}}'
-                        precache: true
-
-              # This is not yet used in production
-              process_redlinks:
-                topic: mediawiki.revision-create
-                retry_limit: 0
-                match:
-                  rev_parent_id: undefined
-                match_not:
-                  - meta:
-                      domain: /\.wikidata\.org$/
-                    page_namespace: 0
-                  - meta:
-                      domain: /\.wikidata\.org$/
-                    page_namespace: 120
-                exec:
-                  method: post
-                  uri: '/sys/links/backlinks/{message.page_title}'
-                  body: '{{globals.message}}'
-
-              rerender_restbase:
-                topic: change-prop.transcludes.resource-change
-                match:
-                  meta:
-                    uri: '/https:\/\/[^\/]+\/wiki\/(?<title>.+)/'
-                  tags: [ 'backlinks' ]
-                exec:
-                  method: get
-                  uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{{match.meta.uri.title}}'
-                  headers:
-                    cache-control: no-cache
+                        format: 'json'
 
               wikidata_description_on_edit:
                 topic: mediawiki.revision-create
@@ -600,7 +595,8 @@ spec: &spec
                   page_namespace: 0
                   # It's impossible to modify a comment in wikidata while editing the entity.
                   # TODO: This is a temp solution until we get a more general fragment support T148079
-                  comment: '/wbeditentity|wbsetdescription/'
+                  comment: '/wbeditentity|wbsetdescription|undo/'
+                  rev_content_changed: true
                 exec:
                   method: post
                   uri: '/sys/links/wikidata_descriptions'
@@ -618,7 +614,7 @@ spec: &spec
                   body: '{{globals.message}}'
 
               on_wikidata_description_change:
-                topic: change-prop.transcludes.resource-change
+                topic: change-prop.wikidata.resource-change
                 match:
                   meta:
                     uri: '/https:\/\/[^\/]+\/wiki\/(?<title>.+)/'
