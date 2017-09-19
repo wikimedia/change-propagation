@@ -56,7 +56,10 @@ describe('Basic rule management', function() {
             '{}'
         ].map((strMsg) => Buffer.from(strMsg)),
             (msg) => producer.produce('test_dc.simple_test_rule', 0, msg))
-        .then(() => common.checkAPIDone(service))
+        .then(() => {
+            console.log('produced');
+            return common.checkAPIDone(service);
+        })
         .finally(() => nock.cleanAll());
     });
 

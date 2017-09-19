@@ -36,18 +36,19 @@
   "homepage": "https://github.com/wikimedia/change-propagation",
   "dependencies": {
     "bluebird": "^3.5.0",
+    "budgeteer": "^0.1.0",
     "cassandra-uuid": "^0.0.2",
     "extend": "^3.0.1",
-    "hyperswitch": "^0.9.1",
-    "service-runner": "^2.3.0",
-    "json-stable-stringify": "^1.0.1",
     "htcp-purge": "^0.2.2",
+    "hyperswitch": "^0.9.1",
+    "json-stable-stringify": "^1.0.1",
     "mediawiki-title": "^0.6.3",
     "murmur-32": "^0.1.0",
     "node-rdkafka": "^1.0.6",
     "node-rdkafka-statsd": "^0.1.0",
     "ratelimit.js": "^1.8.0",
-    "redis": "^2.7.1"
+    "redis": "^2.7.1",
+    "service-runner": "^2.3.0"
   },
   "devDependencies": {
     "istanbul": "^0.4.5",

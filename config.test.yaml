@@ -33,6 +33,11 @@ spec: &spec
               fetch.min.bytes: "1"
               queue.buffering.max.ms: "1"
             concurrency: 1
+            budgeteer:
+                store:
+                    type: redis
+                    host: localhost
+                    port: 6379
             templates:
               simple_test_rule:
                 topic: simple_test_rule

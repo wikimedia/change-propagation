@@ -45,6 +45,11 @@ services:
                   metadata_broker_list: 127.0.0.1:9092
                   dc_name: default
                   concurrency: 10
+                  budgeteer:
+                    store:
+                      type: redis
+                      host: localhost
+                      port: 6379
                   templates: {}
                   # Useful for mirroring the propagation of events in a test
                   # environment; test_mode does the following: a) disables

@@ -28,11 +28,6 @@ spec: &spec
                 # errors per hour
                 - interval: 3600
                   limit: 10
-    /sys/dedupe:
-      x-modules:
-        - path: sys/deduplicator.js
-          options:
-            redis: *redis_config
     /sys/purge:
       x-modules:
         - path: sys/purge.js
@@ -67,6 +62,13 @@ spec: &spec
             producer:
               queue.buffering.max.messages: "10"
             concurrency: 250
+            budgeteer:
+                store:
+                    type: redis
+                    host: localhost
+                    port: 6379
+                
+
             templates:
 
               summary_definition_rerender: &summary_definition_rerender_spec
