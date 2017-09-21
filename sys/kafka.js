@@ -24,6 +24,7 @@ class Kafka {
         this._services = {
             log: options.log || (() => { }),
             kafka: new KafkaFactory(options),
+            // Rate limiting and deduplication
             budgeteer: new Budgeteer(options.budgeteer),
             hyper: null // Filled in during setup
         };
@@ -34,7 +35,6 @@ class Kafka {
 
         this.subscriber = new RuleSubscriber(options, this._services);
         HyperSwitch.lifecycle.on('close', () => this.subscriber.unsubscribeAll());
-        // Rate limiting and deduplication
     }
 
     setup(hyper) {

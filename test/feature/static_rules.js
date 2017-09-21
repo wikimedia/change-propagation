@@ -57,7 +57,6 @@ describe('Basic rule management', function() {
         ].map((strMsg) => Buffer.from(strMsg)),
             (msg) => producer.produce('test_dc.simple_test_rule', 0, msg))
         .then(() => {
-            console.log('produced');
             return common.checkAPIDone(service);
         })
         .finally(() => nock.cleanAll());
@@ -287,6 +286,53 @@ describe('Basic rule management', function() {
                 produce_to_topic: 'simple_test_rule'
             })))))
         .then(() => common.checkAPIDone(service))
+        .finally(() => nock.cleanAll());
+    });
+
+    it('Should deduplicate identical events based on sha1', () => {
+        const rand = Math.random().toString();
+
+        let service;
+        function setupService() {
+            service = nock('http://mock.com', {
+                reqheaders: {
+                    test_header_name: 'test_header_value',
+                    'content-type': 'application/json',
+                    'user-agent': 'ChangePropTestSuite'
+                }
+            })
+            .post('/', {
+                'test_field_name': 'test_field_value',
+                'derived_field': 'test',
+                'random_field': rand,
+            })
+            .reply({});
+        }
+
+        const eventBuffer = Buffer.from(
+            JSON.stringify(
+                common.eventWithProperties('simple_test_rule', {
+                    sha1: rand,
+                    random: rand,
+                    message: 'test'
+                })));
+
+        setupService();
+        return P.try(() => producer.produce('test_dc.simple_test_rule', 0, eventBuffer))
+        .then(() => {
+            common.checkAPIDone(service);
+            nock.cleanAll();
+            setupService();
+        })
+        // Send the exact same event again, and make sure it is not executed
+        // again.
+        .then(() => producer.produce('test_dc.simple_test_rule', 0, eventBuffer))
+        .then(() => common.checkAPIDone(service))
+        .then((isDone) => {
+            if (isDone) {
+                throw new Error('Got request that should have been deduplicated!');
+            }
+        })
         .finally(() => nock.cleanAll());
     });
 
