@@ -9,14 +9,6 @@ spec: &spec
               user-agent: true
   title: The Change Propagation root
   paths:
-    /sys/dedupe:
-      x-modules:
-        - path: sys/deduplicator.js
-          options:
-            redis_prefix: CPJQ
-            redis:
-              host: localhost
-              port: 6379
     /sys/queue:
       x-modules:
         - path: sys/kafka.js
@@ -34,6 +26,11 @@ spec: &spec
             producer:
               queue.buffering.max.messages: "10"
             concurrency: 250
+            budgeteer:
+                store:
+                    type: redis
+                    host: localhost
+                    port: 6379
             templates:
               updateBetaFeaturesUserCounts:
                 topic: 'mediawiki.job.updateBetaFeaturesUserCounts'

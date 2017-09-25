@@ -67,7 +67,6 @@ spec: &spec
                     type: redis
                     host: localhost
                     port: 6379
-                
 
             templates:
 
