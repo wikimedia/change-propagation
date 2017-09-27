@@ -56,9 +56,7 @@ describe('Basic rule management', function() {
             '{}'
         ].map((strMsg) => Buffer.from(strMsg)),
             (msg) => producer.produce('test_dc.simple_test_rule', 0, msg))
-        .then(() => {
-            return common.checkAPIDone(service);
-        })
+        .then(() => common.checkAPIDone(service))
         .finally(() => nock.cleanAll());
     });
 
@@ -279,7 +277,7 @@ describe('Basic rule management', function() {
             'test_field_name': 'test_field_value',
             'derived_field': 'test'
         })
-        .times(2).reply({});
+        .times(2).reply(200, {});
 
         return P.try(() => producer.produce('test_dc.kafka_producing_rule', 0,
             Buffer.from(JSON.stringify(common.eventWithProperties('test_dc.kafka_producing_rule', {
@@ -290,24 +288,21 @@ describe('Basic rule management', function() {
     });
 
     it('Should deduplicate identical events based on sha1', () => {
-        const rand = Math.random().toString();
+        const rand = common.randomString();
 
-        let service;
-        function setupService() {
-            service = nock('http://mock.com', {
-                reqheaders: {
-                    test_header_name: 'test_header_value',
-                    'content-type': 'application/json',
-                    'user-agent': 'ChangePropTestSuite'
-                }
-            })
+        const service = nock('http://mock.com', {
+            reqheaders: {
+                test_header_name: 'test_header_value',
+                'content-type': 'application/json',
+                'user-agent': 'ChangePropTestSuite'
+            }
+        })
             .post('/', {
                 'test_field_name': 'test_field_value',
                 'derived_field': 'test',
                 'random_field': rand,
             })
-            .reply({});
-        }
+            .times(2).reply(200, {});
 
         const eventBuffer = Buffer.from(
             JSON.stringify(
@@ -317,22 +312,11 @@ describe('Basic rule management', function() {
                     message: 'test'
                 })));
 
-        setupService();
         return P.try(() => producer.produce('test_dc.simple_test_rule', 0, eventBuffer))
-        .then(() => {
-            common.checkAPIDone(service);
-            nock.cleanAll();
-            setupService();
-        })
         // Send the exact same event again, and make sure it is not executed
         // again.
         .then(() => producer.produce('test_dc.simple_test_rule', 0, eventBuffer))
-        .then(() => common.checkAPIDone(service))
-        .then((isDone) => {
-            if (isDone) {
-                throw new Error('Got request that should have been deduplicated!');
-            }
-        })
+        .then(() => common.checkPendingMocks(service, 1))
         .finally(() => nock.cleanAll());
     });
 

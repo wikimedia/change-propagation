@@ -32,7 +32,6 @@ class Kafka {
         // Shorthands
         this.log = this._services.log;
 
-
         this.subscriber = new RuleSubscriber(options, this._services);
         HyperSwitch.lifecycle.on('close', () => this.subscriber.unsubscribeAll());
     }
