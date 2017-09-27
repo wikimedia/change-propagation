@@ -426,7 +426,7 @@ describe('RESTBase update rules', function() {
                 'user-agent': 'SampleChangePropInstance'
             }
         })
-        .get('/api/rest_v1/page/revision/1234')
+        .get('/api/rest_v1/page/title/Foo/1234')
         .query({ redirect: false })
         .reply(200, { });
 
@@ -441,6 +441,7 @@ describe('RESTBase update rules', function() {
                     dt: new Date().toISOString(),
                     domain: 'en.wikipedia.org'
                 },
+                page_title: 'Foo',
                 rev_id: 1234
             }))))
         .then(() => common.checkAPIDone(mwAPI))
