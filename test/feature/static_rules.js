@@ -277,13 +277,46 @@ describe('Basic rule management', function() {
             'test_field_name': 'test_field_value',
             'derived_field': 'test'
         })
-        .times(2).reply({});
+        .times(2).reply(200, {});
 
         return P.try(() => producer.produce('test_dc.kafka_producing_rule', 0,
             Buffer.from(JSON.stringify(common.eventWithProperties('test_dc.kafka_producing_rule', {
                 produce_to_topic: 'simple_test_rule'
             })))))
         .then(() => common.checkAPIDone(service))
+        .finally(() => nock.cleanAll());
+    });
+
+    it('Should deduplicate identical events based on sha1', () => {
+        const rand = common.randomString();
+
+        const service = nock('http://mock.com', {
+            reqheaders: {
+                test_header_name: 'test_header_value',
+                'content-type': 'application/json',
+                'user-agent': 'ChangePropTestSuite'
+            }
+        })
+            .post('/', {
+                'test_field_name': 'test_field_value',
+                'derived_field': 'test',
+                'random_field': rand,
+            })
+            .times(2).reply(200, {});
+
+        const eventBuffer = Buffer.from(
+            JSON.stringify(
+                common.eventWithProperties('simple_test_rule', {
+                    sha1: rand,
+                    random: rand,
+                    message: 'test'
+                })));
+
+        return P.try(() => producer.produce('test_dc.simple_test_rule', 0, eventBuffer))
+        // Send the exact same event again, and make sure it is not executed
+        // again.
+        .then(() => producer.produce('test_dc.simple_test_rule', 0, eventBuffer))
+        .then(() => common.checkPendingMocks(service, 1))
         .finally(() => nock.cleanAll());
     });
 

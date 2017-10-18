@@ -10,6 +10,7 @@ const P = require('bluebird');
 const HyperSwitch = require('hyperswitch');
 const HTTPError = HyperSwitch.HTTPError;
 const uuid = require('cassandra-uuid').TimeUuid;
+const Budgeteer = require('budgeteer');
 
 const utils = require('../lib/utils');
 const Rule = require('../lib/rule');
@@ -19,36 +20,48 @@ const RuleSubscriber = require('../lib/rule_subscriber');
 class Kafka {
     constructor(options) {
         this.options = options;
-        this.log = options.log || (() => { });
-        this.kafkaFactory = new KafkaFactory(options);
         this.staticRules = options.templates || {};
+        this._services = {
+            log: options.log || (() => { }),
+            kafka: new KafkaFactory(options),
+            // Rate limiting and deduplication
+            budgeteer: new Budgeteer(options.budgeteer),
+            hyper: null // Filled in during setup
+        };
 
-        this.subscriber = new RuleSubscriber(options, this.kafkaFactory);
+        // Shorthands
+        this.log = this._services.log;
+
+        this.subscriber = new RuleSubscriber(options, this._services);
         HyperSwitch.lifecycle.on('close', () => this.subscriber.unsubscribeAll());
     }
 
     setup(hyper) {
-        return this.kafkaFactory.createGuaranteedProducer(this.log)
+        this._services.hyper = hyper;
+        return this._services.kafka.createGuaranteedProducer(this.log)
         .then((producer) => {
             this.producer = producer;
-            HyperSwitch.lifecycle.on('close', () => this.producer.disconnect());
-            return this._subscribeRules(hyper, this.staticRules);
+            HyperSwitch.lifecycle.on('close', () => P.all([
+                this.producer.disconnect(),
+                this._services.budgeteer.close()
+            ]));
+            return this._subscribeRules(this.staticRules);
         })
         .tap(() => this.log('info/change-prop/init', 'Kafka Queue module initialised'));
     }
 
-    _subscribeRules(hyper, rules) {
+    _subscribeRules(rules) {
         const activeRules = Object.keys(rules)
             .map(ruleName => new Rule(ruleName, rules[ruleName]))
             .filter(rule => !rule.noop);
 
         return P.each(activeRules, rule =>
-            this.subscriber.subscribe(hyper, rule))
+            this.subscriber.subscribe(rule))
         .thenReturn({ status: 201 });
     }
 
-    subscribe(hyper, req) {
-        return this._subscribeRules(hyper, req.body);
+    subscribe(req) {
+        return this._subscribeRules(req.body);
     }
 
     produce(hyper, req) {
@@ -88,7 +101,8 @@ class Kafka {
             const topicName = message.meta.topic.replace(/\./g, '_');
             hyper.metrics.increment(`produce_${hyper.metrics.normalizeName(topicName)}`);
 
-            return this.producer.produce(`${this.kafkaFactory.produceDC}.${message.meta.topic}`, 0,
+            return this.producer.produce(
+                `${this._services.kafka.produceDC}.${message.meta.topic}`, 0,
                 Buffer.from(JSON.stringify(message)));
         }))
         .thenReturn({ status: 201 });
