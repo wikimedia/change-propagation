@@ -39,9 +39,10 @@ spec: &spec
                 topic: 'mediawiki.job.updateBetaFeaturesUserCounts'
                 exec:
                   method: post
-                  uri: 'http://jobrunner.wikipedia.org/rpc/RunSingleJob.php'
+                  uri: 'http://jobrunner.wikipedia.org/wiki/Special:RunSingleJob'
                   headers:
                     content-type: application/json
+                    host: '{{message.meta.domain}}'
                   body: '{{globals.message}}'
 
 num_workers: 0

@@ -24,9 +24,13 @@ describe('JobQueue rules', function () {
         'updateBetaFeaturesUserCounts'
     ].forEach((jobType) => {
         it(`Should propagate ${jobType} job`, () => {
-            const service = nock('http://jobrunner.wikipedia.org')
-            .post('/rpc/RunSingleJob.php', common.jobs[jobType]).reply({});
-            
+            const service = nock('http://jobrunner.wikipedia.org', {
+                reqheaders: {
+                    host: common.jobs[jobType].meta.domain,
+                    'content-type': 'application/json'
+                }
+            })
+            .post('/wiki/Special:RunSingleJob', common.jobs[jobType]).reply({});
             return producer.produce(`test_dc.mediawiki.job.${jobType}`, 0,
                 Buffer.from(JSON.stringify(common.jobs[jobType])))
             .then(() => common.checkAPIDone(service))
