@@ -37,10 +37,10 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
                 return NOT_DUPLICATE;
             }
             hyper.metrics.increment(`${name}_dedupe`);
-            hyper.log('trace/dedupe', {
+            hyper.log('trace/dedupe', () => ({
                 message: 'Event was deduplicated based on id',
                 event_str: utils.stringify(message),
-            });
+            }));
             return DUPLICATE;
         })
         .then((individualDeduplicated) => {
@@ -56,12 +56,12 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
                 if (oldEventTimestamp
                         && new Date(oldEventTimestamp) > new Date(message.root_event.dt)) {
                     hyper.metrics.increment(`${name}_dedupe`);
-                    hyper.log('trace/dedupe', {
+                    hyper.log('trace/dedupe', () => ({
                         message: 'Event was deduplicated based on root event',
                         event_str: utils.stringify(message),
                         signature: message.root_event.signature,
                         newer_dt: oldEventTimestamp
-                    });
+                    }));
                     return DUPLICATE;
                 }
                 return this._redis.setAsync(rootEventKey, message.root_event.dt)
