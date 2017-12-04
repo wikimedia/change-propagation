@@ -260,9 +260,9 @@ class DependencyProcessor {
                 requestTemplate.leafTopicName);
             if (res.body.continue) {
                 actions = actions.then(() => _sendContinueEvent(hyper,
-                        requestTemplate.leafTopicName,
-                        originalEvent,
-                        requestTemplate.getContinueToken(res)));
+                    requestTemplate.leafTopicName,
+                    originalEvent,
+                    requestTemplate.getContinueToken(res)));
             }
             return actions.thenReturn({ status: 200 });
         });
