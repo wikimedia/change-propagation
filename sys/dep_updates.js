@@ -124,7 +124,7 @@ function _sendContinueEvent(hyper, topic, origEvent, continueToken) {
                 uri: origEvent.meta.uri,
                 request_id: origEvent.meta.request_id,
                 domain: origEvent.meta.domain,
-                dt: origEvent.meta.dt
+                dt: new Date().toISOString()
             },
             triggered_by: utils.triggeredBy(origEvent),
             root_event: {
@@ -151,7 +151,7 @@ function _sendResourceChanges(hyper, items, originalEvent, tags, topicName) {
                     uri: resourceURI,
                     request_id: originalEvent.meta.request_id,
                     domain: item.domain,
-                    dt: originalEvent.meta.dt
+                    dt: new Date().toISOString()
                 },
                 triggered_by: utils.triggeredBy(originalEvent),
                 tags,
