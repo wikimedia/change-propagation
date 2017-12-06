@@ -358,7 +358,7 @@ spec: &spec
                       uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{{match.meta.uri.title}}'
                       headers:
                         cache-control: no-cache
-                        if-unmodified-since: '{{date(message.meta.dt)}}'
+                        if-unmodified-since: '{{date(message.root_event.dt)}}'
                         x-restbase-mode: '{{message.tags[1]}}'
                       query:
                         redirect: false
@@ -403,7 +403,7 @@ spec: &spec
                       uri: 'https://{{message.meta.domain}}/api/rest_v1/page/html/{{match.meta.uri.title}}'
                       headers:
                         cache-control: no-cache
-                        if-unmodified-since: '{{date(message.meta.dt)}}'
+                        if-unmodified-since: '{{date(message.root_event.dt)}}'
                         x-restbase-mode: '{{message.tags[1]}}'
                       query:
                         redirect: false
