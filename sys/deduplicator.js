@@ -27,7 +27,12 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
         const message = req.body;
 
         // First, look at the individual event duplication
-        const messageKey = `${this._prefix}_dedupe_${name}_${message.meta.id}`;
+        // In case the `sha1` exist, that means that it's a job, can use that
+        // instead of the ID. If it's not a job or job doesn't want to be
+        // deduplicated by the signature - use ID - that mens it's exactly the
+        // same event reread from kafka on restart
+        const key = message.meta.sha1 || message.meta.id;
+        const messageKey = `${this._prefix}_dedupe_${name}_${key}`;
         return this._redis.setnxAsync(messageKey, '1')
         // Expire the key or renew the expiration timestamp if the key existed
         .tap(() => this._redis.expireAsync(messageKey, Math.ceil(this._expire_timeout / 24)))
@@ -38,7 +43,7 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
             }
             hyper.metrics.increment(`${name}_dedupe`);
             hyper.log('trace/dedupe', () => ({
-                message: 'Event was deduplicated based on id',
+                message: `Event was deduplicated based on ${message.meta.sha1 ? 'sha1' : 'id'}`,
                 event_str: utils.stringify(message),
             }));
             return DUPLICATE;
