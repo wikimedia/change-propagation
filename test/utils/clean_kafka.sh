@@ -45,6 +45,8 @@ createTopic "test_dc.change-prop.wikidata.resource-change"
 createTopic "test_dc.change-prop.retry.change-prop.wikidata.resource-change"
 createTopic "test_dc.mediawiki.job.updateBetaFeaturesUserCounts"
 createTopic "test_dc.change-prop.retry.mediawiki.job.updateBetaFeaturesUserCounts"
+createTopic "test_dc.mediawiki.job.htmlCacheUpdate"
+createTopic "test_dc.change-prop.retry.mediawiki.job.htmlCacheUpdate"
 
 wait
 sleep 5

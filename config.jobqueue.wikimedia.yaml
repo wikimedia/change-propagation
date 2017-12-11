@@ -44,6 +44,15 @@ spec: &spec
                     content-type: application/json
                     host: '{{message.meta.domain}}'
                   body: '{{globals.message}}'
+              htmlCacheUpdate:
+                topic: 'mediawiki.job.htmlCacheUpdate'
+                exec:
+                  method: post
+                  uri: 'http://jobrunner.wikipedia.org/wiki/Special:RunSingleJob'
+                  headers:
+                    content-type: application/json
+                    host: '{{message.meta.domain}}'
+                  body: '{{globals.message}}'
 
 num_workers: 0
 logging:

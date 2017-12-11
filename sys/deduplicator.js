@@ -26,7 +26,9 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
         const name = req.params.name;
         const message = req.body;
 
-        // First, look at the individual event duplication
+        // First, look at the individual event duplication based on ID
+        // This happens when we restart ChangeProp and reread some of the
+        // exact same events which were executed but was not committed.
         const messageKey = `${this._prefix}_dedupe_${name}_${message.meta.id}`;
         return this._redis.setnxAsync(messageKey, '1')
         // Expire the key or renew the expiration timestamp if the key existed
@@ -43,11 +45,36 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
             }));
             return DUPLICATE;
         })
-        .then((individualDeduplicated) => {
-            if (individualDeduplicated.body || !message.root_event) {
-                // If the message was individually deduped or if it has no root event info,
+        .then((individualDuplicate) => {
+            if (individualDuplicate.body || !message.sha1) {
+                // If the message was sha1-deduped or if it has no root event info,
                 // don't use deduplication by the root event
-                return individualDeduplicated;
+                return individualDuplicate;
+            }
+            const messageKey = `${this._prefix}_dedupe_${name}_${message.sha1}`;
+            return this._redis.getAsync(messageKey)
+            .then((previousExecutionTime) => {
+                if (previousExecutionTime
+                        && new Date(previousExecutionTime) > new Date(message.meta.dt)) {
+                    hyper.metrics.increment(`${name}_dedupe`);
+                    hyper.log('trace/dedupe', () => ({
+                        message: 'Event was deduplicated based on sha1',
+                        event_str: utils.stringify(message),
+                        newer_dt: previousExecutionTime
+                    }));
+                    return DUPLICATE;
+                }
+                return this._redis.setAsync(messageKey, new Date().toISOString())
+                .then(() => this._redis.expireAsync(messageKey,
+                    Math.ceil(this._expire_timeout / 24)))
+                .thenReturn(NOT_DUPLICATE);
+            });
+        })
+        .then((sha1Duplicate) => {
+            if (sha1Duplicate.body || !message.root_event) {
+                // If the message was sha1-deduped or if it has no root event info,
+                // don't use deduplication by the root event
+                return sha1Duplicate;
             }
 
             const rootEventKey = `${this._prefix}_dedupe_${name}_${message.root_event.signature}`;

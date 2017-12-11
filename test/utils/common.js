@@ -39,10 +39,10 @@ common.eventWithMessageAndRandom = (message, random) => {
     });
 };
 
-common.randomString = () => {
+common.randomString = (len = 5) => {
     const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let text = '';
-    while (text.length < 5) {
+    while (text.length < len) {
         text += possible.charAt(Math.floor(Math.random() * possible.length));
     }
     return text;
@@ -121,27 +121,63 @@ common.factory = new KafkaFactory({
 // Sample JobQueue events
 
 common.jobs = {
-    updateBetaFeaturesUserCounts: {
-        "database": "enwiki",
-        "meta": {
-            "domain": "en.wikipedia.org",
-            "dt": "2017-09-05T02:08:52+00:00",
-            "id": "29e4bc47-91df-11e7-83b0-14187761316a",
-            "request_id": "d402f64b-7343-4d92-8eea-957eca4fd308",
-            "schema_uri": "mediawiki/job/1",
-            "topic": "mediawiki.job.updateBetaFeaturesUserCounts",
-            "uri": "https://en.wikipedia.org/wiki/Main_Page"
-        },
-        "page_namespace": 0,
-        "page_title": "Main_Page",
-        "params": {
-            "prefs": [
-                "visualeditor-newwikitext"
-            ],
-            "requestId": "Wa4HNApAAEMAAHzG8r4AAAAE"
-        },
-        "sha1": "b63122a8f7ae2ff8578c76eb215e08cbf6560e8f",
-        "type": "updateBetaFeaturesUserCounts"
+    get updateBetaFeaturesUserCounts() {
+        return {
+            "database": "enwiki",
+            "meta": {
+                "domain": "en.wikipedia.org",
+                "dt": new Date().toISOString(),
+                "id": uuid.now().toString(),
+                "request_id": common.randomString(10),
+                "schema_uri": "mediawiki/job/1",
+                "topic": "mediawiki.job.updateBetaFeaturesUserCounts",
+                "uri": "https://en.wikipedia.org/wiki/Main_Page"
+            },
+            "page_namespace": 0,
+            "page_title": "Main_Page",
+            "params": {
+                "prefs": [
+                    "visualeditor-newwikitext"
+                ],
+                "requestId": "Wa4HNApAAEMAAHzG8r4AAAAE"
+            },
+            "sha1": common.randomString(20),
+            "type": "updateBetaFeaturesUserCounts"
+        };
+    },
+    get htmlCacheUpdate() {
+        const rootSignature = common.randomString(10);
+        return {
+            "database": "commonswiki",
+            "mediawiki_signature": common.randomString(10),
+            "meta": {
+                "domain": "commons.wikimedia.org",
+                "dt": new Date().toISOString(),
+                "id": uuid.now().toString(),
+                "request_id": common.randomString(10),
+                "schema_uri": "mediawiki/job/1",
+                "topic": "mediawiki.job.htmlCacheUpdate",
+                "uri": "https://commons.wikimedia.org/wiki/File:%D0%A1%D1%82%D0%B0%D0%B2%D0%BE%D0%BA_-_panoramio_(6).jpg"
+            },
+            "page_namespace": 6,
+            "page_title": "File:Ставок_-_panoramio_(6).jpg",
+            "params": {
+                "causeAction": "page-edit",
+                "causeAgent": "unknown",
+                "recursive": true,
+                "requestId": "Wi7xIQpAANEAAEs6jxcAAACE",
+                "rootJobIsSelf": true,
+                "rootJobSignature": rootSignature,
+                "rootJobTimestamp": "20171211205706",
+                "table": "redirect"
+            },
+            "root_event": {
+                "dt": new Date().toISOString(),
+                "signature": rootSignature
+            },
+            "sha1": common.randomString(10),
+            "type": "htmlCacheUpdate"
+        };
     }
 };
 
