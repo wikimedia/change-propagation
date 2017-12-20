@@ -164,16 +164,29 @@ spec: &spec
                 limiters:
                   blacklist: 'html:{message.meta.uri}'
                 exec:
-                  method: get
-                  # This even comes directly from MediaWiki, so title is encoded in MW-specific way.
-                  # Re-encode the title in standard `encodeURIComponent` encoding.
-                  uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{decode(match.meta.uri.title)}'
-                  headers:
-                    cache-control: no-cache
-                    if-unmodified-since: '{{date(message.meta.dt)}}'
-                  query:
-                    redirect: false
-
+                  - method: get
+                    # This even comes directly from MediaWiki, so title is encoded in MW-specific way.
+                    # Re-encode the title in standard `encodeURIComponent` encoding.
+                    uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{decode(match.meta.uri.title)}'
+                    headers:
+                      cache-control: no-cache
+                      if-unmodified-since: '{{date(message.meta.dt)}}'
+                    query:
+                      redirect: false
+                    # The HTML might not change but sometimes editors use a purge to drop incorrectly rendered summary/MCS
+                    # content, so let's purge them as well just in case. The rate is low.
+                  - method: get
+                    uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{decode(match.meta.uri.title)}'
+                    headers:
+                      cache-control: no-cache
+                    query:
+                      redirect: false
+                  - method: get
+                    uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{decode(match.meta.uri.title)}'
+                    headers:
+                      cache-control: no-cache
+                    query:
+                      redirect: false
               null_edit:
                 topic: resource_change
                 ignore:
@@ -188,16 +201,29 @@ spec: &spec
                   tags:
                     - null_edit
                 exec:
-                  method: get
-                  # This even comes directly from MediaWiki, so title is encoded in MW-specific way.
-                  # Re-encode the title in standard `encodeURIComponent` encoding.
-                  uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{decode(match.meta.uri.title)}'
-                  headers:
-                    cache-control: no-cache
-                    if-unmodified-since: '{{date(message.meta.dt)}}'
-                  query:
-                    redirect: false
-
+                  - method: get
+                    # This even comes directly from MediaWiki, so title is encoded in MW-specific way.
+                    # Re-encode the title in standard `encodeURIComponent` encoding.
+                    uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{decode(match.meta.uri.title)}'
+                    headers:
+                      cache-control: no-cache
+                      if-unmodified-since: '{{date(message.meta.dt)}}'
+                    query:
+                      redirect: false
+                      # The HTML might not change but sometimes editors use a purge to drop incorrectly rendered summary/MCS
+                      # content, so let's purge them as well just in case. The rate is low.
+                  - method: get
+                    uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{decode(match.meta.uri.title)}'
+                    headers:
+                      cache-control: no-cache
+                    query:
+                      redirect: false
+                  - method: get
+                    uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{decode(match.meta.uri.title)}'
+                    headers:
+                      cache-control: no-cache
+                    query:
+                      redirect: false
               page_edit:
                 topic: mediawiki.revision-create
                 limiters:
