@@ -29,7 +29,6 @@ spec: &spec
             startup_delay: 0
             concurrency: 250
             templates:
-
               summary_definition_rerender: &summary_definition_rerender_spec
                 topic: '/^(?:change-prop\.transcludes\.)?resource[-_]change$/'
                 retry_limit: 2
