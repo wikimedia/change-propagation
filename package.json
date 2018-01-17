@@ -45,7 +45,6 @@
     "mediawiki-title": "^0.6.3",
     "murmur-32": "^0.1.0",
     "node-rdkafka": "^2.2.1",
-    "node-rdkafka-statsd": "^0.1.0",
     "ratelimit.js": "^1.8.0",
     "redis": "^2.7.1"
   },
