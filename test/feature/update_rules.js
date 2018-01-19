@@ -123,7 +123,7 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wiktionary.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},resource_change:https://en.wiktionary.org/api/rest_v1/mobile-sections/html/Main_Page`,
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},resource_change:https://en.wiktionary.org/api/rest_v1/page/mobile-sections/Main_Page`,
                 'user-agent': 'SampleChangePropInstance'
             }
         })
