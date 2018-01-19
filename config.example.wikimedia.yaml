@@ -81,9 +81,10 @@ spec: &spec
                 cases: # Non wiktionary domains - rerender summary
                   - match:
                       meta:
-                        uri: '/^(?<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>[^/]+)$/'
+                        uri: '/^(?<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/mobile-sections\/(?<title>[^/]+)$/'
                       tags:
                         - restbase
+                        - mobile-sections
                     match_not:
                       - meta:
                           domain: '/wiktionary.org$/'
@@ -101,10 +102,11 @@ spec: &spec
                       meta:
                         # These URIs are coming from RESTBase, so we know that article titles will be normalized
                         # and main namespace articles will not have : (uri-encoded, so %3a or %3A)
-                        uri: '/^(?<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>(?:(?!%3a|%3A|\/).)+)$/'
+                        uri: '/^(?<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/mobile-sections\/(?<title>(?:(?!%3a|%3A|\/).)+)$/'
                         domain: '/^en\.wiktionary\.org$/'
                       tags:
                         - restbase
+                        - mobile-sections
                     exec:
                       method: get
                       # Don't encode title since it should be already encoded
@@ -173,14 +175,9 @@ spec: &spec
                       if-unmodified-since: '{{date(message.meta.dt)}}'
                     query:
                       redirect: false
-                    # The HTML might not change but sometimes editors use a purge to drop incorrectly rendered summary/MCS
-                    # content, so let's purge them as well just in case. The rate is low.
-                  - method: get
-                    uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{decode(match.meta.uri.title)}'
-                    headers:
-                      cache-control: no-cache
-                    query:
-                      redirect: false
+                    # The HTML might not change but sometimes editors use a purge to drop incorrectly rendered MCS
+                    # content, so let's purge them as well just in case. The rate is low. MCS rerender will cause summary
+                    # to be rerendered
                   - method: get
                     uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{decode(match.meta.uri.title)}'
                     headers:
@@ -211,13 +208,8 @@ spec: &spec
                     query:
                       redirect: false
                       # The HTML might not change but sometimes editors use a purge to drop incorrectly rendered summary/MCS
-                      # content, so let's purge them as well just in case. The rate is low.
-                  - method: get
-                    uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{decode(match.meta.uri.title)}'
-                    headers:
-                      cache-control: no-cache
-                    query:
-                      redirect: false
+                      # content, so let's purge them as well just in case. The rate is low. MCS rerender will cause summary
+                      # to be rerendered
                   - method: get
                     uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{decode(match.meta.uri.title)}'
                     headers:
@@ -651,18 +643,12 @@ spec: &spec
                     uri: '/https:\/\/[^\/]+\/wiki\/(?<title>.+)/'
                   tags: [ 'wikidata' ]
                 exec:
-                  - method: get
-                    uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{{match.meta.uri.title}}'
-                    headers:
-                      cache-control: no-cache
-                    query:
-                      redirect: false
-                  - method: get
-                    uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{{match.meta.uri.title}}'
-                    headers:
-                      cache-control: no-cache
-                    query:
-                      redirect: false
+                  method: get
+                  uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{{match.meta.uri.title}}'
+                  headers:
+                    cache-control: no-cache
+                  query:
+                    redirect: false
               page_images:
                 topic: mediawiki.page-properties-change
                 # We don't support 'OR' in the match section, so workaround it by 2 cases with identical exec
@@ -678,18 +664,12 @@ spec: &spec
                           domain: /\.wikidata\.org$/
                         page_namespace: 120
                     exec:
-                      - method: get
-                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{message.page_title}'
-                        headers:
-                          cache-control: no-cache
-                        query:
-                          redirect: false
-                      - method: get
-                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{message.page_title}'
-                        headers:
-                          cache-control: no-cache
-                        query:
-                          redirect: false
+                      method: get
+                      uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{message.page_title}'
+                      headers:
+                        cache-control: no-cache
+                      query:
+                        redirect: false
                   - match:
                       removed_properties:
                         page_image: '/.+/' # Regex that matches anything just to check the prop is set
@@ -697,19 +677,12 @@ spec: &spec
                       meta:
                         domain: /\.wikidata\.org$/
                     exec:
-                      - method: get
-                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{message.page_title}'
-                        headers:
-                          cache-control: no-cache
-                        query:
-                          redirect: false
-                      - method: get
-                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{message.page_title}'
-                        headers:
-                          cache-control: no-cache
-                        query:
-                          redirect: false
-
+                      method: get
+                      uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{message.page_title}'
+                      headers:
+                        cache-control: no-cache
+                      query:
+                        redirect: false
 num_workers: 0
 logging:
   name: changeprop
