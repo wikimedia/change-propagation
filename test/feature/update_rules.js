@@ -54,7 +54,7 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},${topic}:https://en.wikipedia.org/api/rest_v1/page/html/Main_Page`,
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},${topic}:https://en.wikipedia.org/api/rest_v1/page/mobile-sections/Main_Page`,
                 'user-agent': 'SampleChangePropInstance'
             }
         })
@@ -67,13 +67,13 @@ describe('RESTBase update rules', function() {
                 meta: {
                     topic: topic,
                     schema_uri: 'resource_change/1',
-                    uri: 'https://en.wikipedia.org/api/rest_v1/page/html/Main_Page',
+                    uri: 'https://en.wikipedia.org/api/rest_v1/page/mobile-sections/Main_Page',
                     request_id: common.SAMPLE_REQUEST_ID,
                     id: uuid.now(),
                     dt: new Date().toISOString(),
                     domain: 'en.wikipedia.org'
                 },
-                tags: ['restbase']
+                tags: ['restbase', 'mobile-sections']
             }))))
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
@@ -87,7 +87,7 @@ describe('RESTBase update rules', function() {
     it('Should update summary endpoint, transcludes topic', () =>
         summaryEndpointTest('change-prop.transcludes.resource-change'));
 
-    it('Should update summary endpoint on page images change', () => {
+    it('Should update mobile-sections endpoint on page images change', () => {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
@@ -95,7 +95,7 @@ describe('RESTBase update rules', function() {
                 'user-agent': 'SampleChangePropInstance'
             }
         })
-        .get('/api/rest_v1/page/summary/Some_Page')
+        .get('/api/rest_v1/page/mobile-sections/Some_Page')
         .query({ redirect: false })
         .reply(200, { });
 
@@ -123,7 +123,7 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wiktionary.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},resource_change:https://en.wiktionary.org/api/rest_v1/page/html/Main_Page`,
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},resource_change:https://en.wiktionary.org/api/rest_v1/page/mobile-sections/Main_Page`,
                 'user-agent': 'SampleChangePropInstance'
             }
         })
@@ -136,13 +136,13 @@ describe('RESTBase update rules', function() {
                 meta: {
                     topic: 'resource_change',
                     schema_uri: 'resource_change/1',
-                    uri: 'https://en.wiktionary.org/api/rest_v1/page/html/Main_Page',
+                    uri: 'https://en.wiktionary.org/api/rest_v1/page/mobile-sections/Main_Page',
                     request_id: common.SAMPLE_REQUEST_ID,
                     id: uuid.now(),
                     dt: new Date().toISOString(),
                     domain: 'en.wiktionary.org'
                 },
-                tags: ['restbase']
+                tags: ['restbase', 'mobile-sections']
             }))))
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
@@ -516,9 +516,6 @@ describe('RESTBase update rules', function() {
                 'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:/rev/uri,change-prop.wikidata.resource-change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80`
             }
         })
-        .get('/api/rest_v1/page/summary/%D0%9F%D1%91%D1%82%D1%80')
-        .query({ redirect: false })
-        .reply(200, { })
         .get('/api/rest_v1/page/mobile-sections/%D0%9F%D1%91%D1%82%D1%80')
         .query({ redirect: false })
         .reply(200, { });
@@ -581,9 +578,6 @@ describe('RESTBase update rules', function() {
                 'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:/rev/uri,change-prop.wikidata.resource-change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80`
             }
         })
-        .get('/api/rest_v1/page/summary/%D0%9F%D1%91%D1%82%D1%80')
-        .query({ redirect: false })
-        .reply(200, { })
         .get('/api/rest_v1/page/mobile-sections/%D0%9F%D1%91%D1%82%D1%80')
         .query({ redirect: false })
         .reply(200, { });
@@ -645,9 +639,6 @@ describe('RESTBase update rules', function() {
                 'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},mediawiki.page-undelete:/rev/uri,change-prop.wikidata.resource-change:https://ru.wikipedia.org/wiki/%D0%9F%D1%91%D1%82%D1%80`
             }
         })
-        .get('/api/rest_v1/page/summary/%D0%9F%D1%91%D1%82%D1%80')
-        .query({ redirect: false })
-        .reply(200, { })
         .get('/api/rest_v1/page/mobile-sections/%D0%9F%D1%91%D1%82%D1%80')
         .query({ redirect: false })
         .reply(200, { });
