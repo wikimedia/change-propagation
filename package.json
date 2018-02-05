@@ -81,7 +81,7 @@
         {
           "repo_url": "https://apt.wikimedia.org/wikimedia",
           "release": "jessie-wikimedia",
-          "pool": "backports",
+          "pool": "main",
           "packages": [
             "librdkafka-dev"
           ]
