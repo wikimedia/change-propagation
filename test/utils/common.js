@@ -114,7 +114,8 @@ common.factory = new KafkaFactory({
         "fetch.wait.max.ms": "1",
         "fetch.min.bytes": "1",
         "queue.buffering.max.ms": "1"
-    }
+    },
+    log: console.log.bind(console)
 });
 
 
