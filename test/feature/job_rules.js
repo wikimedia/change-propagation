@@ -17,7 +17,7 @@ describe('JobQueue rules', function() {
         // Setting up might take some tome, so disable the timeout
         this.timeout(50000);
         return changeProp.start()
-        .then(() => common.factory.createProducer())
+        .then(() => common.factory.createProducer(console.log.bind(console)))
         .then(result => producer = result);
     });
 

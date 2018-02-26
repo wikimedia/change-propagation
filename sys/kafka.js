@@ -24,14 +24,14 @@ class Kafka {
         this.staticRules = options.templates || {};
 
         this.subscriber = new RuleSubscriber(options, this.kafkaFactory);
-        HyperSwitch.lifecycle.once('close', () => this.subscriber.unsubscribeAll());
+        HyperSwitch.lifecycle.on('close', () => this.subscriber.unsubscribeAll());
     }
 
     setup(hyper) {
-        return this.kafkaFactory.createGuaranteedProducer()
+        return this.kafkaFactory.createGuaranteedProducer(this.log)
         .then((producer) => {
             this.producer = producer;
-            HyperSwitch.lifecycle.once('close', () => this.producer.disconnect());
+            HyperSwitch.lifecycle.on('close', () => this.producer.disconnect());
             return this._subscribeRules(hyper, this.staticRules);
         })
         .tap(() => this.log('info/change-prop/init', 'Kafka Queue module initialised'));
