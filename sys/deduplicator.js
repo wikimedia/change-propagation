@@ -54,11 +54,28 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
             const messageKey = `${this._prefix}_dedupe_${name}_${message.sha1}`;
             return this._redis.getAsync(messageKey)
             .then((previousExecutionTime) => {
+                // If the same event (by sha1) was created before the previous execution
+                // time, the changes that caused it were already in the database, so it
+                // will be a no-op and can be deduplicated.
                 if (previousExecutionTime
                         && new Date(previousExecutionTime) > new Date(message.meta.dt)) {
                     hyper.metrics.increment(`${name}_dedupe`);
                     hyper.log('trace/dedupe', () => ({
                         message: 'Event was deduplicated based on sha1',
+                        event_str: utils.stringify(message),
+                        newer_dt: previousExecutionTime
+                    }));
+                    return DUPLICATE;
+                }
+                // If the root event was created before the previous exec time for the same
+                // leaf event - we can deduplicate cause by the time of the prev execution
+                // the template (root_event source) changes were already in the database.
+                if (previousExecutionTime
+                        && message.root_event
+                        && new Date(previousExecutionTime) > new Date(message.root_event.dt)) {
+                    hyper.metrics.increment(`${name}_dedupe`);
+                    hyper.log('trace/dedupe', () => ({
+                        message: 'Event was deduplicated based on sha1 and root_event dt',
                         event_str: utils.stringify(message),
                         newer_dt: previousExecutionTime
                     }));
@@ -80,6 +97,8 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
             const rootEventKey = `${this._prefix}_dedupe_${name}_${message.root_event.signature}`;
             return this._redis.getAsync(rootEventKey)
             .then((oldEventTimestamp) => {
+                // If this event was caused by root event and there was a leaf event executed
+                // already that belonged to a later root_event we can cut off this chain.
                 if (oldEventTimestamp
                         && new Date(oldEventTimestamp) > new Date(message.root_event.dt)) {
                     hyper.metrics.increment(`${name}_dedupe`);

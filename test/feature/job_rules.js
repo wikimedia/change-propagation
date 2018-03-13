@@ -84,6 +84,30 @@ describe('JobQueue rules', function() {
         .finally(() => nock.cleanAll());
     });
 
+    it('Should deduplicate based on SHA1 and root job combination', () => {
+        const firstEvent = common.jobs.htmlCacheUpdate;
+        const secondEvent = common.jobs.htmlCacheUpdate;
+        secondEvent.sha1 = firstEvent.sha1;
+        secondEvent.meta.dt = new Date(Date.now() + 10000).toISOString();
+        secondEvent.root_event.dt = new Date(Date.now() - 10000).toISOString();
+        const service = nock('http://jobrunner.wikipedia.org', {
+            reqheaders: {
+                host: firstEvent.meta.domain,
+                'content-type': 'application/json'
+            }
+        })
+        .post('/wiki/Special:RunSingleJob', firstEvent)
+        .reply({})
+        // We specify a mock for the second event as well to checkout it's still pending after tests
+        .post('/wiki/Special:RunSingleJob', secondEvent)
+        .reply({});
+        return producer.produce('test_dc.mediawiki.job.htmlCacheUpdate', 0, Buffer.from(JSON.stringify(firstEvent)))
+        .then(() => common.checkPendingMocks(service, 1))
+        .then(() => producer.produce('test_dc.mediawiki.job.htmlCacheUpdate', 0, Buffer.from(JSON.stringify(secondEvent))))
+        .then(() => common.checkPendingMocks(service, 1))
+        .finally(() => nock.cleanAll());
+    });
+
     it('Should deduplicate base on root job', () => {
         const firstEvent = common.jobs.htmlCacheUpdate;
         const secondEvent = common.jobs.htmlCacheUpdate;
