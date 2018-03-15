@@ -132,12 +132,18 @@ spec: &spec
                   meta:
                     domain: /\.wikidata\.org$/
                 exec:
-                  method: get
-                  uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{{match.meta.uri.title}}'
-                  query:
-                    redirect: false
-                  headers:
-                    cache-control: no-cache
+                  - method: get
+                    uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{{match.meta.uri.title}}'
+                    query:
+                      redirect: false
+                    headers:
+                      cache-control: no-cache
+                    # Until we start storing and actively rerendering PCS endpoints we still need to purge it from Varnish
+                  - method: post
+                    uri: '/sys/purge/'
+                    body:
+                      - meta:
+                          uri: '//{{message.meta.domain}}/api/rest_v1/page/media/{{match.meta.uri.title}}'
 
               purge_varnish: &purge_varnish_spec
                 topic: '/^(?:change-prop\.transcludes\.)?resource[-_]change$/'
@@ -323,6 +329,8 @@ spec: &spec
                           uri: '//{{message.meta.domain}}/api/rest_v1/page/mobile-sections-lead/{message.page_title}'
                       - meta:
                           uri: '//{{message.meta.domain}}/api/rest_v1/page/mobile-sections-remaining/{message.page_title}'
+                      - meta:
+                          uri: '//{{message.meta.domain}}/api/rest_v1/page/media/{message.page_title}'
 
               page_restore:
                 topic: mediawiki.page-undelete
