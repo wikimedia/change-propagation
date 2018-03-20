@@ -144,6 +144,8 @@ spec: &spec
                     body:
                       - meta:
                           uri: '//{{message.meta.domain}}/api/rest_v1/page/media/{{match.meta.uri.title}}'
+                      - meta:
+                          uri: '//{{message.meta.domain}}/api/rest_v1/page/metadata/{{match.meta.uri.title}}'
 
               purge_varnish: &purge_varnish_spec
                 topic: '/^(?:change-prop\.transcludes\.)?resource[-_]change$/'
@@ -331,6 +333,8 @@ spec: &spec
                           uri: '//{{message.meta.domain}}/api/rest_v1/page/mobile-sections-remaining/{message.page_title}'
                       - meta:
                           uri: '//{{message.meta.domain}}/api/rest_v1/page/media/{message.page_title}'
+                      - meta:
+                          uri: '//{{message.meta.domain}}/api/rest_v1/page/metadata/{message.page_title}'
 
               page_restore:
                 topic: mediawiki.page-undelete
