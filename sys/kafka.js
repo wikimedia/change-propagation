@@ -59,6 +59,7 @@ class Kafka {
             return { status: 201 };
         }
 
+        const partition = req.params.partition || 0;
         const messages = req.body;
         if (!Array.isArray(messages) || !messages.length) {
             throw new HTTPError({
@@ -88,9 +89,11 @@ class Kafka {
         });
         return P.all(messages.map((message) => {
             const topicName = message.meta.topic.replace(/\./g, '_');
-            hyper.metrics.increment(`produce_${hyper.metrics.normalizeName(topicName)}`);
+            hyper.metrics.increment(
+                `produce_${hyper.metrics.normalizeName(topicName)}.${partition}`);
 
-            return this.producer.produce(`${this.kafkaFactory.produceDC}.${message.meta.topic}`, 0,
+            return this.producer.produce(`${this.kafkaFactory.produceDC}.${message.meta.topic}`,
+                partition,
                 Buffer.from(JSON.stringify(message)));
         }))
         .thenReturn({ status: 201 });
@@ -108,7 +111,7 @@ module.exports = (options) => {
                         operationId: 'setup_kafka'
                     }
                 },
-                '/events': {
+                '/events{/partition}': {
                     post: {
                         summary: 'produces a message the kafka topic',
                         operationId: 'produce'

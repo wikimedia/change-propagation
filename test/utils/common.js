@@ -178,6 +178,37 @@ common.jobs = {
             "sha1": common.randomString(10),
             "type": "htmlCacheUpdate"
         };
+    },
+    get refreshLinks() {
+        const rootSignature = common.randomString(10);
+        return {
+            "database": "zhwiki",
+            "mediawiki_signature": "b2aad36ac3f784de69ad2809da3e82f6f1a08ab65f8542d626f556975fa6058c",
+            "meta": {
+                "domain": "zh.wikipedia.org",
+                "dt": new Date().toISOString(),
+                "id": uuid.now().toString(),
+                "request_id": common.randomString(10),
+                "schema_uri": "mediawiki/job/1",
+                "topic": "mediawiki.job.refreshLinks",
+                "uri": "https://zh.wikipedia.org/wiki/Category:%E6%99%BA%E5%88%A9%E5%8D%9A%E7%89%A9%E9%A6%86"
+            },
+            "page_namespace": 14,
+            "page_title": "Category:\u667a\u5229\u535a\u7269\u9986",
+            "params": {
+                "causeAction": "update",
+                "causeAgent": "uid:171544",
+                "requestId": "9c56c6dc077393ea1366c31a",
+                "rootJobSignature": rootSignature,
+                "rootJobTimestamp": "20180320163653"
+            },
+            "root_event": {
+                "dt": new Date().toISOString(),
+                "signature": rootSignature
+            },
+            "sha1": "9dfd2116c8c597c6b377a9100c670e21de20bf70",
+            "type": "refreshLinks"
+        }
     }
 };
 

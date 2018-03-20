@@ -53,7 +53,76 @@ spec: &spec
                     content-type: application/json
                     host: '{{message.meta.domain}}'
                   body: '{{globals.message}}'
-
+              refreshLinks_partitioner:
+                topic: 'mediawiki.job.refreshLinks'
+                exec:
+                  method: 'post'
+                  uri: '/sys/partition/'
+                  headers:
+                    content-type: application/json
+                  body: '{{globals.message}}'
+              refreshLinks:
+                topic: 'mediawiki.job.refreshLinks_partitioned'
+                exec:
+                  method: post
+                  uri: 'http://jobrunner.wikipedia.org/wiki/Special:RunSingleJob'
+                  headers:
+                    content-type: application/json
+                    host: '{{message.meta.domain}}'
+                  body: '{{globals.message}}'
+    /sys/partition:
+      x-modules:
+        - path: sys/partitioner.js
+          options:
+            partition_topic_name: 'mediawiki.job.refreshLinks_partitioned'
+            partition_key: database
+            partition_default: 2
+            partition_map:
+              # s1: enwiki
+              enwiki: 0
+              # s2: large wikis
+              bgwiki: 1
+              bgwiktionary: 1
+              cswiki: 1
+              enwikiquote: 1
+              enwiktionary: 1
+              eowiki: 1
+              fiwiki: 1
+              idwiki: 1
+              itwiki: 1
+              nlwiki: 1
+              nowiki: 1
+              plwiki: 1
+              ptwiki: 1
+              svwiki: 1
+              thwiki: 1
+              trwiki: 1
+              zhwiki: 1
+              # s3 (default)
+              # s4: commons
+              commonswiki: 3
+              # s5: dewiki
+              dewiki: 4
+              # s6: large wikis
+              frwiki: 5
+              jawiki: 5
+              ruwiki: 5
+              # s7: large wikis centralauth
+              eswiki: 6
+              huwiki: 6
+              hewiki: 6
+              ukwiki: 6
+              frwiktionary: 6
+              metawiki: 6
+              arwiki: 6
+              centralauth: 6
+              cawiki: 6
+              viwiki: 6
+              fawiki: 6
+              rowiki: 6
+              kowiki: 6
+              # s8: wikidata
+              wikidatawiki: 7
 num_workers: 0
 logging:
   name: changeprop

@@ -41,6 +41,24 @@ describe('JobQueue rules', function() {
         });
     });
 
+    it('Should support partitioned refreshLinks', () => {
+        const sampleEvent = common.jobs.refreshLinks;
+        const sampleEventCopy = JSON.parse(JSON.stringify(sampleEvent));
+        sampleEventCopy.meta.topic += '_partitioned';
+        const service = nock('http://jobrunner.wikipedia.org', {
+            reqheaders: {
+                host: sampleEvent.meta.domain,
+                'content-type': 'application/json'
+            }
+        })
+        .post('/wiki/Special:RunSingleJob', sampleEventCopy)
+        .reply({});
+        return producer.produce(`test_dc.mediawiki.job.refreshLinks`, 0,
+            Buffer.from(JSON.stringify(sampleEvent)))
+        .then(() => common.checkAPIDone(service))
+        .finally(() => nock.cleanAll());
+    });
+
     it('Should deduplicate based on ID', () => {
         const sampleEvent = common.jobs.updateBetaFeaturesUserCounts;
         const service = nock('http://jobrunner.wikipedia.org', {
