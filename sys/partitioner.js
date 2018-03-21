@@ -16,6 +16,11 @@ class Partitioner {
         if (!options.partition_map) {
             throw new Error('No partition_map was provided to the partitioner');
         }
+
+
+        if (!options.partition_default) {
+            throw new Error('No partition_default was provided to the partitioner');
+        }
     }
 
     /**
