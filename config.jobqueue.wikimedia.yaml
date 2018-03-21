@@ -62,7 +62,7 @@ spec: &spec
                     content-type: application/json
                   body: '{{globals.message}}'
               refreshLinks:
-                topic: 'mediawiki.job.refreshLinks_partitioned'
+                topic: 'change-prop.partitioned.mediawiki.job.refreshLinks'
                 exec:
                   method: post
                   uri: 'http://jobrunner.wikipedia.org/wiki/Special:RunSingleJob'
@@ -74,7 +74,7 @@ spec: &spec
       x-modules:
         - path: sys/partitioner.js
           options:
-            partition_topic_name: 'mediawiki.job.refreshLinks_partitioned'
+            partition_topic_name: 'change-prop.partitioned.mediawiki.job.refreshLinks'
             partition_key: database
             partition_default: 2
             partition_map:
