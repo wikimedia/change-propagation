@@ -49,8 +49,8 @@ createTopic "test_dc.mediawiki.job.htmlCacheUpdate"
 createTopic "test_dc.change-prop.retry.mediawiki.job.htmlCacheUpdate"
 createTopic "test_dc.mediawiki.job.refreshLinks"
 createTopic "test_dc.change-prop.retry.mediawiki.job.refreshLinks"
-createTopic "test_dc.mediawiki.job.refreshLinks_partitioned"  8
-createTopic "test_dc.change-prop.retry.mediawiki.job.refreshLinks_partitioned" 8
+createTopic "test_dc.change-prop.partitioned.mediawiki.job.refreshLinks"  8
+createTopic "test_dc.change-prop.retry.change-prop.partitioned.mediawiki.job.refreshLinks" 8
 
 wait
 sleep 5

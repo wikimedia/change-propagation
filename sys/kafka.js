@@ -12,7 +12,6 @@ const HTTPError = HyperSwitch.HTTPError;
 const uuid = require('cassandra-uuid').TimeUuid;
 
 const utils = require('../lib/utils');
-const Rule = require('../lib/rule');
 const KafkaFactory = require('../lib/kafka_factory');
 const RuleSubscriber = require('../lib/rule_subscriber');
 
@@ -40,12 +39,8 @@ class Kafka {
     }
 
     _subscribeRules(hyper, rules) {
-        const activeRules = Object.keys(rules)
-            .map(ruleName => new Rule(ruleName, rules[ruleName]))
-            .filter(rule => !rule.noop);
-
-        return P.each(activeRules, rule =>
-            this.subscriber.subscribe(hyper, rule))
+        return P.map(Object.keys(rules), ruleName =>
+            this.subscriber.subscribe(hyper, ruleName, rules[ruleName]))
         .thenReturn({ status: 201 });
     }
 

@@ -159,7 +159,7 @@ describe('Basic rule management', function() {
 
         return common.factory.createConsumer(
             'change-prop-test-consumer-valid-retry',
-            'test_dc.change-prop.retry.simple_test_rule' )
+            [ 'test_dc.change-prop.retry.simple_test_rule' ])
         .then((retryConsumer) => {
             setTimeout(() => producer.produce('test_dc.simple_test_rule', 0,
                 Buffer.from(JSON.stringify(common.eventWithMessageAndRandom('test', random)))), 2000);
@@ -290,7 +290,7 @@ describe('Basic rule management', function() {
     it('Should emit valid messages to error topic', () => {
         return common.factory.createConsumer(
             'change-prop-test-error-consumer',
-            'test_dc.change-prop.error')
+            [ 'test_dc.change-prop.error' ])
         .then((errorConsumer) => {
             setTimeout(() =>
                 producer.produce('test_dc.simple_test_rule', 0, Buffer.from('not_a_json_message')), 2000);
