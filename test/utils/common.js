@@ -32,6 +32,10 @@ common.eventWithMessage = (message) => {
     return common.eventWithProperties('simple_test_rule', { message: message });
 };
 
+common.eventWithTopic = (topic) => {
+    return common.eventWithProperties(topic, {});
+};
+
 common.eventWithMessageAndRandom = (message, random) => {
     return common.eventWithProperties('simple_test_rule', {
         message: message,

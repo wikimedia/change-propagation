@@ -342,5 +342,22 @@ describe('Basic rule management', function() {
         .finally(() => nock.cleanAll());
     });
 
+    it('Should support array topics', () => {
+        const service = nock('http://mock2.org')
+        .post('/', { 'topic': 'simple_test_rule' }).reply({})
+        .post('/', { 'topic': 'simple_test_rule2' }).reply({});
+
+        return producer.produce('test_dc.simple_test_rule',
+            0,
+            Buffer.from(JSON.stringify(common.eventWithTopic('simple_test_rule')))
+        )
+        .then(() => producer.produce('test_dc.simple_test_rule2',
+            0,
+            Buffer.from(JSON.stringify(common.eventWithTopic('simple_test_rule2')))
+        ))
+        .then(() => common.checkAPIDone(service))
+        .finally(() => nock.cleanAll());
+    });
+
     after(() => changeProp.stop());
 });

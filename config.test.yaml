@@ -35,7 +35,7 @@ spec: &spec
             concurrency: 1
             templates:
               simple_test_rule:
-                topic: simple_test_rule
+                topic: /^simple_test_rule$/
                 retry_limit: 2
                 retry_delay: 10
                 retry_on:
@@ -102,6 +102,15 @@ spec: &spec
                   method: get
                   uri: 'http://mock.com/{{message.meta.domain}}/{{message.page_title}}'
 
+              array_rule:
+                topics:
+                  - simple_test_rule
+                  - simple_test_rule2
+                exec:
+                  method: post
+                  uri: 'http://mock2.org'
+                  body:
+                    topic: '{{message.meta.topic}}'
 num_workers: 0
 logging:
   name: changeprop
