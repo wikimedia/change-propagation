@@ -70,7 +70,7 @@ spec: &spec
             templates:
 
               summary_definition_rerender: &summary_definition_rerender_spec
-                topic: '/^(?:change-prop\.transcludes\.)?resource[-_]change$/'
+                topic: 'resource_change'
                 retry_limit: 2
                 retry_delay: 500
                 retry_on:
@@ -114,8 +114,12 @@ spec: &spec
                       headers:
                         cache-control: no-cache
 
+              summary_definition_rerender_transcludes: &summary_definition_rerender_transcludes_spec
+                <<: *summary_definition_rerender_spec
+                topic: 'change-prop.transcludes.resource-change'
+
               mobile_rerender: &mobile_rerender_spec
-                topic: '/^(?:change-prop\.transcludes\.)?resource[-_]change$/'
+                topic: 'resource_change'
                 retry_limit: 2
                 retry_delay: 500
                 retry_on:
@@ -145,8 +149,12 @@ spec: &spec
                       - meta:
                           uri: '//{{message.meta.domain}}/api/rest_v1/page/media/{{match.meta.uri.title}}'
 
+              mobile_rerender_transcludes: &mobile_rerender_transcludes_spec
+                <<: *mobile_rerender_spec
+                topic: 'change-prop.transcludes.resource-change'
+
               purge_varnish: &purge_varnish_spec
-                topic: '/^(?:change-prop\.transcludes\.)?resource[-_]change$/'
+                topic: 'resource_change'
                 match:
                   meta:
                     uri: '/^https?:\/\/[^\/]+\/api\/rest_v1\/(?<title>.+)$/'
@@ -158,6 +166,10 @@ spec: &spec
                   body:
                     - meta:
                         uri: '//{{message.meta.domain}}/api/rest_v1/{{match.meta.uri.title}}'
+
+              purge_varnish_transcludes: &purge_varnish_transcludes_spec
+                <<: *purge_varnish_spec
+                topic: 'change-prop.transcludes.resource-change'
 
               # RESTBase update jobs
               mw_purge:
@@ -193,6 +205,7 @@ spec: &spec
                       cache-control: no-cache
                     query:
                       redirect: false
+
               null_edit:
                 topic: resource_change
                 ignore:
@@ -230,6 +243,7 @@ spec: &spec
                       cache-control: no-cache
                     query:
                       redirect: false
+
               page_edit:
                 topic: mediawiki.revision-create
                 limiters:
@@ -671,6 +685,7 @@ spec: &spec
                       cache-control: no-cache
                     query:
                       redirect: false
+
               page_images:
                 topic: mediawiki.page-properties-change
                 # We don't support 'OR' in the match section, so workaround it by 2 cases with identical exec
