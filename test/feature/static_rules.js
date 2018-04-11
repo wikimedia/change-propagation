@@ -81,7 +81,7 @@ describe('Basic rule management', function() {
             'derived_field': 'test',
             'random_field': random
         })
-        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:/sample/uri,change-prop.retry.simple_test_rule:/sample/uri`)
+        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:/sample/uri,changeprop.retry.simple_test_rule:/sample/uri`)
         .reply(200, {});
 
         return P.try(() => producer.produce('test_dc.simple_test_rule', 0,
@@ -111,14 +111,14 @@ describe('Basic rule management', function() {
             'derived_field': 'test',
             'random_field': random
         })
-        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:/sample/uri,change-prop.retry.simple_test_rule:/sample/uri`)
+        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:/sample/uri,changeprop.retry.simple_test_rule:/sample/uri`)
         .reply(500, {})
         .post('/', {
             'test_field_name': 'test_field_value',
             'derived_field': 'test',
             'random_field': random
         })
-        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:/sample/uri,change-prop.retry.simple_test_rule:/sample/uri,change-prop.retry.simple_test_rule:/sample/uri`)
+        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:/sample/uri,changeprop.retry.simple_test_rule:/sample/uri,changeprop.retry.simple_test_rule:/sample/uri`)
         .reply(500, {})
         // Next one must never get called, we verify that by checking pending mocks
         .post('/', {
@@ -158,40 +158,45 @@ describe('Basic rule management', function() {
         .reply(200, {});
 
         return common.factory.createConsumer(
-            'change-prop-test-consumer-valid-retry',
-            [ 'test_dc.change-prop.retry.simple_test_rule' ])
+            'changeprop-test-consumer-valid-retry',
+            [ 'test_dc.changeprop.retry.simple_test_rule' ])
         .then((retryConsumer) => {
             setTimeout(() => producer.produce('test_dc.simple_test_rule', 0,
                 Buffer.from(JSON.stringify(common.eventWithMessageAndRandom('test', random)))), 2000);
 
-            function check() {
-                return retryConsumer.consumeAsync(1)
-                .catch(check)
-                .then((messages) => {
-                    if (!messages.length) {
-                        return;
-                    }
+            return preq.get({ uri: retrySchema.$schema })
+            .then((retryMetaSchema) => {
+                const ajv = new Ajv();
+                ajv.addMetaSchema(JSON.parse(retryMetaSchema.body), retrySchema.$schema);
+                const validate = ajv.compile(retrySchema);
 
-                    const message = messages[0];
-                    const ajv = new Ajv();
-                    const validate = ajv.compile(retrySchema);
-                    const msg = JSON.parse(message.value.toString());
-                    const valid = validate(msg);
-                    if (!valid) {
-                        throw new assert.AssertionError({
-                            message: ajv.errorsText(validate.errors)
-                        });
-                    }
-                    if (msg.original_event.random !== random) {
-                        return check();
-                    }
+                function check() {
+                    return retryConsumer.consumeAsync(1)
+                    .catch(check)
+                    .then((messages) => {
+                        if (!messages.length) {
+                            return P.delay(1000).then(check);
+                        }
 
-                    if (msg.triggered_by !== `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:/sample/uri`) {
-                        throw new Error('TriggeredBy should be equal to simple_test_rule:/sample/uri');
-                    }
-                });
-            }
-            return check();
+                        const message = messages[0];
+                        const msg = JSON.parse(message.value.toString());
+                        const valid = validate(msg);
+                        if (!valid) {
+                            throw new assert.AssertionError({
+                                message: ajv.errorsText(validate.errors)
+                            });
+                        }
+                        if (msg.original_event.random !== random) {
+                            return check();
+                        }
+
+                        if (msg.triggered_by !== `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:/sample/uri`) {
+                            throw new Error('TriggeredBy should be equal to simple_test_rule:/sample/uri');
+                        }
+                    });
+                }
+                return check();
+            });
         });
     });
 
@@ -289,33 +294,38 @@ describe('Basic rule management', function() {
 
     it('Should emit valid messages to error topic', () => {
         return common.factory.createConsumer(
-            'change-prop-test-error-consumer',
-            [ 'test_dc.change-prop.error' ])
+            'changeprop-test-error-consumer',
+            [ 'test_dc.changeprop.error' ])
         .then((errorConsumer) => {
             setTimeout(() =>
                 producer.produce('test_dc.simple_test_rule', 0, Buffer.from('not_a_json_message')), 2000);
 
-            function check() {
-                return errorConsumer.consumeAsync(1)
-                .catch(check)
-                .then((messages) => {
-                    if (!messages.length) {
-                        return;
-                    }
+            return preq.get({ uri: errorSchema.$schema })
+            .then((errorMetaSchema) => {
+                const ajv = new Ajv();
+                ajv.addMetaSchema(JSON.parse(errorMetaSchema.body), errorSchema.$schema);
+                const validate = ajv.compile(errorSchema);
 
-                    const message = messages[0];
-                    const ajv = new Ajv();
-                    const validate = ajv.compile(errorSchema);
-                    const valid = validate(JSON.parse(message.value.toString()));
-                    if (!valid) {
-                        throw  new assert.AssertionError({
-                            message: ajv.errorsText(validate.errors)
-                        });
-                    }
-                });
-            }
+                function check() {
+                    return errorConsumer.consumeAsync(1)
+                    .catch(check)
+                    .then((messages) => {
+                        if (!messages.length) {
+                            return P.delay(1000).then(check);
+                        }
 
-            return check();
+                        const message = messages[0];
+                        const valid = validate(JSON.parse(message.value.toString()));
+                        if (!valid) {
+                            throw new assert.AssertionError({
+                                message: ajv.errorsText(validate.errors)
+                            });
+                        }
+                    });
+                }
+
+                return check();
+            });
         });
     });
 

@@ -125,7 +125,7 @@ spec: &spec
               wikidatawiki: 7
 num_workers: 0
 logging:
-  name: changeprop
+  name: cpjobqueue
   level: info
 services:
   - name: changeprop
