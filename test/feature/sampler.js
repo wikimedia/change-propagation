@@ -30,7 +30,7 @@ describe('Sampler', () => {
                 }),
                 match: {
                     meta: {
-                        uri: '/sample/uri'
+                        uri: 'https://en.wikipedia.org/wiki/SamplePage'
                     },
                     message: 'sampled'
                 }

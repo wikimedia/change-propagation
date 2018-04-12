@@ -17,7 +17,7 @@ common.eventWithProperties = (topic, props) => {
         meta: {
             topic: topic,
             schema_uri: 'schema/1',
-            uri: '/sample/uri',
+            uri: 'https://en.wikipedia.org/wiki/SamplePage',
             request_id: common.SAMPLE_REQUEST_ID,
             id: uuid.now(),
             dt: new Date().toISOString(),

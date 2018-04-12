@@ -39,7 +39,7 @@ describe('Basic rule management', function() {
             reqheaders: {
                 test_header_name: 'test_header_value',
                 'content-type': 'application/json',
-                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:/sample/uri`,
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:https://en.wikipedia.org/wiki/SamplePage`,
                 'user-agent': 'ChangePropTestSuite'
             }
         })
@@ -74,14 +74,14 @@ describe('Basic rule management', function() {
             'derived_field': 'test',
             'random_field': random
         })
-        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:/sample/uri`)
+        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:https://en.wikipedia.org/wiki/SamplePage`)
         .reply(500, {})
         .post('/', {
             'test_field_name': 'test_field_value',
             'derived_field': 'test',
             'random_field': random
         })
-        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:/sample/uri,changeprop.retry.simple_test_rule:/sample/uri`)
+        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:https://en.wikipedia.org/wiki/SamplePage,changeprop.retry.simple_test_rule:https://en.wikipedia.org/wiki/SamplePage`)
         .reply(200, {});
 
         return P.try(() => producer.produce('test_dc.simple_test_rule', 0,
@@ -104,21 +104,21 @@ describe('Basic rule management', function() {
             'derived_field': 'test',
             'random_field': random
         })
-        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:/sample/uri`)
+        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:https://en.wikipedia.org/wiki/SamplePage`)
         .reply(500, {})
         .post('/', {
             'test_field_name': 'test_field_value',
             'derived_field': 'test',
             'random_field': random
         })
-        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:/sample/uri,changeprop.retry.simple_test_rule:/sample/uri`)
+        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:https://en.wikipedia.org/wiki/SamplePage,changeprop.retry.simple_test_rule:https://en.wikipedia.org/wiki/SamplePage`)
         .reply(500, {})
         .post('/', {
             'test_field_name': 'test_field_value',
             'derived_field': 'test',
             'random_field': random
         })
-        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:/sample/uri,changeprop.retry.simple_test_rule:/sample/uri,changeprop.retry.simple_test_rule:/sample/uri`)
+        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:https://en.wikipedia.org/wiki/SamplePage,changeprop.retry.simple_test_rule:https://en.wikipedia.org/wiki/SamplePage,changeprop.retry.simple_test_rule:https://en.wikipedia.org/wiki/SamplePage`)
         .reply(500, {})
         // Next one must never get called, we verify that by checking pending mocks
         .post('/', {
@@ -190,8 +190,8 @@ describe('Basic rule management', function() {
                             return check();
                         }
 
-                        if (msg.triggered_by !== `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:/sample/uri`) {
-                            throw new Error('TriggeredBy should be equal to simple_test_rule:/sample/uri');
+                        if (msg.triggered_by !== `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:https://en.wikipedia.org/wiki/SamplePage`) {
+                            throw new Error('TriggeredBy should be equal to simple_test_rule:https://en.wikipedia.org/wiki/SamplePage');
                         }
                     });
                 }
@@ -206,7 +206,7 @@ describe('Basic rule management', function() {
             reqheaders: {
                 test_header_name: 'test_header_value',
                 'content-type': 'application/json',
-                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:/sample/uri`,
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:https://en.wikipedia.org/wiki/SamplePage`,
                 'user-agent': 'ChangePropTestSuite'
             }
         })
@@ -251,7 +251,7 @@ describe('Basic rule management', function() {
             reqheaders: {
                 test_header_name: 'test_header_value',
                 'content-type': 'application/json',
-                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:/sample/uri`,
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},simple_test_rule:https://en.wikipedia.org/wiki/SamplePage`,
                 'user-agent': 'ChangePropTestSuite'
             }
         })

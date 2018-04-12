@@ -782,7 +782,7 @@ describe('RESTBase update rules', function() {
         })
         .get('/api/rest_v1/page/html/File_Transcluded_Page')
         .query({redirect: false})
-        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/File_Transcluded_Page`)
+        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:https://en.wikipedia.org/wiki/SamplePage,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/File_Transcluded_Page`)
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
         .matchHeader('x-restbase-mode', 'files')
         .times(2)
@@ -804,7 +804,7 @@ describe('RESTBase update rules', function() {
         })
         .get('/api/rest_v1/page/html/File_Transcluded_Page')
         .query({redirect: false})
-        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/File_Transcluded_Page`)
+        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:https://en.wikipedia.org/wiki/SamplePage,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/File_Transcluded_Page`)
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
         .matchHeader('x-restbase-mode', 'files')
         .reply(200);
@@ -814,7 +814,7 @@ describe('RESTBase update rules', function() {
                 meta: {
                     topic: 'mediawiki.revision-create',
                     schema_uri: 'schema/1',
-                    uri: '/sample/uri',
+                    uri: 'https://en.wikipedia.org/wiki/SamplePage',
                     request_id: common.SAMPLE_REQUEST_ID,
                     id: uuid.now(),
                     dt: '1990-02-20T19:31:13+00:00',
@@ -860,7 +860,7 @@ describe('RESTBase update rules', function() {
         })
         .get('/api/rest_v1/page/html/Transcluded_Here')
         .query({redirect: false})
-        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/Transcluded_Here`)
+        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:https://en.wikipedia.org/wiki/SamplePage,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/Transcluded_Here`)
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
         .matchHeader('x-restbase-mode', 'templates')
         .times(2)
@@ -888,7 +888,7 @@ describe('RESTBase update rules', function() {
         })
         .get('/api/rest_v1/page/html/Transcluded_Here')
         .query({redirect: false})
-        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:/sample/uri,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/Transcluded_Here`)
+        .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},mediawiki.revision-create:https://en.wikipedia.org/wiki/SamplePage,change-prop.transcludes.resource-change:https://en.wikipedia.org/wiki/Transcluded_Here`)
         .matchHeader('if-unmodified-since', 'Tue, 20 Feb 1990 19:31:13 +0000')
         .matchHeader('x-restbase-mode', 'templates')
         .reply(200);
@@ -898,7 +898,7 @@ describe('RESTBase update rules', function() {
                 meta: {
                     topic: 'mediawiki.revision-create',
                     schema_uri: 'schema/1',
-                    uri: '/sample/uri',
+                    uri: 'https://en.wikipedia.org/wiki/SamplePage',
                     request_id: common.SAMPLE_REQUEST_ID,
                     id: uuid.now(),
                     dt: '1990-02-20T19:31:13+00:00',
@@ -941,7 +941,7 @@ describe('RESTBase update rules', function() {
             .get(`/api/rest_v1/page/html/Linked_${page_title}`)
             .times(2)
             .query({ redirect: false })
-            .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},${topic}:/sample/uri,change-prop.backlinks.resource-change:https://en.wikipedia.org/wiki/Linked_${page_title}`)
+            .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},${topic}:https://en.wikipedia.org/wiki/SamplePage,change-prop.backlinks.resource-change:https://en.wikipedia.org/wiki/Linked_${page_title}`)
             .reply(200)
             .post('/w/api.php', {
                 format: 'json',
@@ -961,7 +961,7 @@ describe('RESTBase update rules', function() {
             })
             .get(`/api/rest_v1/page/html/Linked_${page_title}`)
             .query({ redirect: false })
-            .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},${topic}:/sample/uri,change-prop.backlinks.resource-change:https://en.wikipedia.org/wiki/Linked_${page_title}`)
+            .matchHeader('x-triggered-by', `req:${common.SAMPLE_REQUEST_ID},${topic}:https://en.wikipedia.org/wiki/SamplePage,change-prop.backlinks.resource-change:https://en.wikipedia.org/wiki/Linked_${page_title}`)
             .reply(200);
 
         return P.try(() => producer.produce(`test_dc.${topic}`, 0,

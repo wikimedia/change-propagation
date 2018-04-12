@@ -48,7 +48,7 @@ spec: &spec
                     - 412
                 match:
                   meta:
-                    uri: '/sample/uri'
+                    uri: 'https://en.wikipedia.org/wiki/SamplePage'
                   message: 'test'
                 limiters:
                   blacklist: '{{message.message}}'
@@ -66,7 +66,7 @@ spec: &spec
                 topic: simple_test_rule
                 match:
                   meta:
-                    uri: '/sample/uri'
+                    uri: 'https://en.wikipedia.org/wiki/SamplePage'
                   message: 'redirect'
                 exec:
                   method: get
@@ -96,7 +96,7 @@ spec: &spec
                   hash_template: '{{message.meta.domain}}-{{message.page_title}}'
                 match:
                   meta:
-                    uri: '/sample/uri'
+                    uri: 'https://en.wikipedia.org/wiki/SamplePage'
                   message: 'sampled'
                 exec:
                   method: get
