@@ -44,7 +44,7 @@
     "htcp-purge": "^0.2.2",
     "mediawiki-title": "^0.6.5",
     "murmur-32": "^0.1.0",
-    "node-rdkafka": "^2.2.1",
+    "node-rdkafka": "2.3.1",
     "ratelimit.js": "^1.8.0",
     "redis": "^2.7.1"
   },
