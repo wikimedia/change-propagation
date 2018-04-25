@@ -106,6 +106,9 @@ spec: &spec
                 topics:
                   - simple_test_rule
                   - simple_test_rule2
+                  - simple_test_rule3
+                exclude_topics:
+                  - simple_test_rule3
                 exec:
                   method: post
                   uri: 'http://mock2.org'

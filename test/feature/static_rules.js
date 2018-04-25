@@ -369,5 +369,17 @@ describe('Basic rule management', function() {
         .finally(() => nock.cleanAll());
     });
 
+    it('Should support exclude_topics stanza', () => {
+        const service = nock('http://mock2.org')
+        .post('/', { 'topic': 'simple_test_rule3' }).reply({});
+
+        return producer.produce('test_dc.simple_test_rule3',
+            0,
+            Buffer.from(JSON.stringify(common.eventWithTopic('simple_test_rule3')))
+        )
+        .then(() => common.checkPendingMocks(service, 1))
+        .finally(() => nock.cleanAll());
+    });
+
     after(() => changeProp.stop());
 });

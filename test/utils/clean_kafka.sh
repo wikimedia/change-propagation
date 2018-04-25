@@ -13,9 +13,11 @@ fi
 
 createTopic "test_dc.simple_test_rule"
 createTopic "test_dc.simple_test_rule2"
+createTopic "test_dc.simple_test_rule3"
 createTopic "test_dc.sample_test_rule"
-createTopic "test_dc..retry.simple_test_rule"
+createTopic "test_dc.retry.simple_test_rule"
 createTopic "test_dc.changeprop.retry.simple_test_rule2"
+createTopic "test_dc.changeprop.retry.simple_test_rule3"
 createTopic "test_dc.kafka_producing_rule"
 createTopic "test_dc.changeprop.retry.kafka_producing_rule"
 createTopic "test_dc.mediawiki.revision-create"
