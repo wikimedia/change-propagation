@@ -66,6 +66,7 @@ spec: &spec
               queue.buffering.max.ms: "1"
             producer:
               queue.buffering.max.messages: "10"
+              compression.codec: snappy
             concurrency: 250
             templates:
 

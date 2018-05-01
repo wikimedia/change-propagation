@@ -32,6 +32,8 @@ spec: &spec
               fetch.wait.max.ms: "1"
               fetch.min.bytes: "1"
               queue.buffering.max.ms: "1"
+            producer:
+              compression.codec: snappy
             concurrency: 1
             templates:
               simple_test_rule:
