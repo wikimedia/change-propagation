@@ -11,7 +11,6 @@ class RateLimiter extends mixins.mix(Object).with(mixins.Redis) {
         super(options);
 
         this._options = options;
-        this._log = this._options.log || (() => {});
 
         this._LIMITERS = new Map();
         Object.keys(this._options.limiters).forEach((type) => {
@@ -36,7 +35,7 @@ class RateLimiter extends mixins.mix(Object).with(mixins.Redis) {
         const limiter = this._LIMITERS.get(type);
 
         if (!limiter) {
-            hyper.log('warn/ratelimit', {
+            hyper.logger.log('warn/ratelimit', {
                 msg: 'Unconfigured rate-limiter is used',
                 limiter_type: type
             });
@@ -48,7 +47,7 @@ class RateLimiter extends mixins.mix(Object).with(mixins.Redis) {
         return new P((resolve, reject) => {
             limiter[fun](key, (err, isRateLimited) => {
                 if (err) {
-                    hyper.log('error/ratelimit', err);
+                    hyper.logger.log('error/ratelimit', err);
                     hyper.metrics.endTiming(`ratelimit.${fun}.err`, startTime);
                     // In case we've got problems with limiting just allow everything
                     return resolve({ status: 200 });

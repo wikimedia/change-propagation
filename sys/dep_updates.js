@@ -167,7 +167,6 @@ function _sendResourceChanges(hyper, items, originalEvent, tags, topicName) {
 class DependencyProcessor {
     constructor(options) {
         this.options = options;
-        this.log = options.log || (() => { });
         this.siteInfoCache = {};
         this.backLinksRequest = createBackLinksTemplate(options);
         this.imageLinksRequest = createImageUsageTemplate(options);
@@ -232,7 +231,7 @@ class DependencyProcessor {
             }
 
             if (res.body && res.body.error) {
-                this.log('warn/wikidata_description', () => ({
+                hyper.logger.log('warn/wikidata_description', () => ({
                     msg: 'Could not extract items',
                     event_str: utils.stringify(context.message),
                     error: res.body.error
@@ -290,7 +289,7 @@ class DependencyProcessor {
                 };
             })
             .catch((e) => {
-                hyper.log('error/site_info', e);
+                hyper.logger.log('error/site_info', e);
                 delete this.siteInfoCache[domain];
                 throw e;
             });

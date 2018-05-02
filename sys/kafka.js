@@ -18,7 +18,6 @@ const RuleSubscriber = require('../lib/rule_subscriber');
 class Kafka {
     constructor(options) {
         this.options = options;
-        this.log = options.log || (() => { });
         this.kafkaFactory = new KafkaFactory(options);
         this.staticRules = options.templates || {};
 
@@ -26,7 +25,7 @@ class Kafka {
     }
 
     setup(hyper) {
-        return this.kafkaFactory.createGuaranteedProducer(this.log)
+        return this.kafkaFactory.createGuaranteedProducer(hyper.logger)
         .then((producer) => {
             this.producer = producer;
             HyperSwitch.lifecycle.once('close', () => {
@@ -35,7 +34,7 @@ class Kafka {
             });
             return this._subscribeRules(hyper, this.staticRules);
         })
-        .tap(() => this.log('info/change-prop/init', 'Kafka Queue module initialised'));
+        .tap(() => hyper.logger.log('info/change-prop/init', 'Kafka Queue module initialised'));
     }
 
     _subscribeRules(hyper, rules) {
@@ -50,7 +49,7 @@ class Kafka {
 
     produce(hyper, req) {
         if (this.options.test_mode) {
-            this.log('trace/produce', 'Running in TEST MODE; Production disabled');
+            hyper.logger.log('trace/produce', 'Running in TEST MODE; Production disabled');
             return { status: 201 };
         }
 

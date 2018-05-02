@@ -3,7 +3,6 @@
 class Partitioner {
     constructor(options) {
         this._options = options || {};
-        this._log = this._options.log || (() => {});
 
         if (!options.partition_topic_name) {
             throw new Error('No partition_topic_name was provided to the partitioner');

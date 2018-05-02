@@ -36,7 +36,7 @@ class PurgeService {
 
         return this.purger.purge(req.body.map((event) => {
             if (!event.meta || !event.meta.uri || !/^\/\//.test(event.meta.uri)) {
-                hyper.log('error/events/purge', () => ({
+                hyper.logger.log('error/events/purge', () => ({
                     message: 'Invalid event URI',
                     event_str: utils.stringify(event)
                 }));
