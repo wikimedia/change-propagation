@@ -11,7 +11,6 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
         super(options);
 
         this._options = options || {};
-        this._log = this._options.log || (() => {});
         this._expire_timeout = options.window || 86400;
         this._prefix = this._options.redis_prefix || 'CP';
     }
@@ -39,7 +38,7 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
                 return NOT_DUPLICATE;
             }
             hyper.metrics.increment(`${name}_dedupe`);
-            hyper.log('trace/dedupe', () => ({
+            hyper.logger.log('trace/dedupe', () => ({
                 message: 'Event was deduplicated based on id',
                 event_str: utils.stringify(message),
             }));
@@ -60,7 +59,7 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
                 if (previousExecutionTime
                         && new Date(previousExecutionTime) > new Date(message.meta.dt)) {
                     hyper.metrics.increment(`${name}_dedupe`);
-                    hyper.log('trace/dedupe', () => ({
+                    hyper.logger.log('trace/dedupe', () => ({
                         message: 'Event was deduplicated based on sha1',
                         event_str: utils.stringify(message),
                         newer_dt: previousExecutionTime
@@ -74,7 +73,7 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
                         && message.root_event
                         && new Date(previousExecutionTime) > new Date(message.root_event.dt)) {
                     hyper.metrics.increment(`${name}_dedupe`);
-                    hyper.log('trace/dedupe', () => ({
+                    hyper.logger.log('trace/dedupe', () => ({
                         message: 'Event was deduplicated based on sha1 and root_event dt',
                         event_str: utils.stringify(message),
                         newer_dt: previousExecutionTime
@@ -102,7 +101,7 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
                 if (oldEventTimestamp
                         && new Date(oldEventTimestamp) > new Date(message.root_event.dt)) {
                     hyper.metrics.increment(`${name}_dedupe`);
-                    hyper.log('trace/dedupe', () => ({
+                    hyper.logger.log('trace/dedupe', () => ({
                         message: 'Event was deduplicated based on root event',
                         event_str: utils.stringify(message),
                         signature: message.root_event.signature,
@@ -116,7 +115,7 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
             });
         })
         .catch((e) => {
-            this._log('error/dedupe', {
+            hyper.logger.log('error/dedupe', {
                 message: 'Error during deduplication',
                 error: e
             });
