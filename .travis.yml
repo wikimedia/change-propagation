@@ -17,6 +17,7 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-4.8
+      - oracle-java8-set-default
 
 before_script:
 - npm run install-kafka
