@@ -6,8 +6,7 @@ node_js:
   - "8"
 
 env:
-  - KAFKA_HOME=../kafka KAFKA_VERSION=0.9.0.1 CXX=g++-4.8
-  - KAFKA_HOME=../kafka KAFKA_VERSION=0.10.1.0 CXX=g++-4.8
+  - KAFKA_HOME=../kafka KAFKA_VERSION=1.1.0 CXX=g++-4.8
 
 services:
   - redis-server
