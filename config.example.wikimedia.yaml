@@ -527,7 +527,7 @@ spec: &spec
                   page_namespace: 0
                   # It's impossible to modify a comment in wikidata while editing the entity.
                   # TODO: This is a temp solution until we get a more general fragment support T148079
-                  comment: '/wbeditentity|wbsetdescription|undo/'
+                  comment: '/wbeditentity|wbsetdescription|undo|Reverted/'
                   rev_content_changed: true
                 exec:
                   method: post
