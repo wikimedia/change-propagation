@@ -86,8 +86,7 @@ common.EN_SITE_INFO_RESPONSE = {
     }
 };
 
-common.checkAPIDone = (api, maxAttempts) => {
-    maxAttempts = maxAttempts || 50;
+common.checkAPIDone = (api, maxAttempts = 50) => {
     let attempts = 0;
     const check = () => {
         if (api.isDone()) {
@@ -121,12 +120,43 @@ common.factory = new KafkaFactory({
     }
 });
 
+// Sample ChangeProp events
+
+const eventMethods = {
+    toBuffer() {
+        return Buffer.from(JSON.stringify(this));
+    }
+};
+
+common.events = {
+    resourceChange(
+        uri = 'https://en.wikipedia.org/api/rest_v1/page/html/Main_Page',
+        dt = new Date().toISOString(),
+        tags = [ 'restbase' ]
+    ) {
+        const domain = /https?:\/\/([^/]+).+/.exec(uri)[1];
+        return {
+            __proto__: eventMethods,
+            meta: {
+                topic: 'resource_change',
+                schema_uri: 'resource_change/1',
+                uri,
+                request_id: common.SAMPLE_REQUEST_ID,
+                id: uuid.now(),
+                dt,
+                domain
+            },
+            tags
+        };
+    }
+};
 
 // Sample JobQueue events
 
 common.jobs = {
     get updateBetaFeaturesUserCounts() {
         return {
+            __proto__: eventMethods,
             "database": "enwiki",
             "meta": {
                 "domain": "en.wikipedia.org",
@@ -152,6 +182,7 @@ common.jobs = {
     get htmlCacheUpdate() {
         const rootSignature = common.randomString(10);
         return {
+            __proto__: eventMethods,
             "database": "commonswiki",
             "mediawiki_signature": common.randomString(10),
             "meta": {
@@ -186,6 +217,7 @@ common.jobs = {
     get refreshLinks() {
         const rootSignature = common.randomString(10);
         return {
+            __proto__: eventMethods,
             "database": "zhwiki",
             "mediawiki_signature": "b2aad36ac3f784de69ad2809da3e82f6f1a08ab65f8542d626f556975fa6058c",
             "meta": {
@@ -217,6 +249,7 @@ common.jobs = {
     get cdnPurge() {
         const releaseTimestamp = Date.now() / 1000 + 3;
         return {
+            __proto__: eventMethods,
             "database": "commonswiki",
             "delay_until": `${releaseTimestamp}`,
             "mediawiki_signature": "e6ff5af8f89ac6441c6ad7b34bdcf44fb1746c1ef6e07d8b9653c75d0005193e",

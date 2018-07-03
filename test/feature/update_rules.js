@@ -212,19 +212,7 @@ describe('RESTBase update rules', function() {
         .query({ redirect: false })
         .reply(200, { });
 
-        return P.try(() => producer.produce('test_dc.resource_change', 0,
-            Buffer.from(JSON.stringify({
-                meta: {
-                    topic: 'resource_change',
-                    schema_uri: 'resource_change/1',
-                    uri: 'https://en.wikipedia.org/api/rest_v1/page/html/Main_Page',
-                    request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
-                    dt: new Date().toISOString(),
-                    domain: 'en.wikipedia.org'
-                },
-                tags: ['restbase']
-            }))))
+        return P.try(() => producer.produce('test_dc.resource_change', 0, common.events.resourceChange().toBuffer()))
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
     });
@@ -242,18 +230,7 @@ describe('RESTBase update rules', function() {
         });
 
         return P.try(() => producer.produce('test_dc.resource_change', 0,
-            Buffer.from(JSON.stringify({
-                meta: {
-                    topic: 'resource_change',
-                    schema_uri: 'resource_change/1',
-                    uri: 'https://en.wiktionary.org/api/rest_v1/page/html/User%3APchelolo',
-                    request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
-                    dt: new Date().toISOString(),
-                    domain: 'en.wiktionary.org'
-                },
-                tags: ['restbase']
-            }))))
+            common.events.resourceChange('https://en.wiktionary.org/api/rest_v1/page/html/User%3APchelolo').toBuffer()))
         .then(() => common.checkPendingMocks(mwAPI, 1))
         .finally(() => nock.cleanAll());
     });
@@ -272,18 +249,11 @@ describe('RESTBase update rules', function() {
         .reply(200, { });
 
         return P.try(() => producer.produce('test_dc.resource_change', 0,
-            Buffer.from(JSON.stringify({
-                meta: {
-                    topic: 'resource_change',
-                    schema_uri: 'resource_change/1',
-                    uri: 'https://en.wikipedia.org/wiki/Main_Page',
-                    request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
-                    dt: '1990-02-20T19:31:13+00:00',
-                    domain: 'en.wikipedia.org'
-                },
-                tags: ['purge']
-            }))))
+            common.events.resourceChange(
+                'https://en.wikipedia.org/wiki/Main_Page',
+                '1990-02-20T19:31:13+00:00',
+                ['purge']
+            ).toBuffer()))
         .then(() => common.checkAPIDone(mwAPI))
         .finally(() => nock.cleanAll());
     });
