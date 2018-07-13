@@ -123,7 +123,7 @@ describe('RESTBase update rules', function() {
         const mwAPI = nock('https://en.wikipedia.org', {
             reqheaders: {
                 'cache-control': 'no-cache',
-                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},resource_change:https://en.wikipedia.org/wiki/User:Cyberbot_I/Test`,
+                'x-triggered-by': `req:${common.SAMPLE_REQUEST_ID},resource_change:https://en.wikipedia.org/api/rest_v1/page/html/User%3ACyberbot_I%2FTest`,
                 'user-agent': 'SampleChangePropInstance'
             }
         })
@@ -136,7 +136,7 @@ describe('RESTBase update rules', function() {
                 meta: {
                     topic: 'resource_change',
                     schema_uri: 'resource_change/1',
-                    uri: 'https://en.wikipedia.org/api/rest_v1/page/html/User:Cyberbot_I/Test',
+                    uri: 'https://en.wikipedia.org/api/rest_v1/page/html/User%3ACyberbot_I%2FTest',
                     request_id: common.SAMPLE_REQUEST_ID,
                     id: uuid.now(),
                     dt: new Date().toISOString(),
