@@ -653,16 +653,16 @@ spec: &spec
                         query:
                           redirect: false
                   - match:
-                      removed_properties:
+                      added_properties:
                         page_image: '/.+/'
                     match_not: *others_match_not
                     exec: &page_images_others_rerender
-                    - method: get
-                      uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{message.page_title}'
-                      headers:
-                        cache-control: no-cache
-                      query:
-                        redirect: false
+                      - method: get
+                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{message.page_title}'
+                        headers:
+                          cache-control: no-cache
+                        query:
+                          redirect: false
                   - match:
                       meta:
                         domain: '/.*\.wikipedia.org$/'
