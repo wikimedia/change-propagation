@@ -275,28 +275,36 @@ spec: &spec
                       meta:
                         uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
                       tags:
-                      - purge
-                    match_not:
-                      meta:
-                        domain: '/(?:.*\.wikipedia\.org$)|(?:.*\.wiktionary\.org$)/'
+                        - purge
+                    match_not: &others_match_not
+                      - meta:
+                          domain: '/.*\.wikipedia\.org$/'
+                      - meta:
+                          domain: '/.*\.wiktionary\.org$/'
+                      - meta:
+                          domain: /\.wikidata\.org$/
+                        page_namespace: 0
+                      - meta:
+                          domain: /\.wikidata\.org$/
+                        page_namespace: 120
                     exec: &mw_purge_others_rerender
-                    - method: get
-                      # This even comes directly from MediaWiki, so title is encoded in MW-specific way.
-                      # Re-encode the title in standard `encodeURIComponent` encoding.
-                      uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{decode(match.meta.uri.title)}'
-                      headers:
-                        cache-control: no-cache
-                        if-unmodified-since: '{{date(message.meta.dt)}}'
-                      query:
-                        redirect: false
-                      # The HTML might not change but sometimes editors use a purge to drop incorrectly rendered summary/MCS
-                      # content, so let's purge them as well just in case. The rate is low.
-                    - method: get
-                      uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{decode(match.meta.uri.title)}'
-                      headers:
-                        cache-control: no-cache
-                      query:
-                        redirect: false
+                      - method: get
+                        # This even comes directly from MediaWiki, so title is encoded in MW-specific way.
+                        # Re-encode the title in standard `encodeURIComponent` encoding.
+                        uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{decode(match.meta.uri.title)}'
+                        headers:
+                          cache-control: no-cache
+                          if-unmodified-since: '{{date(message.meta.dt)}}'
+                        query:
+                          redirect: false
+                        # The HTML might not change but sometimes editors use a purge to drop incorrectly rendered summary/MCS
+                        # content, so let's purge them as well just in case. The rate is low.
+                      - method: get
+                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{decode(match.meta.uri.title)}'
+                        headers:
+                          cache-control: no-cache
+                        query:
+                          redirect: false
 
               null_edit:
                 topic: resource_change
@@ -307,29 +315,27 @@ spec: &spec
                 limiters:
                   blacklist: 'html:{message.meta.uri}'
                 cases:
-                - match:
-                    meta:
-                      uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
-                      domain: '/.*\.wikipedia.org$/'
-                    tags:
-                    - null_edit
-                  exec: *mw_purge_wikipedia_rerender
-                - match:
-                    meta:
-                      uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
-                      domain: '/.*\.wiktionary.org$/'
-                    tags:
-                    - purge
-                  exec: *mw_purge_wiktionary_rerender
-                - match:
-                    meta:
-                      uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
-                    tags:
-                    - purge
-                  match_not:
-                    meta:
-                      domain: '/(?:.*\.wikipedia\.org$)|(?:.*\.wiktionary\.org$)/'
-                  exec: *mw_purge_others_rerender
+                  - match:
+                      meta:
+                        uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
+                        domain: '/.*\.wikipedia.org$/'
+                      tags:
+                        - null_edit
+                    exec: *mw_purge_wikipedia_rerender
+                  - match:
+                      meta:
+                        uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
+                        domain: '/.*\.wiktionary.org$/'
+                      tags:
+                        - purge
+                    exec: *mw_purge_wiktionary_rerender
+                  - match:
+                      meta:
+                        uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
+                      tags:
+                        - purge
+                    match_not: *others_match_not
+                    exec: *mw_purge_others_rerender
 
               page_edit:
                 topic: mediawiki.revision-create
@@ -615,16 +621,14 @@ spec: &spec
                       meta:
                         uri: '/https:\/\/[^\/]+\/wiki\/(?<title>.+)/'
                       tags: [ 'wikidata' ]
-                    match_not:
-                      meta:
-                        domain: '/(?:.*\.wikipedia\.org$)|(?:.*\.wiktionary\.org$)/'
+                    match_not: *others_match_not
                     exec:
-                    - method: get
-                      uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{{match.meta.uri.title}}'
-                      headers:
-                        cache-control: no-cache
-                      query:
-                        redirect: false
+                      - method: get
+                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{{match.meta.uri.title}}'
+                        headers:
+                          cache-control: no-cache
+                        query:
+                          redirect: false
 
               page_images:
                 topic: mediawiki.page-properties-change
@@ -636,30 +640,22 @@ spec: &spec
                       added_properties:
                         page_image: '/.+/'
                     exec: &page_images_wikipedia_rerender
-                    - method: get
-                      uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{message.page_title}'
-                      headers:
-                        cache-control: no-cache
-                      query:
-                        redirect: false
-                    - method: get
-                      uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{message.page_title}'
-                      headers:
-                        cache-control: no-cache
-                      query:
-                        redirect: false
+                      - method: get
+                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{message.page_title}'
+                        headers:
+                          cache-control: no-cache
+                        query:
+                          redirect: false
+                      - method: get
+                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{message.page_title}'
+                        headers:
+                          cache-control: no-cache
+                        query:
+                          redirect: false
                   - match:
                       removed_properties:
                         page_image: '/.+/'
-                    match_not:
-                      - meta:
-                         domain: '/(?:.*\.wikipedia\.org$)|(?:.*\.wiktionary\.org$)/'
-                      - meta:
-                          domain: /\.wikidata\.org$/
-                        page_namespace: 0
-                      - meta:
-                          domain: /\.wikidata\.org$/
-                        page_namespace: 120
+                    match_not: *others_match_not
                     exec: &page_images_others_rerender
                     - method: get
                       uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{message.page_title}'
@@ -676,15 +672,7 @@ spec: &spec
                   - match:
                       removed_properties:
                         page_image: '/.+/'
-                    match_not:
-                    - meta:
-                        domain: '/(?:.*\.wikipedia\.org$)|(?:.*\.wiktionary\.org$)/'
-                    - meta:
-                        domain: /\.wikidata\.org$/
-                      page_namespace: 0
-                    - meta:
-                        domain: /\.wikidata\.org$/
-                      page_namespace: 120
+                    match_not: *others_match_not
                     exec: *page_images_others_rerender
 
 num_workers: 0
