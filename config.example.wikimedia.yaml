@@ -172,11 +172,9 @@ spec: &spec
                 match:
                   meta:
                     uri: '/^(?<proto>https?):\/\/[^\/]+\/api\/rest_v1\/page\/html\/(?<title>[^/]+)$/'
+                    domain: '/^.+\.wikipedia\.org$/'
                   tags:
                     - restbase
-                match_not:
-                  meta:
-                    domain: /\.wikidata\.org$/
                 exec:
                   - method: get
                     uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{{match.meta.uri.title}}'
@@ -222,12 +220,10 @@ spec: &spec
                   - match:
                       meta:
                         uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
+                        domain: '/.*\.wikipedia.org$/'
                       tags:
                         - purge
-                    match_not:
-                      meta:
-                        domain: '/.*\.wiktionary.org$/'
-                    exec:
+                    exec: &mw_purge_wikipedia_rerender
                       - method: get
                         # This even comes directly from MediaWiki, so title is encoded in MW-specific way.
                         # Re-encode the title in standard `encodeURIComponent` encoding.
@@ -257,7 +253,7 @@ spec: &spec
                         domain: '/.*\.wiktionary.org$/'
                       tags:
                         - purge
-                    exec:
+                    exec: &mw_purge_wiktionary_rerender
                       - method: get
                         # This even comes directly from MediaWiki, so title is encoded in MW-specific way.
                         # Re-encode the title in standard `encodeURIComponent` encoding.
@@ -275,12 +271,32 @@ spec: &spec
                           cache-control: no-cache
                         query:
                           redirect: false
-                      - method: get
-                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{decode(match.meta.uri.title)}'
-                        headers:
-                          cache-control: no-cache
-                        query:
-                          redirect: false
+                  - match:
+                      meta:
+                        uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
+                      tags:
+                      - purge
+                    match_not:
+                      meta:
+                        domain: '/(?:.*\.wikipedia\.org$)|(?:.*\.wiktionary\.org$)/'
+                    exec: &mw_purge_others_rerender
+                    - method: get
+                      # This even comes directly from MediaWiki, so title is encoded in MW-specific way.
+                      # Re-encode the title in standard `encodeURIComponent` encoding.
+                      uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{decode(match.meta.uri.title)}'
+                      headers:
+                        cache-control: no-cache
+                        if-unmodified-since: '{{date(message.meta.dt)}}'
+                      query:
+                        redirect: false
+                      # The HTML might not change but sometimes editors use a purge to drop incorrectly rendered summary/MCS
+                      # content, so let's purge them as well just in case. The rate is low.
+                    - method: get
+                      uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{decode(match.meta.uri.title)}'
+                      headers:
+                        cache-control: no-cache
+                      query:
+                        redirect: false
 
               null_edit:
                 topic: resource_change
@@ -290,35 +306,30 @@ spec: &spec
                     - 412
                 limiters:
                   blacklist: 'html:{message.meta.uri}'
-                match:
-                  meta:
-                    uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
-                  tags:
+                cases:
+                - match:
+                    meta:
+                      uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
+                      domain: '/.*\.wikipedia.org$/'
+                    tags:
                     - null_edit
-                exec:
-                  - method: get
-                    # This even comes directly from MediaWiki, so title is encoded in MW-specific way.
-                    # Re-encode the title in standard `encodeURIComponent` encoding.
-                    uri: '{{match.meta.uri.proto}}://{{message.meta.domain}}/api/rest_v1/page/html/{decode(match.meta.uri.title)}'
-                    headers:
-                      cache-control: no-cache
-                      if-unmodified-since: '{{date(message.meta.dt)}}'
-                    query:
-                      redirect: false
-                      # The HTML might not change but sometimes editors use a purge to drop incorrectly rendered summary/MCS
-                      # content, so let's purge them as well just in case. The rate is low.
-                  - method: get
-                    uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{decode(match.meta.uri.title)}'
-                    headers:
-                      cache-control: no-cache
-                    query:
-                      redirect: false
-                  - method: get
-                    uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{decode(match.meta.uri.title)}'
-                    headers:
-                      cache-control: no-cache
-                    query:
-                      redirect: false
+                  exec: *mw_purge_wikipedia_rerender
+                - match:
+                    meta:
+                      uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
+                      domain: '/.*\.wiktionary.org$/'
+                    tags:
+                    - purge
+                  exec: *mw_purge_wiktionary_rerender
+                - match:
+                    meta:
+                      uri: '/^(?<proto>https?):\/\/[^\/]+\/wiki\/(?<title>.+)$/'
+                    tags:
+                    - purge
+                  match_not:
+                    meta:
+                      domain: '/(?:.*\.wikipedia\.org$)|(?:.*\.wiktionary\.org$)/'
+                  exec: *mw_purge_others_rerender
 
               page_edit:
                 topic: mediawiki.revision-create
@@ -581,70 +592,100 @@ spec: &spec
 
               on_wikidata_description_change:
                 topic: change-prop.wikidata.resource-change
-                match:
-                  meta:
-                    uri: '/https:\/\/[^\/]+\/wiki\/(?<title>.+)/'
-                  tags: [ 'wikidata' ]
-                exec:
-                  - method: get
-                    uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{{match.meta.uri.title}}'
-                    headers:
-                      cache-control: no-cache
-                    query:
-                      redirect: false
-                  - method: get
-                    uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{{match.meta.uri.title}}'
-                    headers:
-                      cache-control: no-cache
-                    query:
-                      redirect: false
+                cases:
+                  - match:
+                      meta:
+                        uri: '/https:\/\/[^\/]+\/wiki\/(?<title>.+)/'
+                        domain: '/.*\.wikipedia.org$/'
+                      tags: [ 'wikidata' ]
+                    exec:
+                      - method: get
+                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{{match.meta.uri.title}}'
+                        headers:
+                          cache-control: no-cache
+                        query:
+                          redirect: false
+                      - method: get
+                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{{match.meta.uri.title}}'
+                        headers:
+                          cache-control: no-cache
+                        query:
+                          redirect: false
+                  - match:
+                      meta:
+                        uri: '/https:\/\/[^\/]+\/wiki\/(?<title>.+)/'
+                      tags: [ 'wikidata' ]
+                    match_not:
+                      meta:
+                        domain: '/(?:.*\.wikipedia\.org$)|(?:.*\.wiktionary\.org$)/'
+                    exec:
+                    - method: get
+                      uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{{match.meta.uri.title}}'
+                      headers:
+                        cache-control: no-cache
+                      query:
+                        redirect: false
 
               page_images:
                 topic: mediawiki.page-properties-change
                 # We don't support 'OR' in the match section, so workaround it by 2 cases with identical exec
                 cases:
                   - match:
+                      meta:
+                        domain: '/.*\.wikipedia.org$/'
                       added_properties:
-                        page_image: '/.+/' # Regex that matches anything just to check the prop is set
+                        page_image: '/.+/'
+                    exec: &page_images_wikipedia_rerender
+                    - method: get
+                      uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{message.page_title}'
+                      headers:
+                        cache-control: no-cache
+                      query:
+                        redirect: false
+                    - method: get
+                      uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{message.page_title}'
+                      headers:
+                        cache-control: no-cache
+                      query:
+                        redirect: false
+                  - match:
+                      removed_properties:
+                        page_image: '/.+/'
                     match_not:
+                      - meta:
+                         domain: '/(?:.*\.wikipedia\.org$)|(?:.*\.wiktionary\.org$)/'
                       - meta:
                           domain: /\.wikidata\.org$/
                         page_namespace: 0
                       - meta:
                           domain: /\.wikidata\.org$/
                         page_namespace: 120
-                    exec:
-                      - method: get
-                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{message.page_title}'
-                        headers:
-                          cache-control: no-cache
-                        query:
-                          redirect: false
-                      - method: get
-                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{message.page_title}'
-                        headers:
-                          cache-control: no-cache
-                        query:
-                          redirect: false
+                    exec: &page_images_others_rerender
+                    - method: get
+                      uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{message.page_title}'
+                      headers:
+                        cache-control: no-cache
+                      query:
+                        redirect: false
+                  - match:
+                      meta:
+                        domain: '/.*\.wikipedia.org$/'
+                      removed_properties:
+                        page_image: '/.+/'
+                    exec: *page_images_wikipedia_rerender
                   - match:
                       removed_properties:
-                        page_image: '/.+/' # Regex that matches anything just to check the prop is set
+                        page_image: '/.+/'
                     match_not:
-                      meta:
+                    - meta:
+                        domain: '/(?:.*\.wikipedia\.org$)|(?:.*\.wiktionary\.org$)/'
+                    - meta:
                         domain: /\.wikidata\.org$/
-                    exec:
-                      - method: get
-                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/summary/{message.page_title}'
-                        headers:
-                          cache-control: no-cache
-                        query:
-                          redirect: false
-                      - method: get
-                        uri: 'https://{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{message.page_title}'
-                        headers:
-                          cache-control: no-cache
-                        query:
-                          redirect: false
+                      page_namespace: 0
+                    - meta:
+                        domain: /\.wikidata\.org$/
+                      page_namespace: 120
+                    exec: *page_images_others_rerender
 
 num_workers: 0
 logging:
