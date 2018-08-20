@@ -28,13 +28,19 @@ class Partitioner {
      * @param {Object} req
      */
     repostToPartition(hyper, req) {
-        const event = req.body;
+        let event = req.body;
         const partitionKeyValue = event[this._options.partition_key];
         let partition = this._options.partition_map[partitionKeyValue];
         if (partition === undefined) {
             partition = this._options.partition_default;
         }
 
+        // Clone the event and meta sub-object to avoid modifying
+        // the original event since that could mess up processing
+        // in the executor regarding metrics, limiters, follow-up
+        // executions etc.
+        event = Object.assign({}, event);
+        event.meta = Object.assign({}, event.meta);
         event.meta.topic = this._options.partition_topic_name;
         return hyper.post({
             uri: `/sys/queue/events/${partition}`,
