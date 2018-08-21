@@ -1,5 +1,7 @@
 "use strict";
 
+const extend = require('extend');
+
 class Partitioner {
     constructor(options) {
         this._options = options || {};
@@ -39,8 +41,7 @@ class Partitioner {
         // the original event since that could mess up processing
         // in the executor regarding metrics, limiters, follow-up
         // executions etc.
-        event = Object.assign({}, event);
-        event.meta = Object.assign({}, event.meta);
+        event = extend(true, {}, event);
         event.meta.topic = this._options.partition_topic_name;
         return hyper.post({
             uri: `/sys/queue/events/${partition}`,
