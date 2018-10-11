@@ -523,6 +523,8 @@ describe('update rules', function() {
         .finally(() => nock.cleanAll());
     });
 
+    // TODO: Add checks for schema compliance once
+    // the new schema is deployed and accessible
     it('Should update ORES on revision-create', () => {
         const oresService = nock('https://ores.wikimedia.org')
         .post('/v3/precache')

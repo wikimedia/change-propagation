@@ -46,16 +46,41 @@ class OresProcessor {
                 rev_timestamp: message.rev_timestamp,
                 scores: []
             };
+
+
             const domainScores = res.body[newMessage.database];
             const revScores = domainScores.scores[`${newMessage.rev_id}`];
             Object.keys(revScores).forEach((modelName) => {
+                // The example schema for the score object:
+                // {
+                //   "model_name": "awesomeness",
+                //   "model_version": "1.0",
+                //   "prediction": ["yes", "mostly"],
+                //   "probability": [
+                //     {"name": "yes", "value": 0.99},
+                //     {"name": "mostly", "value": 0.90},
+                //     {"name": "hardly", "value": 0.01}
+                //   ]
+                // }
                 const score = {
                     model_name: modelName,
                     model_version: domainScores.models[modelName].version,
                 };
-                Object.assign(score, revScores[modelName].score);
+                const originalScore = revScores[modelName].score;
+                // Convert prediction to array of strings
+                let prediction = originalScore.prediction;
+                if (!Array.isArray(prediction)) {
+                    prediction = [ prediction ];
+                }
+                score.prediction = prediction.map(p => `${p}`);
+                // Convert probabilities to an array of name-value pairs.
+                score.probability = Object.keys(originalScore.probability).map(probName => ({
+                    name: probName,
+                    value: originalScore.probability[probName]
+                }));
                 newMessage.scores.push(score);
             });
+
             return hyper.post({
                 uri: this._options.eventbus_uri,
                 headers: {
