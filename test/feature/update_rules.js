@@ -8,6 +8,7 @@ const dgram      = require('dgram');
 const assert     = require('assert');
 const P          = require('bluebird');
 const preq       = require('preq');
+const Ajv        = require('ajv');
 
 process.env.UV_THREADPOOL_SIZE = 128;
 
@@ -523,60 +524,87 @@ describe('update rules', function() {
         .finally(() => nock.cleanAll());
     });
 
-    // TODO: Add checks for schema compliance once
-    // the new schema is deployed and accessible
     it('Should update ORES on revision-create', () => {
-        const oresService = nock('https://ores.wikimedia.org')
-        .post('/v3/precache')
-        .reply(200, {
-            "enwiki": {
-                "models": {
-                    "damaging": {
-                        "version": "0.4.0"
-                    }
-                },
-                "scores": {
-                    "1234": {
+        return common.fetchEventValidator('mediawiki/revision/score')
+        .then((validate) => {
+            const oresService = nock('https://ores.wikimedia.org')
+            .post('/v3/precache')
+            .reply(200, {
+                "enwiki": {
+                    "models": {
                         "damaging": {
-                            "score": {
-                                "prediction": false,
-                                "probability": {
-                                    "false": 0.6166652256695712,
-                                    "true": 0.38333477433042884
+                            "version": "0.4.0"
+                        }
+                    },
+                    "scores": {
+                        "1234": {
+                            "damaging": {
+                                "score": {
+                                    "prediction": false,
+                                    "probability": {
+                                        "false": 0.6166652256695712,
+                                        "true": 0.38333477433042884
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
+            });
+            const eventBusService = nock('https://eventbus.stubfortests.org')
+            .post('/v1/events', function(body) {
+                if (!body || !Array.isArray(body) || !body.length) {
+                    return false;
+                }
+                return validate(body[0]);
+            })
+            .reply(200, {});
+            return producer.produce('test_dc.mediawiki.revision-create', 0,
+                common.events.revisionCreate().toBuffer())
+            .then(() => common.checkAPIDone(oresService))
+            .then(() => common.checkAPIDone(eventBusService))
+            .finally(() => nock.cleanAll());
         });
-        const eventBusService = nock('https://eventbus.stubfortests.org')
-        .post('/v1/events')
-        .reply(200, {});
-        const originalMessage = {
-            meta: {
-                topic: 'mediawiki.revision-create',
-                schema_uri: 'revision-create/1',
-                uri: '/edit/uri',
-                request_id: common.SAMPLE_REQUEST_ID,
-                id: uuid.now(),
-                dt: new Date(1000).toISOString(),
-                domain: 'en.wikipedia.org'
-            },
-            database: 'enwiki',
-            page_title: 'TestPage',
-            rev_id: 1234,
-            rev_timestamp: new Date().toISOString(),
-            rev_parent_id: 1233,
-            performer: {
-                user_is_bot: false
-            }
-        };
-        return P.try(() => producer.produce('test_dc.mediawiki.revision-create', 0,
-            Buffer.from(JSON.stringify(originalMessage))))
-        .then(() => common.checkAPIDone(oresService))
-        .then(() => common.checkAPIDone(eventBusService))
-        .finally(() => nock.cleanAll())
+    });
+
+    it('Should update ORES on revision-create, error', () => {
+        return common.fetchEventValidator('mediawiki/revision/score')
+        .then((validate) => {
+            const oresService = nock('https://ores.wikimedia.org')
+            .post('/v3/precache')
+            .reply(200, {
+                "enwiki": {
+                    "models": {
+                        "damaging": {
+                            "version": "0.4.0"
+                        }
+                    },
+                    "scores": {
+                        "1234": {
+                            "damaging": {
+                                "error": {
+                                    "type": 'Bla',
+                                    "message": 'Something is terribly wrong'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            const eventBusService = nock('https://eventbus.stubfortests.org')
+            .post('/v1/events', function(body) {
+                if (!body || !Array.isArray(body) || !body.length) {
+                    return false;
+                }
+                return validate(body[0]);
+            })
+            .reply(200, {});
+            return producer.produce('test_dc.mediawiki.revision-create', 0,
+                common.events.revisionCreate().toBuffer())
+            .then(() => common.checkAPIDone(oresService))
+            .then(() => common.checkAPIDone(eventBusService))
+            .finally(() => nock.cleanAll());
+        });
     });
 
     it('Should update RESTBase summary and mobile-sections on wikidata description change', () => {

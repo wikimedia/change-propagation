@@ -4,6 +4,9 @@ const uuid         = require('cassandra-uuid').TimeUuid;
 const P            = require('bluebird');
 const KafkaFactory = require('../../lib/kafka_factory');
 const assert       = require('assert');
+const preq         = require('preq');
+const yaml         = require('js-yaml');
+const Ajv          = require('ajv');
 
 const common = {};
 
@@ -104,6 +107,28 @@ common.checkPendingMocks = (api, num) => {
     return P.delay(2000).then(() =>  assert.equal(api.pendingMocks().length, num));
 };
 
+const validatorCache = new Map();
+common.fetchEventValidator = (schemaUri, version = 1) => {
+    const schemaPath = `${schemaUri}/${version}.yaml`;
+    if (validatorCache.has(schemaPath)) {
+        return P.resolve(validatorCache.get(schemaPath));
+    }
+    return preq.get({
+        uri: `https://raw.githubusercontent.com/wikimedia/mediawiki-event-schemas/master/jsonschema/${schemaPath}`
+    })
+    .then((res) => {
+        const schema = yaml.safeLoad(res.body);
+        return preq.get({ uri: schema.$schema })
+        .then((metaSchema) => {
+            const ajv = new Ajv();
+            ajv.addMetaSchema(JSON.parse(metaSchema.body), schema.$schema);
+            const validate = ajv.compile(schema);
+            validatorCache.set(schemaPath, validate);
+            return validate;
+        });
+    });
+};
+
 common.factory = new KafkaFactory({
     metadata_broker_list: '127.0.0.1:9092',
     producer: {
@@ -148,6 +173,35 @@ common.events = {
             },
             tags
         };
+    },
+    revisionCreate(
+        uri = 'https://en.wikipedia.org/api/rest_v1/page/html/Main_Page',
+        dt = new Date().toISOString()
+    ) {
+        const domain = /https?:\/\/([^/]+).+/.exec(uri)[1];
+        const title = /\/([^\/]+)$/.exec(uri)[1];
+        return {
+            __proto__: eventMethods,
+            meta: {
+                topic: 'mediawiki.revision-create',
+                schema_uri: 'revision-create/1',
+                uri,
+                request_id: common.SAMPLE_REQUEST_ID,
+                id: uuid.now(),
+                dt,
+                domain
+            },
+            database: 'enwiki',
+            page_title: title,
+            page_id: 12345,
+            page_namespace: 0,
+            rev_id: 1234,
+            rev_timestamp: new Date().toISOString(),
+            rev_parent_id: 1233,
+            performer: {
+                user_is_bot: false
+            }
+        }
     }
 };
 

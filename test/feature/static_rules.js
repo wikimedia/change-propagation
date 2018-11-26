@@ -2,10 +2,8 @@
 
 const ChangeProp = require('../utils/changeProp');
 const nock = require('nock');
-const preq = require('preq');
 const Ajv = require('ajv');
 const assert = require('assert');
-const yaml = require('js-yaml');
 const common = require('../utils/common');
 const P = require('bluebird');
 
@@ -17,18 +15,12 @@ describe('Basic rule management', function() {
     const changeProp = new ChangeProp('config.test.yaml');
 
     let producer;
-    let retrySchema;
-    let errorSchema;
 
     before(function() {
         // Setting up might take some tome, so disable the timeout
         this.timeout(30000);
 
         return changeProp.start()
-        .then(() => preq.get({ uri: 'https://raw.githubusercontent.com/wikimedia/mediawiki-event-schemas/master/jsonschema/change-prop/retry/1.yaml' }))
-        .then((res) => retrySchema = yaml.safeLoad(res.body))
-        .then(() => preq.get({ uri: 'https://raw.githubusercontent.com/wikimedia/mediawiki-event-schemas/master/jsonschema/error/1.yaml' }))
-        .then((res) => errorSchema = yaml.safeLoad(res.body))
         .then(() => common.factory.createProducer({ log: console.log.bind(console) }))
         .then((result) => producer = result);
     });
@@ -163,13 +155,8 @@ describe('Basic rule management', function() {
         .then((retryConsumer) => {
             setTimeout(() => producer.produce('test_dc.simple_test_rule', 0,
                 Buffer.from(JSON.stringify(common.eventWithMessageAndRandom('test', random)))), 2000);
-
-            return preq.get({ uri: retrySchema.$schema })
-            .then((retryMetaSchema) => {
-                const ajv = new Ajv();
-                ajv.addMetaSchema(JSON.parse(retryMetaSchema.body), retrySchema.$schema);
-                const validate = ajv.compile(retrySchema);
-
+            return common.fetchEventValidator('change-prop/retry')
+            .then((validate) => {
                 function check() {
                     return retryConsumer.consumeAsync(1)
                     .catch(check)
@@ -183,7 +170,7 @@ describe('Basic rule management', function() {
                         const valid = validate(msg);
                         if (!valid) {
                             throw new assert.AssertionError({
-                                message: ajv.errorsText(validate.errors)
+                                message: Ajv.errorsText(validate.errors)
                             });
                         }
                         if (msg.original_event.random !== random) {
@@ -300,12 +287,8 @@ describe('Basic rule management', function() {
             setTimeout(() =>
                 producer.produce('test_dc.simple_test_rule', 0, Buffer.from('not_a_json_message')), 2000);
 
-            return preq.get({ uri: errorSchema.$schema })
-            .then((errorMetaSchema) => {
-                const ajv = new Ajv();
-                ajv.addMetaSchema(JSON.parse(errorMetaSchema.body), errorSchema.$schema);
-                const validate = ajv.compile(errorSchema);
-
+            return common.fetchEventValidator('error')
+            .then((validate) => {
                 function check() {
                     return errorConsumer.consumeAsync(1)
                     .catch(check)
@@ -318,7 +301,7 @@ describe('Basic rule management', function() {
                         const valid = validate(JSON.parse(message.value.toString()));
                         if (!valid) {
                             throw new assert.AssertionError({
-                                message: ajv.errorsText(validate.errors)
+                                message: Ajv.errorsText(validate.errors)
                             });
                         }
                     });

@@ -66,21 +66,24 @@ class OresProcessor {
                     model_name: modelName,
                     model_version: domainScores.models[modelName].version,
                 };
-                const originalScore = revScores[modelName].score;
-                // Convert prediction to array of strings
-                let prediction = originalScore.prediction;
-                if (!Array.isArray(prediction)) {
-                    prediction = [ prediction ];
+                if (revScores[modelName].error) {
+                    score.error = revScores[modelName].error;
+                } else {
+                    const originalScore = revScores[modelName].score;
+                    // Convert prediction to array of strings
+                    let prediction = originalScore.prediction;
+                    if (!Array.isArray(prediction)) {
+                        prediction = [ prediction ];
+                    }
+                    score.prediction = prediction.map(p => `${p}`);
+                    // Convert probabilities to an array of name-value pairs.
+                    score.probability = Object.keys(originalScore.probability).map(probName => ({
+                        name: probName,
+                        value: originalScore.probability[probName]
+                    }));
                 }
-                score.prediction = prediction.map(p => `${p}`);
-                // Convert probabilities to an array of name-value pairs.
-                score.probability = Object.keys(originalScore.probability).map(probName => ({
-                    name: probName,
-                    value: originalScore.probability[probName]
-                }));
                 newMessage.scores.push(score);
             });
-
             return hyper.post({
                 uri: this._options.eventbus_uri,
                 headers: {
