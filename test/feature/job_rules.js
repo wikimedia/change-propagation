@@ -79,7 +79,7 @@ describe('JobQueue rules', function() {
     it('Should deduplicate based on SHA1', () => {
         const firstEvent = common.jobs.updateBetaFeaturesUserCounts;
         const secondEvent = common.jobs.updateBetaFeaturesUserCounts;
-        secondEvent.meta.dt = new Date(Date.now() - 1000).toISOString();
+        secondEvent.meta.dt = new Date(Date.now() - 5000).toISOString();
         secondEvent.sha1 = firstEvent.sha1;
         const service = nock('http://jobrunner.wikipedia.org', {
             reqheaders: {

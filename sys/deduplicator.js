@@ -57,7 +57,12 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
                 // time, the changes that caused it were already in the database, so it
                 // will be a no-op and can be deduplicated.
                 if (previousExecutionTime
-                        && new Date(previousExecutionTime) > new Date(message.meta.dt)) {
+                        // Give that the resolution of the event dt is 1 second, this could
+                        // be false-positive when the job queue is so quick that it executes
+                        // two jobs with the same SHA1 within a single second. To be on the safe
+                        // side - subtract 1 second from the previous execution time to allow for
+                        // some lag.
+                        && new Date(previousExecutionTime) - 1000 > new Date(message.meta.dt)) {
                     hyper.metrics.increment(`${name}_dedupe`);
                     hyper.logger.log('trace/dedupe', () => ({
                         message: 'Event was deduplicated based on sha1',
@@ -71,7 +76,8 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
                 // the template (root_event source) changes were already in the database.
                 if (previousExecutionTime
                         && message.root_event
-                        && new Date(previousExecutionTime) > new Date(message.root_event.dt)) {
+                        && new Date(previousExecutionTime) - 1000 >
+                            new Date(message.root_event.dt)) {
                     hyper.metrics.increment(`${name}_dedupe`);
                     hyper.logger.log('trace/dedupe', () => ({
                         message: 'Event was deduplicated based on sha1 and root_event dt',
