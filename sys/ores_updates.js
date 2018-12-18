@@ -7,10 +7,10 @@ class OresProcessor {
     constructor(options) {
         this._options = options;
         if (!options.ores_precache_uris || !Array.isArray(options.ores_precache_uris)) {
-            throw new Error('OreProcessor is miconfigured. ores_precache_uris is required');
+            throw new Error('OresProcessor is miconfigured. ores_precache_uris is required');
         }
         if (!options.eventbus_uri) {
-            throw new Error('OreProcessor is miconfigured. eventbus_uri is required');
+            throw new Error('OresProcessor is miconfigured. eventbus_uri is required');
         }
     }
 
