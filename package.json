@@ -1,6 +1,6 @@
 {
   "name": "change-propagation",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Listens to events from Kafka and delivers them",
   "main": "server.js",
   "repository": {
@@ -13,7 +13,8 @@
     "install-kafka": "sh node_modules/kafka-test-tools/install_kafka.sh",
     "start-kafka": "sh node_modules/kafka-test-tools/start_kafka.sh start",
     "stop-kafka": "sh node_modules/kafka-test-tools/start_kafka.sh stop",
-    "test": "export UV_THREADPOOL_SIZE=128 && npm run cleanup && mocha",
+    "test": "export UV_THREADPOOL_SIZE=128 && npm run cleanup && mocha && npm run lint",
+    "lint": "node_modules/.bin/eslint --cache --max-warnings 0 --ext .js .",
     "coverage": "export UV_THREADPOOL_SIZE=128 && npm run cleanup && istanbul cover _mocha -- -R spec",
     "coveralls": "cat ./coverage/lcov.info | coveralls"
   },
@@ -36,7 +37,7 @@
   "homepage": "https://github.com/wikimedia/change-propagation",
   "dependencies": {
     "bluebird": "^3.5.1",
-    "cassandra-uuid": "^0.0.2",
+    "cassandra-uuid": "^0.1.0",
     "extend": "^3.0.1",
     "hyperswitch": "^0.10.2",
     "service-runner": "^2.6.3",
@@ -44,27 +45,25 @@
     "htcp-purge": "^0.3.0",
     "mediawiki-title": "^0.6.5",
     "murmur-32": "^0.1.0",
-    "node-rdkafka": "2.3.1",
+    "node-rdkafka": "2.5.1",
     "ratelimit.js": "^1.8.0",
     "redis": "^2.8.0"
   },
   "devDependencies": {
+    "ajv": "^6.7.0",
+    "coveralls": "^3.0.0",
+    "eslint": "^5.12.0",
+    "eslint-config-wikimedia": "^0.10.0",
+    "eslint-plugin-jsdoc": "^4.0.0",
+    "eslint-plugin-json": "^1.3.2",
     "istanbul": "^0.4.5",
-    "mocha": "^3.4.2",
+    "js-yaml": "^3.11.0",
+    "kafka-test-tools": "^0.1.13",
+    "mocha": "^5.2.0",
     "mocha-jshint": "^2.3.1",
     "mocha-lcov-reporter": "^1.3.0",
-    "coveralls": "^3.0.0",
-    "js-yaml": "^3.11.0",
-    "nock": "^9.2.5",
-    "preq": "^0.5.6",
-    "ajv": "^5.5.2",
-    "mocha-eslint": "^4.1.0",
-    "eslint": "^4.19.1",
-    "eslint-config-node-services": "^2.2.5",
-    "eslint-config-wikimedia": "^0.5.0",
-    "eslint-plugin-jsdoc": "^3.6.3",
-    "eslint-plugin-json": "^1.2.0",
-    "kafka-test-tools": "^0.1.5"
+    "nock": "^10.0.6",
+    "preq": "^0.5.6"
   },
   "engines": {
     "node": ">=6"

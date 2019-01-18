@@ -1,10 +1,10 @@
-"use strict";
+'use strict';
 
-const Purger      = require('htcp-purge');
+const Purger = require('htcp-purge');
 const HyperSwitch = require('hyperswitch');
-const HTTPError   = HyperSwitch.HTTPError;
-const lifecicle   = HyperSwitch.lifecycle;
-const utils       = require('../lib/utils');
+const HTTPError = HyperSwitch.HTTPError;
+const lifecicle = HyperSwitch.lifecycle;
+const utils = require('../lib/utils');
 
 class PurgeService {
     constructor(options) {
@@ -43,14 +43,14 @@ class PurgeService {
                 return undefined;
             }
             return `http:${event.meta.uri.replace(/^https?:/, '')}`;
-        }).filter(event => !!event))
-        .thenReturn({ status: 201 })
-        .catch((e) => {
-            throw new HTTPError({
-                status: 500,
-                details: e.message
+        }).filter((event) => !!event))
+            .thenReturn({ status: 201 })
+            .catch((e) => {
+                throw new HTTPError({
+                    status: 500,
+                    details: e.message
+                });
             });
-        });
     }
 }
 
@@ -76,8 +76,8 @@ module.exports = (options) => {
             init: ps.init.bind(ps),
             purge: ps.purge.bind(ps)
         },
-        resources: [{
+        resources: [ {
             uri: '/sys/purge/init'
-        }]
+        } ]
     };
 };

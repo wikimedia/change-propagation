@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 const uuid         = require('cassandra-uuid').TimeUuid;
 const P            = require('bluebird');

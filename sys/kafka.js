@@ -1,10 +1,8 @@
-"use strict";
-
+'use strict';
 
 /**
  * restbase-mod-queue-kafka main entry point
  */
-
 
 const P = require('bluebird');
 const HyperSwitch = require('hyperswitch');
@@ -26,21 +24,21 @@ class Kafka {
 
     setup(hyper) {
         return this.kafkaFactory.createGuaranteedProducer(hyper.logger)
-        .then((producer) => {
-            this.producer = producer;
-            HyperSwitch.lifecycle.once('close', () => {
-                this.subscriber.unsubscribeAll();
-                this.producer.disconnect();
-            });
-            return this._subscribeRules(hyper, this.staticRules);
-        })
-        .tap(() => hyper.logger.log('info/change-prop/init', 'Kafka Queue module initialised'));
+            .then((producer) => {
+                this.producer = producer;
+                HyperSwitch.lifecycle.once('close', () => {
+                    this.subscriber.unsubscribeAll();
+                    this.producer.disconnect();
+                });
+                return this._subscribeRules(hyper, this.staticRules);
+            })
+            .tap(() => hyper.logger.log('info/change-prop/init', 'Kafka Queue module initialised'));
     }
 
     _subscribeRules(hyper, rules) {
-        return P.map(Object.keys(rules), ruleName =>
-            this.subscriber.subscribe(hyper, ruleName, rules[ruleName]))
-        .thenReturn({ status: 201 });
+        return P.map(Object.keys(rules), (ruleName) =>
+            this.subscriber.subscribe(hyper, ruleName, rules[ ruleName ]))
+            .thenReturn({ status: 201 });
     }
 
     subscribe(hyper, req) {
@@ -90,7 +88,7 @@ class Kafka {
                 partition,
                 Buffer.from(JSON.stringify(message)));
         }))
-        .thenReturn({ status: 201 });
+            .thenReturn({ status: 201 });
     }
 }
 
@@ -124,8 +122,8 @@ module.exports = (options) => {
             produce: kafkaMod.produce.bind(kafkaMod),
             subscribe: kafkaMod.subscribe.bind(kafkaMod)
         },
-        resources: [{
+        resources: [ {
             uri: '/sys/queue/setup'
-        }]
+        } ]
     };
 };

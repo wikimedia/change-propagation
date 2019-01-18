@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 const Limiter = require('ratelimit.js').RateLimit;
 const P = require('bluebird');
@@ -14,7 +14,7 @@ class RateLimiter extends mixins.mix(Object).with(mixins.Redis) {
 
         this._LIMITERS = new Map();
         Object.keys(this._options.limiters).forEach((type) => {
-            let limiterOpts = this._options.limiters[type];
+            let limiterOpts = this._options.limiters[ type ];
 
             if (!Array.isArray(limiterOpts)) {
                 limiterOpts = [ limiterOpts ];
@@ -45,7 +45,7 @@ class RateLimiter extends mixins.mix(Object).with(mixins.Redis) {
         const startTime = Date.now();
 
         return new P((resolve, reject) => {
-            limiter[fun](key, (err, isRateLimited) => {
+            limiter[ fun ](key, (err, isRateLimited) => {
                 if (err) {
                     hyper.logger.log('error/ratelimit', err);
                     hyper.metrics.endTiming(`ratelimit.${fun}.err`, startTime);

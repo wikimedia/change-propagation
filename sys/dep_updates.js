@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 const extend = require('extend');
 const HyperSwitch = require('hyperswitch');
@@ -20,10 +20,10 @@ function createBackLinksTemplate(options) {
                 bllimit: 500
             }
         })),
-        getContinueToken: res => res.body.continue && res.body.continue.blcontinue,
+        getContinueToken: (res) => res.body.continue && res.body.continue.blcontinue,
         resourceChangeTags: [ 'backlinks' ],
         leafTopicName: 'change-prop.backlinks.resource-change',
-        extractResults: res => res.body.query.backlinks
+        extractResults: (res) => res.body.query.backlinks
     };
 }
 
@@ -41,10 +41,10 @@ function createImageUsageTemplate(options) {
                 // TODO: decide what do we want to do with redirects
             }
         })),
-        getContinueToken: res => res.body.continue && res.body.continue.iucontinue,
+        getContinueToken: (res) => res.body.continue && res.body.continue.iucontinue,
         leafTopicName: 'change-prop.transcludes.resource-change',
         resourceChangeTags: [ 'transcludes', 'files' ],
-        extractResults: res =>  res.body.query.imageusage
+        extractResults: (res) => res.body.query.imageusage
     };
 }
 
@@ -63,11 +63,11 @@ function createTranscludeInTemplate(options) {
                 tilimit: 500
             }
         })),
-        getContinueToken: res => res.body.continue && res.body.continue.ticontinue,
+        getContinueToken: (res) => res.body.continue && res.body.continue.ticontinue,
         leafTopicName: 'change-prop.transcludes.resource-change',
         resourceChangeTags: [ 'transcludes', 'templates' ],
         extractResults: (res) => {
-            return res.body.query.pages[Object.keys(res.body.query.pages)[0]].transcludedin;
+            return res.body.query.pages[ Object.keys(res.body.query.pages)[ 0 ] ].transcludedin;
         }
     };
 }
@@ -94,20 +94,20 @@ function createWikidataTemplate(options) {
             if (!Object.keys(entities).length) {
                 return false;
             }
-            const sitelinks = entities[Object.keys(entities)[0]].sitelinks || {};
+            const sitelinks = entities[ Object.keys(entities)[ 0 ] ].sitelinks || {};
             if (!Object.keys(sitelinks).length) {
                 return false;
             }
             return true;
         },
         extractResults: (res) => {
-            const siteLinks = res.body.entities[Object.keys(res.body.entities)[0]].sitelinks;
+            const siteLinks = res.body.entities[ Object.keys(res.body.entities)[ 0 ] ].sitelinks;
             return Object.keys(siteLinks).map((siteId) => {
-                const pageURI = siteLinks[siteId].url;
+                const pageURI = siteLinks[ siteId ].url;
                 const match = /^https?:\/\/([^/]+)\/wiki\/(.+)$/.exec(pageURI);
                 return {
-                    domain: match[1],
-                    title: decodeURIComponent(match[2])
+                    domain: match[ 1 ],
+                    title: decodeURIComponent(match[ 2 ])
                 };
             });
         }
@@ -117,7 +117,7 @@ function createWikidataTemplate(options) {
 function _sendContinueEvent(hyper, topic, origEvent, continueToken) {
     return hyper.post({
         uri: '/sys/queue/events',
-        body: [{
+        body: [ {
             meta: {
                 topic,
                 schema_uri: 'continue/1',
@@ -132,8 +132,8 @@ function _sendContinueEvent(hyper, topic, origEvent, continueToken) {
                 dt: origEvent.meta.dt
             },
             original_event: origEvent,
-            continue: continueToken,
-        }]
+            continue: continueToken
+        } ]
     });
 }
 
@@ -191,10 +191,10 @@ class DependencyProcessor {
         };
         const originalEvent = req.body.original_event || req.body;
         return this._getSiteInfo(hyper, req.body)
-        .then((siteInfo) => {
-            return this._fetchAndProcessBatch(hyper, this.backLinksRequest,
-                context, siteInfo, originalEvent);
-        });
+            .then((siteInfo) => {
+                return this._fetchAndProcessBatch(hyper, this.backLinksRequest,
+                    context, siteInfo, originalEvent);
+            });
     }
 
     processTranscludes(hyper, req) {
@@ -205,15 +205,15 @@ class DependencyProcessor {
         };
         const originalEvent = req.body.original_event || req.body;
         return this._getSiteInfo(hyper, message)
-        .then((siteInfo) => {
-            const title = Title.newFromText(req.params.title, siteInfo);
-            if (title.getNamespace().isFile()) {
-                return this._fetchAndProcessBatch(hyper, this.imageLinksRequest,
+            .then((siteInfo) => {
+                const title = Title.newFromText(req.params.title, siteInfo);
+                if (title.getNamespace().isFile()) {
+                    return this._fetchAndProcessBatch(hyper, this.imageLinksRequest,
+                        context, siteInfo, originalEvent);
+                }
+                return this._fetchAndProcessBatch(hyper, this.transcludeInRequest,
                     context, siteInfo, originalEvent);
-            }
-            return this._fetchAndProcessBatch(hyper, this.transcludeInRequest,
-                context, siteInfo, originalEvent);
-        });
+            });
     }
 
     processWikidata(hyper, req) {
@@ -222,79 +222,79 @@ class DependencyProcessor {
             message: req.body
         };
         return hyper.request(this.wikidataRequest.template.expand(context))
-        .then((res) => {
-            if (this.wikidataRequest.shouldProcess(res)) {
-                const items = this.wikidataRequest.extractResults(res);
-                return _sendResourceChanges(hyper, items, req.body,
-                    this.wikidataRequest.resourceChangeTags,
-                    this.wikidataRequest.leafTopicName);
-            }
+            .then((res) => {
+                if (this.wikidataRequest.shouldProcess(res)) {
+                    const items = this.wikidataRequest.extractResults(res);
+                    return _sendResourceChanges(hyper, items, req.body,
+                        this.wikidataRequest.resourceChangeTags,
+                        this.wikidataRequest.leafTopicName);
+                }
 
-            if (res.body && res.body.error) {
-                hyper.logger.log('warn/wikidata_description', () => ({
-                    msg: 'Could not extract items',
-                    event_str: utils.stringify(context.message),
-                    error: res.body.error
-                }));
-            }
-        })
-        .thenReturn({ status: 200 });
+                if (res.body && res.body.error) {
+                    hyper.logger.log('warn/wikidata_description', () => ({
+                        msg: 'Could not extract items',
+                        event_str: utils.stringify(context.message),
+                        error: res.body.error
+                    }));
+                }
+            })
+            .thenReturn({ status: 200 });
     }
 
     _fetchAndProcessBatch(hyper, requestTemplate, context, siteInfo, originalEvent) {
         return hyper.post(requestTemplate.template.expand(context))
-        .then((res) => {
-            const titles = (requestTemplate.extractResults(res) || []).map((item) => {
-                return {
-                    title: Title.newFromText(item.title, siteInfo).getPrefixedDBKey(),
-                    domain: originalEvent.meta.domain
-                };
-            });
-            if (!titles.length) {
+            .then((res) => {
+                const titles = (requestTemplate.extractResults(res) || []).map((item) => {
+                    return {
+                        title: Title.newFromText(item.title, siteInfo).getPrefixedDBKey(),
+                        domain: originalEvent.meta.domain
+                    };
+                });
+                if (!titles.length) {
                 // the batch is complete or the list of transcluded titles is empty
-                return { status: 200 };
-            }
-            let actions = _sendResourceChanges(hyper, titles,
-                originalEvent, requestTemplate.resourceChangeTags,
-                requestTemplate.leafTopicName);
-            if (res.body.continue) {
-                actions = actions.then(() => _sendContinueEvent(hyper,
-                    requestTemplate.leafTopicName,
-                    originalEvent,
-                    requestTemplate.getContinueToken(res)));
-            }
-            return actions.thenReturn({ status: 200 });
-        });
+                    return { status: 200 };
+                }
+                let actions = _sendResourceChanges(hyper, titles,
+                    originalEvent, requestTemplate.resourceChangeTags,
+                    requestTemplate.leafTopicName);
+                if (res.body.continue) {
+                    actions = actions.then(() => _sendContinueEvent(hyper,
+                        requestTemplate.leafTopicName,
+                        originalEvent,
+                        requestTemplate.getContinueToken(res)));
+                }
+                return actions.thenReturn({ status: 200 });
+            });
     }
 
     _getSiteInfo(hyper, message) {
         const domain = message.meta.domain;
-        if (!this.siteInfoCache[domain]) {
-            this.siteInfoCache[domain] = hyper.post(this.siteInfoRequest.expand({
+        if (!this.siteInfoCache[ domain ]) {
+            this.siteInfoCache[ domain ] = hyper.post(this.siteInfoRequest.expand({
                 message
             }))
-            .then((res) => {
-                if (!res || !res.body || !res.body.query || !res.body.query.general) {
-                    throw new Error(`SiteInfo is unavailable for ${message.meta.domain}`);
-                }
-                return {
-                    general: {
-                        lang: res.body.query.general.lang,
-                        legaltitlechars: res.body.query.general.legaltitlechars,
-                        case: res.body.query.general.case
-                    },
-                    namespaces: res.body.query.namespaces,
-                    namespacealiases: res.body.query.namespacealiases,
-                    specialpagealiases: res.body.query.specialpagealiases
-                };
-            })
-            .catch((e) => {
-                hyper.logger.log('error/site_info', e);
-                delete this.siteInfoCache[domain];
-                throw e;
-            });
+                .then((res) => {
+                    if (!res || !res.body || !res.body.query || !res.body.query.general) {
+                        throw new Error(`SiteInfo is unavailable for ${message.meta.domain}`);
+                    }
+                    return {
+                        general: {
+                            lang: res.body.query.general.lang,
+                            legaltitlechars: res.body.query.general.legaltitlechars,
+                            case: res.body.query.general.case
+                        },
+                        namespaces: res.body.query.namespaces,
+                        namespacealiases: res.body.query.namespacealiases,
+                        specialpagealiases: res.body.query.specialpagealiases
+                    };
+                })
+                .catch((e) => {
+                    hyper.logger.log('error/site_info', e);
+                    delete this.siteInfoCache[ domain ];
+                    throw e;
+                });
         }
-        return this.siteInfoCache[domain];
+        return this.siteInfoCache[ domain ];
     }
 }
 

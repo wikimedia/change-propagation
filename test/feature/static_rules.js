@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 const ChangeProp = require('../utils/changeProp');
 const nock = require('nock');

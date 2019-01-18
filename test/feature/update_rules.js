@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 const ChangeProp = require('../utils/changeProp');
 const nock       = require('nock');
@@ -559,6 +559,7 @@ describe('update rules', function() {
                 return validate(body[0]);
             })
             .reply(200, {});
+            console.log("Here")
             return producer.produce('test_dc.mediawiki.revision-create', 0,
                 common.events.revisionCreate().toBuffer())
             .then(() => common.checkAPIDone(oresService))
