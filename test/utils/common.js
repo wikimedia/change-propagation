@@ -119,9 +119,10 @@ common.fetchEventValidator = (schemaUri, version = 1) => {
     .then((res) => {
         const schema = yaml.safeLoad(res.body);
         return preq.get({ uri: schema.$schema })
-        .then((metaSchema) => {
-            const ajv = new Ajv();
-            ajv.addMetaSchema(JSON.parse(metaSchema.body), schema.$schema);
+        .then((res) => {
+            // JSONSchema Draft 04 used id while 06/07 use $id. Set to auto detect.
+            const ajv = new Ajv({schemaId: 'auto'});
+            ajv.addMetaSchema(JSON.parse(res.body), schema.$schema);
             const validate = ajv.compile(schema);
             validatorCache.set(schemaPath, validate);
             return validate;
