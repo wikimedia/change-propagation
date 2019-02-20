@@ -356,27 +356,27 @@ spec: &spec
                       domain: /\.wikidata\.org$/
                     page_namespace: 120
                 exec:
-                  method: get
-                  uri: 'https://{{message.meta.domain}}/api/rest_v1/page/title/{message.page_title}/{{message.rev_id}}'
-                  headers:
-                    cache-control: no-cache
-                  query:
-                    redirect: false
-                    # For page revision restriction RESTBase doesn't emit resource_change events, and to go through
-                    # the normal purge chain (html update -> html resource_change -> summary update -> summary resource_change)
-                    # we need to add many workarounds/shortcurst in RESTBase. So having this list here is an OK compromise.
-                    # Only purge the URIs with a rev_id since the latest revision can not be restricted.
-                    - method: post
-                      uri: '/sys/purge/'
-                      body:
-                        - meta:
-                            uri: '//{{message.meta.domain}}/api/rest_v1/page/html/{message.page_title}/{{message.rev_id}}'
-                        - meta:
-                            uri: '//{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{message.page_title}/{{message.rev_id}}'
-                        - meta:
-                            uri: '//{{message.meta.domain}}/api/rest_v1/page/mobile-sections-lead/{message.page_title}/{{message.rev_id}}'
-                        - meta:
-                            uri: '//{{message.meta.domain}}/api/rest_v1/page/mobile-sections-remaining/{message.page_title}/{{message.rev_id}}'
+                  - method: get
+                    uri: 'https://{{message.meta.domain}}/api/rest_v1/page/title/{message.page_title}/{{message.rev_id}}'
+                    headers:
+                      cache-control: no-cache
+                    query:
+                      redirect: false
+                  # For page revision restriction RESTBase doesn't emit resource_change events, and to go through
+                  # the normal purge chain (html update -> html resource_change -> summary update -> summary resource_change)
+                  # we need to add many workarounds/shortcurst in RESTBase. So having this list here is an OK compromise.
+                  # Only purge the URIs with a rev_id since the latest revision can not be restricted.
+                  - method: post
+                    uri: '/sys/purge/'
+                    body:
+                      - meta:
+                          uri: '//{{message.meta.domain}}/api/rest_v1/page/html/{message.page_title}/{{message.rev_id}}'
+                      - meta:
+                          uri: '//{{message.meta.domain}}/api/rest_v1/page/mobile-sections/{message.page_title}/{{message.rev_id}}'
+                      - meta:
+                          uri: '//{{message.meta.domain}}/api/rest_v1/page/mobile-sections-lead/{message.page_title}/{{message.rev_id}}'
+                      - meta:
+                          uri: '//{{message.meta.domain}}/api/rest_v1/page/mobile-sections-remaining/{message.page_title}/{{message.rev_id}}'
 
               page_delete:
                 topic: mediawiki.page-delete
