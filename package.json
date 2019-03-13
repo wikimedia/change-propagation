@@ -41,7 +41,7 @@
     "extend": "^3.0.1",
     "hyperswitch": "^0.10.2",
     "service-runner": "^2.6.3",
-    "json-stable-stringify": "^1.0.1",
+    "fast-json-stable-stringify": "^2.0.0",
     "htcp-purge": "^0.3.0",
     "mediawiki-title": "^0.6.5",
     "murmur-32": "^0.1.0",
