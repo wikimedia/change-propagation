@@ -21,8 +21,7 @@ addons:
 
 before_script:
 - npm run install-kafka
-- npm run start-kafka
 
-script: npm run coverage && (npm run coveralls || exit 0)
+script: npm test && npm run start-kafka && npm run coverage && (npm run coveralls || exit 0)
 
 after_script: sh node_modules/kafka-test-tools/start_kafka.sh kill

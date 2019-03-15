@@ -4,9 +4,10 @@ const ServiceRunner = require('service-runner');
 const fs        = require('fs');
 const yaml      = require('js-yaml');
 const P         = require('bluebird');
-const preq      = require('preq');
+const common    = require('./common');
 
-const CHANGE_PROP_STOP_DELAY = 500;
+const CHANGE_PROP_STOP_DELAY = 1000;
+const CHANGE_PROP_START_DELAY = 15000;
 
 let startupRetryLimit = 3;
 
@@ -33,11 +34,9 @@ ChangeProp.prototype.start = function() {
         return P.resolve();
     }
 
-    this.port = this._config.services[0].conf.port;
-
     return this._runner.start(this._config)
     .tap(() => this._running = true)
-    .delay(15000)
+    .delay(process.env.MOCK_KAFKA ? 0 : CHANGE_PROP_START_DELAY)
     .catch((e) => {
         if (startupRetryLimit > 0 && /EADDRINUSE/.test(e.message)) {
             console.log('Execution of the previous test might have not finished yet. Retry startup');
@@ -51,8 +50,11 @@ ChangeProp.prototype.start = function() {
 ChangeProp.prototype.stop = function() {
     if (this._running) {
         return this._runner.stop()
-        .tap(() => this._running = false)
-        .delay(CHANGE_PROP_STOP_DELAY);
+        .tap(() => {
+            common.clearKafkaFactory();
+            this._running = false;
+        })
+        .delay(process.env.MOCK_KAFKA ? 0 : CHANGE_PROP_STOP_DELAY);
     }
     return P.resolve();
 };

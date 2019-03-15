@@ -36,7 +36,7 @@ describe('update rules', function() {
             });
         })
         .then((res) => siteInfoResponse = res.body)
-        .then(() => common.factory.createProducer({ log: console.log.bind(console) }))
+        .then(() => common.getKafkaFactory().createProducer({ log: console.log.bind(console) }))
         .then((result) => producer = result);
     });
 

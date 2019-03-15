@@ -2,7 +2,8 @@
 
 const uuid         = require('cassandra-uuid').TimeUuid;
 const P            = require('bluebird');
-const KafkaFactory = require('../../lib/kafka_factory');
+const kafkaFactory = require('../../lib/kafka_factory');
+const MockFactory  = require('./mock_kafka_factory');
 const assert       = require('assert');
 const preq         = require('preq');
 const yaml         = require('js-yaml');
@@ -133,21 +134,16 @@ common.fetchEventValidator = (schemaUri, version = 1) => {
     });
 };
 
-common.factory = new KafkaFactory({
-    metadata_broker_list: '127.0.0.1:9092',
-    producer: {
-        'queue.buffering.max.ms': '1'
-    },
-    consumer: {
-        default_topic_conf: {
-            "auto.offset.reset": "largest"
-        },
-        "group.id": 'change-prop-test-consumer',
-        "fetch.wait.max.ms": "1",
-        "fetch.min.bytes": "1",
-        "queue.buffering.max.ms": "1"
-    }
-});
+common.getKafkaFactory = kafkaFactory.getFactory;
+if (process.env.MOCK_KAFKA) {
+    const mockKafkaFactory = new MockFactory();
+    kafkaFactory.setFactory(mockKafkaFactory);
+    common.clearKafkaFactory = () => {};
+} else {
+    common.clearKafkaFactory = () => {
+        kafkaFactory.setFactory(undefined);
+    };
+}
 
 // Sample ChangeProp events
 

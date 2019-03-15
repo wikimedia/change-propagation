@@ -19,9 +19,8 @@ describe('Basic rule management', function() {
     before(function() {
         // Setting up might take some tome, so disable the timeout
         this.timeout(30000);
-
         return changeProp.start()
-        .then(() => common.factory.createProducer({ log: console.log.bind(console) }))
+        .then(() => common.getKafkaFactory().createProducer({ log: console.log.bind(console) }))
         .then((result) => producer = result);
     });
 
@@ -149,7 +148,7 @@ describe('Basic rule management', function() {
         })
         .reply(200, {});
 
-        return common.factory.createConsumer(
+        return common.getKafkaFactory().createConsumer(
             'changeprop-test-consumer-valid-retry',
             [ 'test_dc.changeprop.retry.simple_test_rule' ])
         .then((retryConsumer) => {
@@ -280,7 +279,7 @@ describe('Basic rule management', function() {
     });
 
     it('Should emit valid messages to error topic', () => {
-        return common.factory.createConsumer(
+        return common.getKafkaFactory().createConsumer(
             'changeprop-test-error-consumer',
             [ 'test_dc.changeprop.error' ])
         .then((errorConsumer) => {

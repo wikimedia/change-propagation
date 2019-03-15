@@ -10,13 +10,13 @@ const HTTPError = HyperSwitch.HTTPError;
 const uuid = require('cassandra-uuid').TimeUuid;
 
 const utils = require('../lib/utils');
-const KafkaFactory = require('../lib/kafka_factory');
+const kafkaFactory = require('../lib/kafka_factory');
 const RuleSubscriber = require('../lib/rule_subscriber');
 
 class Kafka {
     constructor(options) {
         this.options = options;
-        this.kafkaFactory = new KafkaFactory(options);
+        this.kafkaFactory = kafkaFactory.getFactory(options);
         this.staticRules = options.templates || {};
 
         this.subscriber = new RuleSubscriber(options, this.kafkaFactory);
