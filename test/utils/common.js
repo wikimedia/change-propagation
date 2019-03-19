@@ -108,6 +108,16 @@ common.checkPendingMocks = (api, num) => {
 };
 
 const validatorCache = new Map();
+const ajv = new Ajv({
+    schemaId: 'auto',
+    loadSchema: (uri) => preq.get({uri})
+    .then((content) => {
+        if (content.status !== 200) {
+            throw new Error(`Failed to load meta schema at ${uri}`);
+        }
+        ajv.addMetaSchema(JSON.parse(content.body), uri);
+    })
+});
 common.fetchEventValidator = (schemaUri, version = 1) => {
     const schemaPath = `${schemaUri}/${version}.yaml`;
     if (validatorCache.has(schemaPath)) {
@@ -116,16 +126,10 @@ common.fetchEventValidator = (schemaUri, version = 1) => {
     return preq.get({
         uri: `https://raw.githubusercontent.com/wikimedia/mediawiki-event-schemas/master/jsonschema/${schemaPath}`
     })
-    .then((res) => {
-        const schema = yaml.safeLoad(res.body);
-        return preq.get({ uri: schema.$schema })
-        .then((metaSchema) => {
-            const ajv = new Ajv();
-            ajv.addMetaSchema(JSON.parse(metaSchema.body), schema.$schema);
-            const validate = ajv.compile(schema);
-            validatorCache.set(schemaPath, validate);
-            return validate;
-        });
+    .then((res) => ajv.compileAsync(yaml.safeLoad(res.body)))
+    .then((validator) => {
+        validatorCache.set(schemaPath, validator);
+        return validator;
     });
 };
 

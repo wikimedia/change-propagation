@@ -57,4 +57,4 @@ createTopic "test_dc.cpjobqueue.retry.change-prop.partitioned.mediawiki.job.refr
 wait
 sleep 5
 
-redis-cli --raw keys "CP*" | xargs -r redis-cli del
+redis-cli --raw keys "CP*" | xargs redis-cli del

@@ -9,3 +9,6 @@ npm-debug.log*
 /config.yaml
 
 .eslintcache
+package-lock.json
+.nyc_output
+

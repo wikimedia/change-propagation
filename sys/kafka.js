@@ -26,7 +26,9 @@ class Kafka {
         return this.kafkaFactory.createGuaranteedProducer(hyper.logger)
         .then((producer) => {
             this.producer = producer;
+            this._connected = true;
             HyperSwitch.lifecycle.once('close', () => {
+                this._connected = false;
                 this.subscriber.unsubscribeAll();
                 this.producer.disconnect();
             });
@@ -49,6 +51,11 @@ class Kafka {
         if (this.options.test_mode) {
             hyper.logger.log('trace/produce', 'Running in TEST MODE; Production disabled');
             return { status: 201 };
+        }
+
+        if (!this._connected) {
+            hyper.logger.log('debug/produce', 'Attempt to produce while disconnected');
+            return { status: 202 };
         }
 
         const partition = req.params.partition || 0;
