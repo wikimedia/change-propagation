@@ -13,7 +13,7 @@
     "install-kafka": "sh node_modules/kafka-test-tools/install_kafka.sh",
     "start-kafka": "sh node_modules/kafka-test-tools/start_kafka.sh start",
     "stop-kafka": "sh node_modules/kafka-test-tools/start_kafka.sh stop",
-    "test": "export MOCK_KAFKA=true && npm run lint && mocha",
+    "test": "export MOCK_SERVICES=true && npm run lint && mocha",
     "integration": "export UV_THREADPOOL_SIZE=128 && npm run lint && npm run cleanup && mocha",
     "lint": "eslint --cache --max-warnings 0 --ext .js .",
     "coverage": "export UV_THREADPOOL_SIZE=128 && npm run cleanup && nyc --reporter=lcov mocha",
@@ -48,20 +48,22 @@
     "node-rdkafka": "2.3.1",
     "ratelimit.js": "^1.8.0",
     "redis": "^2.8.0",
-    "service-runner": "^2.6.12"
+    "service-runner": "^2.6.13"
   },
   "devDependencies": {
-    "mocha": "^6.0.2",
-    "coveralls": "^3.0.3",
-    "js-yaml": "^3.12.2",
-    "nock": "^10.0.6",
-    "preq": "^0.5.7",
     "ajv": "^6.10.0",
+    "coveralls": "^3.0.3",
     "eslint-config-wikimedia": "^0.11.0",
     "eslint-plugin-jsdoc": "^4.4.3",
     "eslint-plugin-json": "^1.4.0",
+    "js-yaml": "^3.12.2",
     "kafka-test-tools": "^0.1.13",
-    "nyc": "^13.3.0"
+    "mocha": "^6.0.2",
+    "mock-require": "^3.0.3",
+    "nock": "^10.0.6",
+    "nyc": "^13.3.0",
+    "preq": "^0.5.7",
+    "redis-mock": "^0.43.0"
   },
   "engines": {
     "node": ">=6"

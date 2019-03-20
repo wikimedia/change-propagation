@@ -8,6 +8,7 @@ const assert       = require('assert');
 const preq         = require('preq');
 const yaml         = require('js-yaml');
 const Ajv          = require('ajv');
+const mock_require = require('mock-require');
 
 const common = {};
 
@@ -135,10 +136,11 @@ common.fetchEventValidator = (schemaUri, version = 1) => {
 };
 
 common.getKafkaFactory = kafkaFactory.getFactory;
-if (process.env.MOCK_KAFKA) {
+if (process.env.MOCK_SERVICES) {
     const mockKafkaFactory = new MockFactory();
     kafkaFactory.setFactory(mockKafkaFactory);
     common.clearKafkaFactory = () => {};
+    mock_require('redis', require('redis-mock'));
 } else {
     common.clearKafkaFactory = () => {
         kafkaFactory.setFactory(undefined);

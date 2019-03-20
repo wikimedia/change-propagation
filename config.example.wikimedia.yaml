@@ -75,7 +75,8 @@ spec: &spec
               queue.buffering.max.messages: "10"
               compression.codec: snappy
             concurrency: 250
-            enable_blacklist: true
+            # Redis-mock does not support evalsha that rate limiting depend on.
+            disable_ratelimit: '{env(MOCK_SERVICES)}'
             blacklist:
               en.wikipedia.org:
                 - 'User:Nolelover'
@@ -677,7 +678,9 @@ spec: &spec
 num_workers: 0
 logging:
   name: changeprop
-  level: info
+  level: fatal
+  streams:
+    - type: stdout
 services:
   - name: changeprop
     module: hyperswitch

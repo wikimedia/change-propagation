@@ -35,6 +35,8 @@ spec: &spec
             producer:
               compression.codec: snappy
             concurrency: 1
+            # Redis-mock does not support evalsha that rate limiting depend on.
+            disable_ratelimit: '{env(MOCK_SERVICES)}'
             templates:
               simple_test_rule:
                 topic: /^simple_test_rule$/
@@ -119,7 +121,9 @@ spec: &spec
 num_workers: 0
 logging:
   name: changeprop
-  level: info
+  level: fatal
+  streams:
+    - type: stdout
 metrics: # To also examine the metrics code paths, don't care that UDP goes to nowhere
   type: statsd
   host: localhost

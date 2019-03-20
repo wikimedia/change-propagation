@@ -34,6 +34,8 @@ spec: &spec
             producer:
               queue.buffering.max.messages: "10"
               compression.codec: snappy
+            # Redis-mock does not support evalsha that rate limiting depend on.
+            disable_ratelimit: '{env(MOCK_SERVICES)}'
             concurrency: 250
             reenqueue_delay: 5
             templates:
@@ -130,7 +132,9 @@ spec: &spec
 num_workers: 0
 logging:
   name: cpjobqueue
-  level: info
+  level: fatal
+  streams:
+    - type: stdout
 services:
   - name: changeprop
     module: hyperswitch
