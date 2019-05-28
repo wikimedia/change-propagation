@@ -46,8 +46,8 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
         })
         .then((individualDuplicate) => {
             if (individualDuplicate.body || !message.sha1) {
-                // If the message was sha1-deduped or if it has no root event info,
-                // don't use deduplication by the root event
+                // If the message was deduped based on its event ID or if it has no SHA-1 hash,
+                // don't try to deduplicate by SHA-1
                 return individualDuplicate;
             }
             const messageKey = `${this._prefix}_dedupe_${name}_${message.sha1}`;
