@@ -1,7 +1,7 @@
 'use strict';
 
 const P = require('bluebird');
-const uuid = require('cassandra-uuid').TimeUuid;
+const uuidv1 = require('uuid/v1');
 
 class OresProcessor {
     constructor(options) {
@@ -33,7 +33,7 @@ class OresProcessor {
                     topic: 'mediawiki.revision-score',
                     uri: message.meta.uri,
                     request_id: message.meta.request_id,
-                    id: uuid.fromDate(now).toString(),
+                    id: uuidv1({ msecs: now.getTime() }),
                     dt: now.toISOString(),
                     domain: message.meta.domain
                 },

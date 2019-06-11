@@ -7,7 +7,7 @@
 const P = require('bluebird');
 const HyperSwitch = require('hyperswitch');
 const HTTPError = HyperSwitch.HTTPError;
-const uuid = require('cassandra-uuid').TimeUuid;
+const uuidv1 = require('uuid/v1');
 
 const utils = require('../lib/utils');
 const kafkaFactory = require('../lib/kafka_factory');
@@ -72,7 +72,7 @@ class Kafka {
         // Check whether all messages contain the topic
         messages.forEach((message) => {
             const now = new Date();
-            message.meta.id = message.meta.id || uuid.fromDate(now).toString();
+            message.meta.id = message.meta.id || uuidv1({ msecs: now.getTime() });
             message.meta.dt = message.meta.dt || now.toISOString();
             message.meta.request_id = message.meta.request_id || utils.requestId();
             if (!message || !message.meta || !message.meta.topic) {

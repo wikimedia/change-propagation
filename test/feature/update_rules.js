@@ -2,7 +2,7 @@
 
 const ChangeProp = require('../utils/changeProp');
 const nock       = require('nock');
-const uuid       = require('cassandra-uuid').TimeUuid;
+const uuidv1     = require('uuid/v1');
 const common     = require('../utils/common');
 const dgram      = require('dgram');
 const assert     = require('assert');
@@ -69,7 +69,7 @@ describe('update rules', function () {
                     schema_uri: 'resource_change/1',
                     uri: 'https://en.wikipedia.org/api/rest_v1/page/html/Main_Page',
                     request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
+                    id: uuidv1(),
                     dt: new Date().toISOString(),
                     domain: 'en.wikipedia.org'
                 },
@@ -105,8 +105,8 @@ describe('update rules', function () {
                     topic: 'resource_change',
                     schema_uri: 'resource_change/1',
                     uri: uriBefore,
-                    request_id: uuid.now(),
-                    id: uuid.now(),
+                    request_id: uuidv1(),
+                    id: uuidv1(),
                     dt: new Date().toISOString(),
                     domain
                 },
@@ -146,7 +146,7 @@ describe('update rules', function () {
                     schema_uri: 'mediawiki/page/properties-change/1',
                     uri: 'https://en.wikipedia.org/wiki/Some_Page',
                     request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
+                    id: uuidv1(),
                     dt: new Date().toISOString(),
                     domain: 'en.wikipedia.org'
                 },
@@ -178,7 +178,7 @@ describe('update rules', function () {
                     schema_uri: 'resource_change/1',
                     uri: 'https://en.wikipedia.org/api/rest_v1/page/html/User%3ACyberbot_I%2FTest',
                     request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
+                    id: uuidv1(),
                     dt: new Date().toISOString(),
                     domain: 'en.wikipedia.org'
                 },
@@ -207,7 +207,7 @@ describe('update rules', function () {
                     schema_uri: 'resource_change/1',
                     uri: 'https://en.wiktionary.org/api/rest_v1/page/html/Main_Page',
                     request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
+                    id: uuidv1(),
                     dt: new Date().toISOString(),
                     domain: 'en.wiktionary.org'
                 },
@@ -230,7 +230,7 @@ describe('update rules', function () {
                     schema_uri: 'resource_change/1',
                     uri: 'https://en.wiktionary.org/api/rest_v1/page/html/Main_Page/12345',
                     request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
+                    id: uuidv1(),
                     dt: new Date().toISOString(),
                     domain: 'en.wiktionary.org'
                 },
@@ -319,7 +319,7 @@ describe('update rules', function () {
                     schema_uri: 'revision-create/1',
                     uri: '/edit/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
+                    id: uuidv1(),
                     dt: new Date(1000).toISOString(),
                     domain: 'en.wikipedia.org'
                 },
@@ -354,7 +354,7 @@ describe('update rules', function () {
                     schema_uri: 'revision-create/1',
                     uri: 'https://en.wikipedia.org/wiki/User:Nolelover',
                     request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
+                    id: uuidv1(),
                     dt: new Date(1000).toISOString(),
                     domain: 'en.wikipedia.org'
                 },
@@ -381,7 +381,7 @@ describe('update rules', function () {
                     schema_uri: 'revision-create/1',
                     uri: '/edit/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
+                    id: uuidv1(),
                     dt: new Date(1000).toISOString(),
                     domain: 'www.wikidata.org'
                 },
@@ -415,7 +415,7 @@ describe('update rules', function () {
                     schema_uri: 'page_delete/1',
                     uri: '/delete/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
+                    id: uuidv1(),
                     dt: new Date().toISOString(),
                     domain: 'en.wikipedia.org'
                 },
@@ -444,7 +444,7 @@ describe('update rules', function () {
                     schema_uri: 'page_restore/1',
                     uri: '/restore/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
+                    id: uuidv1(),
                     dt: new Date().toISOString(),
                     domain: 'en.wikipedia.org'
                 },
@@ -477,7 +477,7 @@ describe('update rules', function () {
                     schema_uri: 'page_move/1',
                     uri: '/move/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
+                    id: uuidv1(),
                     dt: new Date(1000).toISOString(),
                     domain: 'en.wikipedia.org'
                 },
@@ -510,7 +510,7 @@ describe('update rules', function () {
                     schema_uri: 'revision_visibility_set/1',
                     uri: '/rev/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
+                    id: uuidv1(),
                     dt: new Date().toISOString(),
                     domain: 'en.wikipedia.org'
                 },
@@ -653,7 +653,7 @@ describe('update rules', function () {
                     schema_uri: 'revision-create/1',
                     uri: '/rev/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
+                    id: uuidv1(),
                     dt: new Date().toISOString(),
                     domain: 'www.wikidata.org'
                 },
@@ -718,7 +718,7 @@ describe('update rules', function () {
                     schema_uri: 'revision-create/1',
                     uri: '/rev/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
+                    id: uuidv1(),
                     dt: new Date().toISOString(),
                     domain: 'www.wikidata.org'
                 },
@@ -782,7 +782,7 @@ describe('update rules', function () {
                     schema_uri: 'page-undelet/1',
                     uri: '/rev/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
+                    id: uuidv1(),
                     dt: new Date().toISOString(),
                     domain: 'www.wikidata.org'
                 },
@@ -826,7 +826,7 @@ describe('update rules', function () {
                     schema_uri: 'revision-create/1',
                     uri: '/rev/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
+                    id: uuidv1(),
                     dt: new Date().toISOString(),
                     domain: 'www.wikidata.org'
                 },
@@ -866,7 +866,7 @@ describe('update rules', function () {
                     schema_uri: 'revision-create/1',
                     uri: '/rev/uri',
                     request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
+                    id: uuidv1(),
                     dt: new Date().toISOString(),
                     domain: 'www.wikidata.org'
                 },
@@ -939,7 +939,7 @@ describe('update rules', function () {
                     schema_uri: 'schema/1',
                     uri: 'https://en.wikipedia.org/wiki/SamplePage',
                     request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
+                    id: uuidv1(),
                     dt: '1990-02-20T19:31:13+00:00',
                     domain: 'en.wikipedia.org'
                 },
@@ -1023,7 +1023,7 @@ describe('update rules', function () {
                     schema_uri: 'schema/1',
                     uri: 'https://en.wikipedia.org/wiki/SamplePage',
                     request_id: common.SAMPLE_REQUEST_ID,
-                    id: uuid.now(),
+                    id: uuidv1(),
                     dt: '1990-02-20T19:31:13+00:00',
                     domain: 'en.wikipedia.org'
                 },

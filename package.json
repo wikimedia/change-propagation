@@ -1,6 +1,6 @@
 {
   "name": "change-propagation",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "description": "Listens to events from Kafka and delivers them",
   "main": "server.js",
   "repository": {
@@ -38,17 +38,17 @@
   "homepage": "https://github.com/wikimedia/change-propagation",
   "dependencies": {
     "bluebird": "^3.5.3",
-    "cassandra-uuid": "^0.1.0",
     "extend": "^3.0.2",
     "fast-json-stable-stringify": "^2.0.0",
     "htcp-purge": "^0.3.0",
-    "hyperswitch": "^0.10.4",
+    "hyperswitch": "^0.12.4",
     "mediawiki-title": "^0.6.5",
     "murmur-32": "^0.1.0",
     "node-rdkafka": "2.3.1",
     "ratelimit.js": "^1.8.0",
     "redis": "^2.8.0",
-    "service-runner": "^2.6.17"
+    "service-runner": "^2.7.1",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "ajv": "^6.10.0",

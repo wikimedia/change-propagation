@@ -1,6 +1,6 @@
 'use strict';
 
-const uuid         = require('cassandra-uuid').TimeUuid;
+const uuidv1       = require('uuid/v1');
 const P            = require('bluebird');
 const kafkaFactory = require('../../lib/kafka_factory');
 const MockFactory  = require('./mock_kafka_factory');
@@ -15,7 +15,7 @@ const common = {};
 common.topics_created = false;
 common.REQUEST_CHECK_DELAY = 3000;
 
-common.SAMPLE_REQUEST_ID = uuid.now().toString();
+common.SAMPLE_REQUEST_ID = uuidv1();
 
 common.eventWithProperties = (topic, props) => {
     const event = {
@@ -24,7 +24,7 @@ common.eventWithProperties = (topic, props) => {
             schema_uri: 'schema/1',
             uri: 'https://en.wikipedia.org/wiki/SamplePage',
             request_id: common.SAMPLE_REQUEST_ID,
-            id: uuid.now(),
+            id: uuidv1(),
             dt: new Date().toISOString(),
             domain: 'en.wikipedia.org'
         }
@@ -172,7 +172,7 @@ common.events = {
                 schema_uri: 'resource_change/1',
                 uri,
                 request_id: common.SAMPLE_REQUEST_ID,
-                id: uuid.now(),
+                id: uuidv1(),
                 dt,
                 domain
             },
@@ -192,7 +192,7 @@ common.events = {
                 schema_uri: 'revision-create/1',
                 uri,
                 request_id: common.SAMPLE_REQUEST_ID,
-                id: uuid.now(),
+                id: uuidv1(),
                 dt,
                 domain
             },
@@ -222,7 +222,7 @@ common.jobs = {
             meta: {
                 domain: 'en.wikipedia.org',
                 dt: new Date().toISOString(),
-                id: uuid.now().toString(),
+                id: uuidv1(),
                 request_id: common.randomString(10),
                 schema_uri: 'mediawiki/job/1',
                 topic: 'mediawiki.job.updateBetaFeaturesUserCounts',
@@ -249,7 +249,7 @@ common.jobs = {
             meta: {
                 domain: 'commons.wikimedia.org',
                 dt: new Date().toISOString(),
-                id: uuid.now().toString(),
+                id: uuidv1(),
                 request_id: common.randomString(10),
                 schema_uri: 'mediawiki/job/1',
                 topic: 'mediawiki.job.htmlCacheUpdate',
@@ -284,7 +284,7 @@ common.jobs = {
             meta: {
                 domain: 'zh.wikipedia.org',
                 dt: new Date().toISOString(),
-                id: uuid.now().toString(),
+                id: uuidv1(),
                 request_id: common.randomString(10),
                 schema_uri: 'mediawiki/job/1',
                 topic: 'mediawiki.job.refreshLinks',
@@ -317,7 +317,7 @@ common.jobs = {
             meta: {
                 domain: 'commons.wikimedia.org',
                 dt: new Date().toISOString(),
-                id: uuid.now().toString(),
+                id: uuidv1(),
                 request_id: common.randomString(10),
                 schema_uri: 'mediawiki/job/1',
                 topic: 'mediawiki.job.cdnPurge',
