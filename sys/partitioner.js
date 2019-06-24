@@ -45,6 +45,7 @@ class Partitioner {
         // in the executor regarding metrics, limiters, follow-up
         // executions etc.
         event = extend(true, {}, event);
+        // TODO: Change it to stream when switching to EventGate
         event.meta.topic = this._partitionedTopicTemplate.expand({
             message: event
         });

@@ -83,15 +83,15 @@ spec: &spec
                   uri: '/sys/queue/events'
                   body:
                     - meta:
-                        topic: '{{message.produce_to_topic}}'
+                        stream: '{{message.produce_to_topic}}'
                         uri: '{{message.meta.uri}}'
                       message: 'test'
-                      triggered_by: '{{message.meta.topic}}:{{message.meta.uri}}'
+                      triggered_by: '{{message.meta.stream}}:{{message.meta.uri}}'
                     - meta:
-                        topic: '{{message.produce_to_topic}}'
+                        stream: '{{message.produce_to_topic}}'
                         uri: '{{message.meta.uri}}'
                       message: 'test'
-                      triggered_by: '{{message.meta.topic}}:{{message.meta.uri}}'
+                      triggered_by: '{{message.meta.stream}}:{{message.meta.uri}}'
 
               sample_testing_rule:
                 topic: sample_test_rule

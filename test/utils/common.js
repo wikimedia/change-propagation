@@ -20,7 +20,7 @@ common.SAMPLE_REQUEST_ID = uuidv1();
 common.eventWithProperties = (topic, props) => {
     const event = {
         meta: {
-            topic: topic,
+            topic,
             schema_uri: 'schema/1',
             uri: 'https://en.wikipedia.org/wiki/SamplePage',
             request_id: common.SAMPLE_REQUEST_ID,
@@ -168,7 +168,7 @@ common.events = {
         return {
             __proto__: eventMethods,
             meta: {
-                topic: 'resource_change',
+                stream: 'resource_change',
                 schema_uri: 'resource_change/1',
                 uri,
                 request_id: common.SAMPLE_REQUEST_ID,
@@ -188,7 +188,7 @@ common.events = {
         return {
             __proto__: eventMethods,
             meta: {
-                topic: 'mediawiki.revision-create',
+                stream: 'mediawiki.revision-create',
                 schema_uri: 'revision-create/1',
                 uri,
                 request_id: common.SAMPLE_REQUEST_ID,
@@ -228,8 +228,6 @@ common.jobs = {
                 topic: 'mediawiki.job.updateBetaFeaturesUserCounts',
                 uri: 'https://en.wikipedia.org/wiki/Main_Page'
             },
-            page_namespace: 0,
-            page_title: 'Main_Page',
             params: {
                 prefs: [
                     'visualeditor-newwikitext'
@@ -255,8 +253,6 @@ common.jobs = {
                 topic: 'mediawiki.job.htmlCacheUpdate',
                 uri: 'https://commons.wikimedia.org/wiki/File:%D0%A1%D1%82%D0%B0%D0%B2%D0%BE%D0%BA_-_panoramio_(6).jpg'
             },
-            page_namespace: 6,
-            page_title: 'File:Ставок_-_panoramio_(6).jpg',
             params: {
                 causeAction: 'page-edit',
                 causeAgent: 'unknown',
@@ -290,8 +286,6 @@ common.jobs = {
                 topic: 'mediawiki.job.refreshLinks',
                 uri: 'https://zh.wikipedia.org/wiki/Category:%E6%99%BA%E5%88%A9%E5%8D%9A%E7%89%A9%E9%A6%86'
             },
-            page_namespace: 14,
-            page_title: 'Category:\u667a\u5229\u535a\u7269\u9986',
             params: {
                 causeAction: 'update',
                 causeAgent: 'uid:171544',
@@ -323,8 +317,6 @@ common.jobs = {
                 topic: 'mediawiki.job.cdnPurge',
                 uri: 'https://commons.wikimedia.org/wiki/Special:Badtitle/CdnCacheUpdate'
             },
-            page_namespace: -1,
-            page_title: 'Special:Badtitle/CdnCacheUpdate',
             params: {
                 jobReleaseTimestamp: releaseTimestamp,
                 requestId: common.randomString(10),

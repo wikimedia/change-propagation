@@ -75,23 +75,22 @@ class Kafka {
             message.meta.id = message.meta.id || uuidv1({ msecs: now.getTime() });
             message.meta.dt = message.meta.dt || now.toISOString();
             message.meta.request_id = message.meta.request_id || utils.requestId();
-            if (!message || !message.meta || !message.meta.topic) {
+        });
+        return P.all(messages.map((message) => {
+            const topic = message.meta.topic || message.meta.stream;
+            if (!topic) {
                 throw new HTTPError({
                     status: 400,
                     body: {
                         type: 'bad_request',
-                        detail: 'Event must have a meta.topic and meta.id properties',
+                        detail: 'Event must have a meta.topic or meta.stream',
                         event_str: message
                     }
                 });
             }
-        });
-        return P.all(messages.map((message) => {
-            const topicName = message.meta.topic.replace(/\./g, '_');
             hyper.metrics.increment(
-                `produce_${hyper.metrics.normalizeName(topicName)}.${partition}`);
-
-            return this.producer.produce(`${this.kafkaFactory.produceDC}.${message.meta.topic}`,
+                `produce_${hyper.metrics.normalizeName(topic.replace(/\./g, '_'))}.${partition}`);
+            return this.producer.produce(`${this.kafkaFactory.produceDC}.${topic}`,
                 partition,
                 Buffer.from(JSON.stringify(message)));
         }))
