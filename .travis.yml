@@ -20,6 +20,7 @@ addons:
       - openjdk-8-jre-headless
 
 before_script:
+- export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
 - npm run install-kafka
 
 script: npm test && npm run start-kafka && npm run coverage && (npm run coveralls || exit 0)

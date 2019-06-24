@@ -34,7 +34,7 @@ describe('JobQueue rules', function () {
                     'content-type': 'application/json'
                 }
             })
-            .post('/wiki/Special:RunSingleJob', sampleEvent)
+            .post('/wiki/Special%3ARunSingleJob', sampleEvent)
             .reply({});
             return producer.produce(`test_dc.mediawiki.job.${jobType}`, 0, sampleEvent.toBuffer())
             .then(() => common.checkAPIDone(service))
@@ -52,7 +52,7 @@ describe('JobQueue rules', function () {
                 'content-type': 'application/json'
             }
         })
-        .post('/wiki/Special:RunSingleJob', sampleEventCopy)
+        .post('/wiki/Special%3ARunSingleJob', sampleEventCopy)
         .reply({});
         return producer.produce('test_dc.mediawiki.job.refreshLinks', 0, sampleEvent.toBuffer())
         .then(() => common.checkAPIDone(service))
@@ -67,7 +67,7 @@ describe('JobQueue rules', function () {
                 'content-type': 'application/json'
             }
         })
-        .post('/wiki/Special:RunSingleJob', sampleEvent)
+        .post('/wiki/Special%3ARunSingleJob', sampleEvent)
         .twice() // We set 2 mocks here in order to check that after the test 1 is still pending
         .reply({});
         return P.each([ sampleEvent,  sampleEvent ], msg =>
@@ -87,10 +87,10 @@ describe('JobQueue rules', function () {
                 'content-type': 'application/json'
             }
         })
-        .post('/wiki/Special:RunSingleJob', firstEvent)
+        .post('/wiki/Special%3ARunSingleJob', firstEvent)
         .reply({})
         // We specify a mock for the second event as well to checkout it's still pending after tests
-        .post('/wiki/Special:RunSingleJob', secondEvent)
+        .post('/wiki/Special%3ARunSingleJob', secondEvent)
         .reply({});
         return producer.produce('test_dc.mediawiki.job.updateBetaFeaturesUserCounts', 0, firstEvent.toBuffer())
         .then(() => common.checkPendingMocks(service, 1))
@@ -111,10 +111,10 @@ describe('JobQueue rules', function () {
                 'content-type': 'application/json'
             }
         })
-        .post('/wiki/Special:RunSingleJob', firstEvent)
+        .post('/wiki/Special%3ARunSingleJob', firstEvent)
         .reply({})
         // We specify a mock for the second event as well to checkout it's still pending after tests
-        .post('/wiki/Special:RunSingleJob', secondEvent)
+        .post('/wiki/Special%3ARunSingleJob', secondEvent)
         .reply({});
         return producer.produce('test_dc.mediawiki.job.htmlCacheUpdate', 0, firstEvent.toBuffer())
         .then(() => common.checkPendingMocks(service, 1))
@@ -136,10 +136,10 @@ describe('JobQueue rules', function () {
                 'content-type': 'application/json'
             }
         })
-        .post('/wiki/Special:RunSingleJob', firstEvent)
+        .post('/wiki/Special%3ARunSingleJob', firstEvent)
         .reply({})
         // We specify a mock for the second event as well to checkout it's still pending after tests
-        .post('/wiki/Special:RunSingleJob', secondEvent)
+        .post('/wiki/Special%3ARunSingleJob', secondEvent)
         .reply({});
         return producer.produce('test_dc.mediawiki.job.htmlCacheUpdate', 0, firstEvent.toBuffer())
         .then(() => common.checkPendingMocks(service, 1))
@@ -158,10 +158,10 @@ describe('JobQueue rules', function () {
                 'content-type': 'application/json'
             }
         })
-        .post('/wiki/Special:RunSingleJob', sampleEvent)
+        .post('/wiki/Special%3ARunSingleJob', sampleEvent)
         .reply({});
         return producer.produce('test_dc.mediawiki.job.cdnPurge', 0, sampleEvent.toBuffer())
-        .then(() => common.checkAPIDone(service))
+        .then(() => common.checkAPIDone(service, 50))
         .finally(() => nock.cleanAll());
     });
 
