@@ -160,6 +160,10 @@ spec: &spec
                     body:
                       - meta:
                           uri: '//{{message.meta.domain}}/api/rest_v1/page/media/{{match.meta.uri.title}}'
+                      - meta:
+                          uri: '//{{message.meta.domain}}/api/rest_v1/page/metadata/{{match.meta.uri.title}}'
+                      - meta:
+                          uri: '//{{message.meta.domain}}/api/rest_v1/page/references/{{match.meta.uri.title}}'
 
               mobile_rerender_transcludes: &mobile_rerender_transcludes_spec
                 <<: *mobile_rerender_spec
@@ -425,6 +429,10 @@ spec: &spec
                           uri: '//{{message.meta.domain}}/api/rest_v1/page/mobile-sections-remaining/{message.page_title}'
                       - meta:
                           uri: '//{{message.meta.domain}}/api/rest_v1/page/media/{message.page_title}'
+                      - meta:
+                          uri: '//{{message.meta.domain}}/api/rest_v1/page/metadata/{message.page_title}'
+                      - meta:
+                          uri: '//{{message.meta.domain}}/api/rest_v1/page/references/{message.page_title}'
 
               page_restore:
                 topic: mediawiki.page-undelete
