@@ -218,14 +218,14 @@ common.jobs = {
     get updateBetaFeaturesUserCounts() {
         return {
             __proto__: eventMethods,
+            $schema: 'mediawiki/job/1.0.0',
             database: 'enwiki',
             meta: {
                 domain: 'en.wikipedia.org',
                 dt: new Date().toISOString(),
                 id: uuidv1(),
                 request_id: common.randomString(10),
-                schema_uri: 'mediawiki/job/1',
-                topic: 'mediawiki.job.updateBetaFeaturesUserCounts',
+                stream: 'mediawiki.job.updateBetaFeaturesUserCounts',
                 uri: 'https://en.wikipedia.org/wiki/Main_Page'
             },
             params: {
@@ -238,6 +238,7 @@ common.jobs = {
             type: 'updateBetaFeaturesUserCounts'
         };
     },
+    // TODO: After transition to eventgate, change to new-style events too.
     get htmlCacheUpdate() {
         const rootSignature = common.randomString(10);
         return {
@@ -275,6 +276,7 @@ common.jobs = {
         const rootSignature = common.randomString(10);
         return {
             __proto__: eventMethods,
+            $schema: 'mediawiki/job/1.0.0',
             database: 'zhwiki',
             mediawiki_signature: 'b2aad36ac3f784de69ad2809da3e82f6f1a08ab65f8542d626f556975fa6058c',
             meta: {
@@ -282,8 +284,7 @@ common.jobs = {
                 dt: new Date().toISOString(),
                 id: uuidv1(),
                 request_id: common.randomString(10),
-                schema_uri: 'mediawiki/job/1',
-                topic: 'mediawiki.job.refreshLinks',
+                stream: 'mediawiki.job.refreshLinks',
                 uri: 'https://zh.wikipedia.org/wiki/Category:%E6%99%BA%E5%88%A9%E5%8D%9A%E7%89%A9%E9%A6%86'
             },
             params: {
@@ -305,6 +306,7 @@ common.jobs = {
         const releaseTimestamp = Date.now() / 1000 + 3;
         return {
             __proto__: eventMethods,
+            $schema: 'mediawiki/job/1.0.0',
             database: 'commonswiki',
             delay_until: `${releaseTimestamp}`,
             mediawiki_signature: 'e6ff5af8f89ac6441c6ad7b34bdcf44fb1746c1ef6e07d8b9653c75d0005193e',
@@ -313,8 +315,7 @@ common.jobs = {
                 dt: new Date().toISOString(),
                 id: uuidv1(),
                 request_id: common.randomString(10),
-                schema_uri: 'mediawiki/job/1',
-                topic: 'mediawiki.job.cdnPurge',
+                stream: 'mediawiki.job.cdnPurge',
                 uri: 'https://commons.wikimedia.org/wiki/Special:Badtitle/CdnCacheUpdate'
             },
             params: {

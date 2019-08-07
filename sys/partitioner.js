@@ -33,8 +33,8 @@ class Partitioner {
      * @return {Object}
      */
     repostToPartition(hyper, req) {
-        let event = req.body;
-        const partitionKeyValue = event[this._options.partition_key];
+        const origEvent = req.body;
+        const partitionKeyValue = origEvent[this._options.partition_key];
         let partition = this._options.partition_map[partitionKeyValue];
         if (partition === undefined) {
             partition = this._options.partition_default;
@@ -44,11 +44,21 @@ class Partitioner {
         // the original event since that could mess up processing
         // in the executor regarding metrics, limiters, follow-up
         // executions etc.
-        event = extend(true, {}, event);
-        // TODO: Change it to stream when switching to EventGate
-        event.meta.topic = this._partitionedTopicTemplate.expand({
+        const event = extend(true, {}, origEvent);
+        // TODO: Temporary workaround for eventgate transition.
+        // Support both meta.topic and meta.stream
+        event.meta.topic = event.meta.stream = event.meta.topic || event.meta.stream;
+        const partitionedTopic = this._partitionedTopicTemplate.expand({
             message: event
         });
+        event.meta.topic = event.meta.stream = partitionedTopic;
+        // Bring it back to the style that the original event had.
+        if (!origEvent.meta.topic) {
+            delete event.meta.topic;
+        }
+        if (!origEvent.meta.stream) {
+            delete event.meta.stream;
+        }
         return hyper.post({
             uri: `/sys/queue/events/${partition}`,
             body: [ event ]
