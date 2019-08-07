@@ -19,9 +19,9 @@ common.SAMPLE_REQUEST_ID = uuidv1();
 
 common.eventWithProperties = (topic, props) => {
     const event = {
+        $schema: 'event/1.0.0',
         meta: {
             topic,
-            schema_uri: 'schema/1',
             uri: 'https://en.wikipedia.org/wiki/SamplePage',
             request_id: common.SAMPLE_REQUEST_ID,
             id: uuidv1(),
@@ -167,9 +167,9 @@ common.events = {
         const domain = /https?:\/\/([^/]+).+/.exec(uri)[1];
         return {
             __proto__: eventMethods,
+            $schema: 'resource_change/1.0.0',
             meta: {
                 stream: 'resource_change',
-                schema_uri: 'resource_change/1',
                 uri,
                 request_id: common.SAMPLE_REQUEST_ID,
                 id: uuidv1(),
@@ -187,9 +187,9 @@ common.events = {
         const title = /\/([^/]+)$/.exec(uri)[1];
         return {
             __proto__: eventMethods,
+            $schema: 'mediawiki/revision/create/1.0.0',
             meta: {
                 stream: 'mediawiki.revision-create',
-                schema_uri: 'revision-create/1',
                 uri,
                 request_id: common.SAMPLE_REQUEST_ID,
                 id: uuidv1(),
