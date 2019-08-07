@@ -151,7 +151,7 @@ describe('JobQueue rules', function () {
     it('Should support delayed jobs with re-enqueue', () => {
         this.timeout(20000);
         const sampleEvent = common.jobs.cdnPurge;
-        sampleEvent.delay_until = `${parseInt(sampleEvent.delay_until) + 10}`;
+        sampleEvent.delay_until = `${new Date(Date.parse(sampleEvent.delay_until) + 10000).toISOString()}`;
         const service = nock('http://jobrunner.wikipedia.org', {
             reqheaders: {
                 host: sampleEvent.meta.domain,
