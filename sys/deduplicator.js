@@ -24,11 +24,12 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
     checkDuplicate(hyper, req) {
         const name = req.params.name;
         const message = req.body;
+        const prefix = `${this._prefix}_dedupe_${name}`;
 
         // First, look at the individual event duplication based on ID
         // This happens when we restart ChangeProp and reread some of the
         // exact same events which were executed but was not committed.
-        const messageKey = `${this._prefix}_dedupe_${name}_${message.meta.id}`;
+        const messageKey = `${prefix}_${message.meta.domain}_${message.meta.id}`;
         return this._redis.setnxAsync(messageKey, '1')
         // Expire the key or renew the expiration timestamp if the key existed
         .tap(() => this._redis.expireAsync(messageKey, Math.ceil(this._expire_timeout / 24)))
@@ -50,7 +51,7 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
                 // don't try to deduplicate by SHA-1
                 return individualDuplicate;
             }
-            const messageKey = `${this._prefix}_dedupe_${name}_${message.sha1}`;
+            const messageKey = `${prefix}_${message.meta.domain}_${message.sha1}`;
             return this._redis.getAsync(messageKey)
             .then((previousExecutionTime) => {
                 // If the same event (by sha1) was created before the previous execution
@@ -99,7 +100,7 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
                 return sha1Duplicate;
             }
 
-            const rootEventKey = `${this._prefix}_dedupe_${name}_${message.root_event.signature}`;
+            const rootEventKey = `${prefix}_${message.root_event.signature}`;
             return this._redis.getAsync(rootEventKey)
             .then((oldEventTimestamp) => {
                 // If this event was caused by root event and there was a leaf event executed
