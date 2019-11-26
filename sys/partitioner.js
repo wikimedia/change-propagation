@@ -27,6 +27,18 @@ class Partitioner {
     }
 
     /**
+     * Returns a partition key value based on a configured partition key
+     * @param {Object} event
+     * @return {undefined|string}
+     * @private
+     */
+    _getPartitionKeyValue(event) {
+        const result = this._options.partition_key.split('.')
+        .reduce((value, key) => value ? value[key] : undefined, event);
+        return typeof result === 'string' ? result : undefined;
+    }
+
+    /**
      * Selects a proper partition and reposts the message to the partitioned topic.
      * @param {HyperSwitch} hyper
      * @param {Object} req
@@ -34,8 +46,7 @@ class Partitioner {
      */
     repostToPartition(hyper, req) {
         const origEvent = req.body;
-        const partitionKeyValue = origEvent[this._options.partition_key];
-        let partition = this._options.partition_map[partitionKeyValue];
+        let partition = this._options.partition_map[this._getPartitionKeyValue(origEvent)];
         if (partition === undefined) {
             partition = this._options.partition_default;
         }
