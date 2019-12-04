@@ -1,0 +1,15 @@
+# Remove potentially existing node_modules folder from build context
+*~
+.git/*
+.gitignore
+.eslintcache
+.idea/*
+.nyc_output
+.travis.yml
+.vscode/*
+coverage
+node_modules
+npm-debug.log*
+/Dockerfile
+LICENSE
+README.md

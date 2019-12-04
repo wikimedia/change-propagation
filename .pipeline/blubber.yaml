@@ -1,5 +1,5 @@
-version: v3
-base: docker-registry.wikimedia.org/nodejs-slim
+version: v4
+base: docker-registry.wikimedia.org/nodejs10-slim
 apt: { packages: [librdkafka++1, librdkafka1] }
 lives:
   in: /srv/service
@@ -8,20 +8,22 @@ runs:
 
 variants:
   build:
-    base: docker-registry.wikimedia.org/nodejs-devel
-    apt: { packages: [librdkafka-dev] }
+    apt: { packages: [librdkafka-dev, build-essential, python-dev, git, libsasl2-dev] }
+    base: docker-registry.wikimedia.org/nodejs10-devel
+    copies: [local]
     node: { requirements: [package.json]}
-    runs: { environment: { LINK: g++, BUILD_LIBRDKAFKA: 0 } }
+    runs: { environment: { LINK: g++, BUILD_LIBRDKAFKA: "0" }}
   development:
     includes: [build]
     entrypoint: [node, server.js]
   test:
     includes: [build]
     entrypoint: [npm, test]
+    runs: { insecurely: true }
   prep:
     includes: [build]
     node: { env: production }
   production:
-    copies: prep
+    copies: [prep]
     node: { env: production }
     entrypoint: [node, server.js]
