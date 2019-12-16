@@ -25,6 +25,18 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
         const name = req.params.name;
         const message = req.body;
         const prefix = `${this._prefix}_dedupe_${name}`;
+        const metric = hyper.metrics.makeMetric({
+            type: 'Counter',
+            name: 'dedupe',
+            prometheus: {
+                name: 'changeprop_dedupe_count_total',
+                help: 'dedupe count'
+            },
+            labels: {
+                names: ['request_class', 'name'],
+                omitLabelNames: true
+            }
+        });
 
         // First, look at the individual event duplication based on ID
         // This happens when we restart ChangeProp and reread some of the
@@ -38,7 +50,7 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
             if (setResult) {
                 return NOT_DUPLICATE;
             }
-            hyper.metrics.increment(`${name}_dedupe`);
+            metric.increment(1, [hyper.requestClass, name]);
             hyper.logger.log('trace/dedupe', () => ({
                 message: 'Event was deduplicated based on id',
                 event_str: utils.stringify(message)
@@ -64,7 +76,7 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
                         // side - subtract 1 second from the previous execution time to allow for
                         // some lag.
                         new Date(previousExecutionTime) - 1000 > new Date(message.meta.dt)) {
-                    hyper.metrics.increment(`${name}_dedupe`);
+                    metric.increment(1, [hyper.requestClass, name]);
                     hyper.logger.log('trace/dedupe', () => ({
                         message: 'Event was deduplicated based on sha1',
                         event_str: utils.stringify(message),
@@ -79,7 +91,7 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
                         message.root_event &&
                         new Date(previousExecutionTime) - 1000 >
                             new Date(message.root_event.dt)) {
-                    hyper.metrics.increment(`${name}_dedupe`);
+                    metric.increment(1, [hyper.requestClass, name]);
                     hyper.logger.log('trace/dedupe', () => ({
                         message: 'Event was deduplicated based on sha1 and root_event dt',
                         event_str: utils.stringify(message),
@@ -107,7 +119,7 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
                 // already that belonged to a later root_event we can cut off this chain.
                 if (oldEventTimestamp &&
                         new Date(oldEventTimestamp) > new Date(message.root_event.dt)) {
-                    hyper.metrics.increment(`${name}_dedupe`);
+                    metric.increment(1, [hyper.requestClass, name]);
                     hyper.logger.log('trace/dedupe', () => ({
                         message: 'Event was deduplicated based on root event',
                         event_str: utils.stringify(message),

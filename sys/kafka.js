@@ -87,8 +87,18 @@ class Kafka {
                     }
                 });
             }
-            hyper.metrics.increment(
-                `produce_${hyper.metrics.normalizeName(message.meta.stream.replace(/\./g, '_'))}.${partition}`);
+            hyper.metrics.makeMetric({
+                type: 'Counter',
+                name: 'produce',
+                prometheus: {
+                    name: 'changeprop_kafka_produce_count_total',
+                    help: 'kafka produce count'
+                },
+                labels: {
+                    names: ['request_class', 'type', 'partition'],
+                    omitLabelNames: true
+                }
+            }).increment(1, [hyper.requestClass, message.meta.stream.replace(/\./g, '_'), partition]);
             return this.producer.produce(`${this.kafkaFactory.produceDC}.${message.meta.stream}`,
                 partition,
                 Buffer.from(JSON.stringify(message)));

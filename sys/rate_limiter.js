@@ -45,16 +45,27 @@ class RateLimiter extends mixins.mix(Object).with(mixins.Redis) {
         const startTime = Date.now();
 
         return new P((resolve, reject) => {
+            const metric = hyper.metrics.makeMetric({
+                type: 'Gauge',
+                name: 'ratelimit',
+                prometheus: {
+                    name: 'changeprop_ratelimit_duration_seconds',
+                    help: 'ratelimit duration'
+                },
+                labels: {
+                    names: ['request_class', 'func', 'status']
+                }
+            });
             limiter[fun](key, (err, isRateLimited) => {
                 if (err) {
                     hyper.logger.log('error/ratelimit', err);
-                    hyper.metrics.endTiming(`ratelimit.${fun}.err`, startTime);
+                    metric.endTiming(startTime, [hyper.requestClass, fun, 'err']);
                     // In case we've got problems with limiting just allow everything
                     return resolve({ status: 200 });
                 }
 
                 if (isRateLimited) {
-                    hyper.metrics.endTiming(`ratelimit.${fun}.block`, startTime);
+                    metric.endTiming(startTime, [hyper.requestClass, fun, 'block']);
                     return reject(new HTTPError({
                         status: 429,
                         body: {
@@ -65,7 +76,7 @@ class RateLimiter extends mixins.mix(Object).with(mixins.Redis) {
                     }));
                 }
 
-                hyper.metrics.endTiming(`ratelimit.${fun}.allow`, startTime);
+                metric.endTiming(startTime, [hyper.requestClass, fun, 'allow']);
                 return resolve({ status: 201 });
             });
         });
