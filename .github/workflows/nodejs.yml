@@ -31,7 +31,7 @@ jobs:
         java-version: 1.8
         java-package: jre
     - name: Get Packages
-      run: apt-get install g++-4.8
+      run: sudo apt-get install g++-4.8 libsasl
     - run: npm install
       env:
         CXX: g++-4.8
