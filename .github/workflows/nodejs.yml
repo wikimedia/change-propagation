@@ -38,7 +38,9 @@ jobs:
         CXX: g++-4.8
     - run: npm run lint
     - name: Setup Kafka
-      run: npm run install-kafka
+      run: |
+        npm run install-kafka
+        npm run start-kafka
       if: matrix.mode == 'integration'
     - run: npm run ${{ matrix.mode }}
   
