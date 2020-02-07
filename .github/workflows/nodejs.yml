@@ -18,6 +18,7 @@ jobs:
     env:
       KAFKA_HOME: ../kafka 
       KAFKA_VERSION: 1.1.0
+      BUILD_LIBRDKAFKA: 1
     steps:
     - uses: actions/checkout@v2
     - name: Use Node.js ${{ matrix.node-version }}
@@ -42,5 +43,7 @@ jobs:
         npm run install-kafka
         npm run start-kafka
       if: matrix.mode == 'integration'
+    - name: Setup Redis
+      uses: zhulik/redis-action@1.1.0
     - run: npm run ${{ matrix.mode }}
   
