@@ -19,6 +19,7 @@ jobs:
       KAFKA_HOME: ../kafka 
       KAFKA_VERSION: 1.1.0
       BUILD_LIBRDKAFKA: 1
+      CXX: g++-4.8
     steps:
     - uses: actions/checkout@v2
     - name: Use Node.js ${{ matrix.node-version }}
@@ -31,10 +32,8 @@ jobs:
         java-version: 1.8
         java-package: jre
     - name: Get Packages
-      run: sudo apt-get install g++-4.8 libsasl
+      run: sudo apt-get install g++-4.8 libsasl2-dev
     - run: npm install
-      env:
-        CXX: g++-4.8
     - run: npm run lint
     - name: Setup Kafka
       run: |
