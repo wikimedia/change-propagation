@@ -113,13 +113,16 @@ common.checkPendingMocks = (api, num) => {
 
 const validatorCache = new Map();
 const ajv = new Ajv({
-    schemaId: 'auto',
+    schemaId: '$id',
     loadSchema: (uri) => preq.get({ uri })
     .then((content) => {
         if (content.status !== 200) {
             throw new Error(`Failed to load meta schema at ${uri}`);
         }
-        ajv.addMetaSchema(JSON.parse(content.body), uri);
+        const metaSchema = JSON.parse(content.body);
+        // Need to reassign the ID cause we're using https in the meta-schema URIs
+        metaSchema.$id = uri;
+        return metaSchema;
     })
 });
 
