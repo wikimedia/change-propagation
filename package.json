@@ -1,6 +1,6 @@
 {
   "name": "change-propagation",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "Listens to events from Kafka and delivers them",
   "main": "server.js",
   "repository": {
@@ -47,7 +47,7 @@
     "node-rdkafka": "2.6.1",
     "ratelimit.js": "^1.8.0",
     "redis": "^2.8.0",
-    "service-runner": "^2.7.1",
+    "service-runner": "^2.7.7",
     "uuid": "^3.3.2"
   },
   "devDependencies": {

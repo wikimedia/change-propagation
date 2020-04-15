@@ -26,4 +26,5 @@ variants:
   production:
     copies: [prep]
     node: { env: production }
+    runs: { environment: { UV_THREADPOOL_SIZE: "128" } }
     entrypoint: [node, server.js]
