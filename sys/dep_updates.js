@@ -232,7 +232,7 @@ class DependencyProcessor {
 
             if (res.body && res.body.error) {
                 hyper.logger.log('warn/wikidata_description', () => ({
-                    msg: 'Could not extract items',
+                    message: 'Could not extract items',
                     event_str: utils.stringify(context.message),
                     error: res.body.error
                 }));
