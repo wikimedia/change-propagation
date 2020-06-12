@@ -79,6 +79,7 @@
       "debian": [
         {
           "repo_url": "https://apt.wikimedia.org/wikimedia",
+          "key_url": "https://wikitech.wikimedia.org/w/index.php?title=APT_repository/Key&action=raw",
           "release": "jessie-wikimedia",
           "pool": "main",
           "packages": [
