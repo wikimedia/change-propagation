@@ -1,0 +1,43 @@
+name: Node.js CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [6.x, 10.x]
+        mode: [test, integration]
+    env:
+      KAFKA_HOME: ../kafka 
+      KAFKA_VERSION: 1.1.0
+      LINK: g++
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Setup Java JRE
+      uses: actions/setup-java@v1.3.0
+      with:
+        java-version: 1.8
+        java-package: jre
+    - run: npm install
+    - run: npm run lint
+    - name: Setup Kafka
+      run: |
+        npm run install-kafka
+        npm run start-kafka
+      if: matrix.mode == 'integration'
+    - name: Setup Redis
+      uses: zhulik/redis-action@1.1.0
+    - run: npm run ${{ matrix.mode }}
+  
