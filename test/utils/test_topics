@@ -24,7 +24,7 @@ test_dc.mediawiki.page-undelete
 test_dc.changeprop.retry.mediawiki.page-undelete
 test_dc.mediawiki.revision-visibility-change
 test_dc.changeprop.retry.mediawiki.revision-visibility-change
-test_dc.change-prop.transcludes.resource-change
+test_dc.change-prop.transcludes.resource-change 2
 test_dc.changeprop.retry.change-prop.transcludes.resource-change
 test_dc.change-prop.backlinks.resource-change
 test_dc.changeprop.retry.change-prop.backlinks.resource-change

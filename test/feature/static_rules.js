@@ -38,7 +38,7 @@ describe('Basic rule management', function () {
             test_field_name: 'test_field_value',
             derived_field: 'test',
             random_field: random
-        }).reply({});
+        }).reply(200, {});
 
         return P.each([
             JSON.stringify(common.eventWithMessageAndRandom('this_will_not_match', random)),
@@ -268,7 +268,7 @@ describe('Basic rule management', function () {
             test_field_name: 'test_field_value',
             derived_field: 'test'
         })
-        .times(2).reply({});
+        .times(2).reply(200, {});
 
         return P.try(() => producer.produce('test_dc.kafka_producing_rule', 0,
             Buffer.from(JSON.stringify(common.eventWithProperties('test_dc.kafka_producing_rule', {
@@ -319,13 +319,13 @@ describe('Basic rule management', function () {
 
         return P.try(() => producer.produce('test_dc.sample_test_rule', 0,
             Buffer.from(JSON.stringify(
-                // en.wikipedia.org-N0ryO6Lrp hashes to lower 20% of hashspace (should pass)
+                // en.wikipedia.org-N0ryO6Lrp hashes to lower 50% of hashspace (should pass)
                 common.eventWithProperties('test_dc.sample_test_rule', { page_title: 'N0ryO6Lrp', message: 'sampled' })
             )))
         )
         .then(() => producer.produce('test_dc.sample_test_rule', 0,
             Buffer.from(JSON.stringify(
-                // en.wikipedia.org-rpiwQuPlA hashes to upper 80% of hashspace (should fail)
+                // en.wikipedia.org-rpiwQuPlA hashes to upper 50% of hashspace (should fail)
                 common.eventWithProperties('test_dc.sample_test_rule', { page_title: 'rpiwQuPlA', message: 'sampled' })
             )))
         )
@@ -335,8 +335,8 @@ describe('Basic rule management', function () {
 
     it('Should support array topics', () => {
         const service = nock('http://mock2.org')
-        .post('/', { topic: 'simple_test_rule' }).reply({})
-        .post('/', { topic: 'simple_test_rule2' }).reply({});
+        .post('/', { topic: 'simple_test_rule' }).reply(200, {})
+        .post('/', { topic: 'simple_test_rule2' }).reply(200, {});
 
         return producer.produce('test_dc.simple_test_rule',
             0,
@@ -352,7 +352,7 @@ describe('Basic rule management', function () {
 
     it('Should support exclude_topics stanza', () => {
         const service = nock('http://mock2.org')
-        .post('/', { topic: 'simple_test_rule3' }).reply({});
+        .post('/', { topic: 'simple_test_rule3' }).reply(200, {});
 
         return producer.produce('test_dc.simple_test_rule3',
             0,

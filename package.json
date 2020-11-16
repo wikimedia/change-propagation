@@ -1,6 +1,6 @@
 {
   "name": "change-propagation",
-  "version": "0.9.3",
+  "version": "0.10.3",
   "description": "Listens to events from Kafka and delivers them",
   "main": "server.js",
   "repository": {
@@ -37,56 +37,36 @@
   },
   "homepage": "https://github.com/wikimedia/change-propagation",
   "dependencies": {
-    "bluebird": "^3.5.3",
+    "bluebird": "^3.7.2",
     "extend": "^3.0.2",
-    "fast-json-stable-stringify": "^2.0.0",
-    "htcp-purge": "^0.3.0",
+    "fast-json-stable-stringify": "^2.1.0",
+    "htcp-purge": "^0.3.1",
     "hyperswitch": "^0.14.0",
-    "mediawiki-title": "^0.6.5",
-    "murmur-32": "^0.1.0",
-    "node-rdkafka": "2.3.1",
+    "mediawiki-title": "^0.7.2",
+    "murmurhash": "^1.0.0",
+    "node-rdkafka": "2.8.1",
     "ratelimit.js": "^1.8.0",
-    "redis": "^2.8.0",
+    "redis": "^3.0.2",
     "service-runner": "^2.8.0",
-    "uuid": "^3.3.2"
+    "uuid": "^8.1.0"
   },
   "devDependencies": {
-    "@wikimedia/jsonschema-tools": "^0.6.0",
-    "ajv": "^6.10.0",
-    "coveralls": "^3.0.3",
-    "eslint-config-wikimedia": "^0.11.0",
-    "eslint-plugin-jsdoc": "^4.4.3",
-    "eslint-plugin-json": "^1.4.0",
-    "js-yaml": "^3.12.2",
+    "@wikimedia/jsonschema-tools": "^0.7.5",
+    "ajv": "^6.12.2",
+    "coveralls": "^3.1.0",
+    "eslint-config-wikimedia": "^0.16.1",
+    "eslint-plugin-jsdoc": "^27.0.6",
+    "eslint-plugin-json": "^2.1.1",
+    "js-yaml": "^3.14.0",
     "kafka-test-tools": "^0.1.13",
-    "mocha": "^6.0.2",
+    "mocha": "^8.0.1",
     "mock-require": "^3.0.3",
-    "nock": "^10.0.6",
-    "nyc": "^13.3.0",
-    "preq": "^0.5.7",
-    "redis-mock": "^0.43.0"
+    "nock": "^12.0.3",
+    "nyc": "^15.1.0",
+    "preq": "^0.5.14",
+    "redis-mock": "^0.49.0"
   },
   "engines": {
-    "node": ">=6"
-  },
-  "deploy": {
-    "node": "6.11.1",
-    "target": "debian",
-    "env": {
-      "BUILD_LIBRDKAFKA": "0"
-    },
-    "dependencies": {
-      "debian": [
-        {
-          "repo_url": "https://apt.wikimedia.org/wikimedia",
-          "release": "jessie-wikimedia",
-          "pool": "main",
-          "packages": [
-            "librdkafka-dev"
-          ]
-        },
-        "libsasl2-dev"
-      ]
-    }
+    "node": ">=10"
   }
 }

@@ -7,7 +7,7 @@
 const P = require('bluebird');
 const HyperSwitch = require('hyperswitch');
 const HTTPError = HyperSwitch.HTTPError;
-const uuidv1 = require('uuid/v1');
+const uuidv1 = require('uuid').v1;
 
 const utils = require('../lib/utils');
 const kafkaFactory = require('../lib/kafka_factory');
@@ -58,7 +58,7 @@ class Kafka {
             return { status: 202 };
         }
 
-        const partition = req.params.partition || 0;
+        const partition = req.params.partition || null;
         const messages = req.body;
         if (!Array.isArray(messages) || !messages.length) {
             throw new HTTPError({

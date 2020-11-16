@@ -69,7 +69,7 @@ describe('update rules', function () {
     }
 
     function testPurgeCacheOnResourceChange(uriBefore, uriAfter, domain, tags, testString, done) {
-        var udpServer = dgram.createSocket('udp4');
+        const udpServer = dgram.createSocket('udp4');
         let closed = false;
         udpServer.on('message', function (msg) {
             try {

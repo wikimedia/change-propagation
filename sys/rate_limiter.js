@@ -36,7 +36,7 @@ class RateLimiter extends mixins.mix(Object).with(mixins.Redis) {
 
         if (!limiter) {
             hyper.logger.log('warn/ratelimit', {
-                msg: 'Unconfigured rate-limiter is used',
+                message: 'Unconfigured rate-limiter is used',
                 limiter_type: type
             });
             return { status: 204 };

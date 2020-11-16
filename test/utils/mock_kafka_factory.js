@@ -80,6 +80,7 @@ class MockKafkaFactory {
 
     /**
      * Returns a DC name to consume from
+     *
      * @return {string}
      */
     get consumeDC() {
@@ -89,6 +90,7 @@ class MockKafkaFactory {
 
     /**
      * Returns a DC name to produce to
+     *
      * @return {string}
      */
     get produceDC() {
@@ -98,6 +100,7 @@ class MockKafkaFactory {
 
     /**
      * Create new KafkaConsumer and connect it.
+     *
      * @param {string} groupId Consumer group ID to use
      * @param {Array} topics Topics to subscribe to
      * @return {Object} kafka consumer

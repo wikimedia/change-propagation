@@ -1,6 +1,6 @@
 'use strict';
 
-const uuidv1       = require('uuid/v1');
+const uuidv1       = require('uuid').v1;
 const P            = require('bluebird');
 const kafkaFactory = require('../../lib/kafka_factory');
 const MockFactory  = require('./mock_kafka_factory');
@@ -113,13 +113,16 @@ common.checkPendingMocks = (api, num) => {
 
 const validatorCache = new Map();
 const ajv = new Ajv({
-    schemaId: 'auto',
+    schemaId: '$id',
     loadSchema: (uri) => preq.get({ uri })
     .then((content) => {
         if (content.status !== 200) {
             throw new Error(`Failed to load meta schema at ${uri}`);
         }
-        ajv.addMetaSchema(JSON.parse(content.body), uri);
+        const metaSchema = JSON.parse(content.body);
+        // Need to reassign the ID cause we're using https in the meta-schema URIs
+        metaSchema.$id = uri;
+        return metaSchema;
     })
 });
 

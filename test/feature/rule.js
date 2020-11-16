@@ -1,7 +1,7 @@
 'use strict';
 
-var assert = require('assert');
-var Rule = require('../../lib/rule');
+const assert = require('assert');
+const Rule = require('../../lib/rule');
 
 describe('Rule', function () {
 
@@ -12,12 +12,12 @@ describe('Rule', function () {
     });
 
     it('no-op rule', function () {
-        var r = new Rule('noop_rule', { topic: 'nono' });
+        const r = new Rule('noop_rule', { topic: 'nono' });
         assert.ok(r.noop, 'The rule should be a no-op!');
     });
 
     it('simple rule - one request', function () {
-        var r = new Rule('rule', {
+        const r = new Rule('rule', {
             topic: 'nono',
             exec: { uri: 'a/b/c' }
         });
@@ -25,7 +25,7 @@ describe('Rule', function () {
     });
 
     it('simple rule - multiple requests', function () {
-        var r = new Rule('rule', {
+        const r = new Rule('rule', {
             topic: 'nono',
             exec: [
                 { uri: 'a/b/c' },
@@ -37,7 +37,7 @@ describe('Rule', function () {
 
     describe('Matching', function () {
 
-        var msg = {
+        const msg = {
             meta: {
                 uri: 'a/fake/uri/for/you',
                 request_id: '12345678-9101'
@@ -47,7 +47,7 @@ describe('Rule', function () {
         };
 
         it('all', function () {
-            var r = new Rule('rule', {
+            const r = new Rule('rule', {
                 topic: 'nono',
                 exec: { uri: 'a/b/c' }
             });
@@ -55,7 +55,7 @@ describe('Rule', function () {
         });
 
         it('simple value match', function () {
-            var r = new Rule('rule', {
+            const r = new Rule('rule', {
                 topic: 'nono',
                 exec: { uri: 'a/b/c' },
                 match: { number: 1, string: 'oolala' }
@@ -64,7 +64,7 @@ describe('Rule', function () {
         });
 
         it('simple value mismatch', function () {
-            var r = new Rule('rule', {
+            const r = new Rule('rule', {
                 topic: 'nono',
                 exec: { uri: 'a/b/c' },
                 match: { number: 2, string: 'oolala' }
@@ -73,7 +73,7 @@ describe('Rule', function () {
         });
 
         it('regex match', function () {
-            var r = new Rule('rule', {
+            const r = new Rule('rule', {
                 topic: 'nono',
                 exec: { uri: 'a/b/c' },
                 match: { number: 1, string: '/(?:la)+/' }
@@ -82,18 +82,18 @@ describe('Rule', function () {
         });
 
         it('regex match with undefined', function () {
-            var r = new Rule('rule', {
+            const r = new Rule('rule', {
                 topic: 'nono',
                 exec: { uri: 'a/b/c' },
                 match: { number: 1, string: '/.+/' }
             });
-            var msgWithUndefined = Object.assign({}, msg);
+            const msgWithUndefined = Object.assign({}, msg);
             msgWithUndefined.string = undefined;
             assert.equal(r.test(msgWithUndefined), -1, 'Expected the rule not to match the given message!');
         });
 
         it('regex mismatch', function () {
-            var r = new Rule('rule', {
+            const r = new Rule('rule', {
                 topic: 'nono',
                 exec: { uri: 'a/b/c' },
                 match: { number: 1, string: '/lah/' }
@@ -102,12 +102,12 @@ describe('Rule', function () {
         });
 
         it('array match', function () {
-            var r = new Rule('rule', {
+            const r = new Rule('rule', {
                 topic: 'nono',
                 exec: { uri: 'a/b/c' },
                 match: { array: ['1', 2, '/(\\d)/'] }
             });
-            var msg = { array: [2, '1', '3', '4', 5] };
+            const msg = { array: [2, '1', '3', '4', 5] };
             assert.equal(r.test(msg), 0, 'Expected the rule to match the given message!');
         });
 
@@ -115,7 +115,7 @@ describe('Rule', function () {
             assert.throws(
                 function () {
                     // eslint-disable-next-line no-unused-vars
-                    var r = new Rule('rule', {
+                    const r = new Rule('rule', {
                         topic: 'nono',
                         exec: { uri: 'a/b/c' },
                         match: { number: 1, string: '/l/ah/' }
@@ -124,7 +124,7 @@ describe('Rule', function () {
         });
 
         it('match_not', function () {
-            var r = new Rule('rule', {
+            const r = new Rule('rule', {
                 topic: 'nono',
                 exec: { uri: 'a/b/c' },
                 match_not: { meta: { uri: '/my-url/' } }
@@ -133,7 +133,7 @@ describe('Rule', function () {
         });
 
         it('match_not array', () => {
-            var r = new Rule('rule', {
+            const r = new Rule('rule', {
                 topic: 'nono',
                 exec: { uri: 'a/b/c' },
                 match_not: [
@@ -155,7 +155,7 @@ describe('Rule', function () {
         });
 
         it('matches match and match_not', function () {
-            var r = new Rule('rule', {
+            const r = new Rule('rule', {
                 topic: 'nono',
                 exec: { uri: 'a/b/c' },
                 match: { number: 1 },
@@ -165,7 +165,7 @@ describe('Rule', function () {
         });
 
         it('matches match but not match_not', function () {
-            var r = new Rule('rule', {
+            const r = new Rule('rule', {
                 topic: 'nono',
                 exec: { uri: 'a/b/c' },
                 match: { number: 1 },
@@ -175,7 +175,7 @@ describe('Rule', function () {
         });
 
         it('matches match_not but not match', function () {
-            var r = new Rule('rule', {
+            const r = new Rule('rule', {
                 topic: 'nono',
                 exec: { uri: 'a/b/c' },
                 match: { number: 10 },
@@ -185,29 +185,29 @@ describe('Rule', function () {
         });
 
         it('expansion', function () {
-            var r = new Rule('rule', {
+            const r = new Rule('rule', {
                 topic: 'nono',
                 exec: { uri: 'a/{match.meta.uri[1]}/c' },
                 match: { meta: { uri: '/\\/fake\\/([^\\/]+)/' }, number: 1 }
             });
-            var exp = r.getHandler(r.test(msg)).expand(msg);
+            const exp = r.getHandler(r.test(msg)).expand(msg);
             assert.deepEqual(exp.meta.uri, /\/fake\/([^/]+)/.exec(msg.meta.uri));
         });
 
         it('expansion with named groups', function () {
-            var r = new Rule('rule', {
+            const r = new Rule('rule', {
                 topic: 'nono',
                 exec: { uri: 'a/{match.meta.uri.element}/c' },
                 match: { meta: { uri: '/\\/fake\\/(?<element>[^\\/]+)/' }, number: 1 }
             });
-            var exp = r.getHandler(r.test(msg)).expand(msg);
+            const exp = r.getHandler(r.test(msg)).expand(msg);
             assert.deepEqual(exp.meta.uri, { element: 'uri' });
         });
 
         it('checks for named and unnamed groups mixing', function () {
             try {
                 // eslint-disable-next-line no-unused-vars
-                var r = new Rule('rule', {
+                const r = new Rule('rule', {
                     topic: 'nono',
                     exec: { uri: 'a/{match.meta.uri.element}/c' },
                     // eslint-disable-next-line no-useless-escape

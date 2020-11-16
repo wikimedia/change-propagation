@@ -28,6 +28,7 @@ class Partitioner {
 
     /**
      * Returns a partition key value based on a configured partition key
+     *
      * @param {Object} event
      * @return {undefined|string}
      * @private
@@ -40,6 +41,7 @@ class Partitioner {
 
     /**
      * Selects a proper partition and reposts the message to the partitioned topic.
+     *
      * @param {HyperSwitch} hyper
      * @param {Object} req
      * @return {Object}

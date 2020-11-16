@@ -96,7 +96,7 @@ spec: &spec
               sample_testing_rule:
                 topic: sample_test_rule
                 sample:
-                  rate: 0.2
+                  rate: 0.5
                   hash_template: '{{message.meta.domain}}-{{message.page_title}}'
                 match:
                   meta:

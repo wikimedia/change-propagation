@@ -27,3 +27,6 @@ rules:
     - off
   no-multi-spaces:
     - off
+  jsdoc/no-undefined-types:
+    - off
+

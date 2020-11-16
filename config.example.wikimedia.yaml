@@ -159,7 +159,7 @@ spec: &spec
                     uri: '/sys/purge/'
                     body:
                       - meta:
-                          uri: '//{{message.meta.domain}}/api/rest_v1/page/media/{{match.meta.uri.title}}'
+                          uri: '//{{message.meta.domain}}/api/rest_v1/page/media-list/{{match.meta.uri.title}}'
 
               mobile_rerender_transcludes: &mobile_rerender_transcludes_spec
                 <<: *mobile_rerender_spec
@@ -405,7 +405,7 @@ spec: &spec
                     body: '{{globals.message}}'
                   # For page deletion RESTBase doesn't emit resource_change events, and to go through
                   # the normal purge chain (html update -> html resource_change -> summary update -> summary resource_change)
-                  # we need to add many workarounds/shortcurst in RESTBase. So having this list here is an OK compromise.
+                  # we need to add many workarounds/shortcuts in RESTBase. So having this list here is an OK compromise.
                   - method: post
                     uri: '/sys/purge/'
                     body:
@@ -424,7 +424,7 @@ spec: &spec
                       - meta:
                           uri: '//{{message.meta.domain}}/api/rest_v1/page/mobile-sections-remaining/{message.page_title}'
                       - meta:
-                          uri: '//{{message.meta.domain}}/api/rest_v1/page/media/{message.page_title}'
+                          uri: '//{{message.meta.domain}}/api/rest_v1/page/media-list/{message.page_title}'
 
               page_restore:
                 topic: mediawiki.page-undelete

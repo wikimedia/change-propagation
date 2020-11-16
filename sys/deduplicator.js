@@ -17,6 +17,7 @@ class Deduplicator extends mixins.mix(Object).with(mixins.Redis) {
 
     /**
      * Checks whether the message is a duplicate
+     *
      * @param {HyperSwitch} hyper
      * @param {Object} req
      * @return {Promise} response status shows whether it's a duplicate or not.
