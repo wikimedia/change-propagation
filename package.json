@@ -41,13 +41,13 @@
     "extend": "^3.0.2",
     "fast-json-stable-stringify": "^2.1.0",
     "htcp-purge": "^0.3.1",
-    "hyperswitch": "^0.13.0",
+    "hyperswitch": "^0.14.0",
     "mediawiki-title": "^0.7.2",
     "murmurhash": "^1.0.0",
     "node-rdkafka": "2.8.1",
     "ratelimit.js": "^1.8.0",
     "redis": "^3.0.2",
-    "service-runner": "^2.7.8",
+    "service-runner": "^2.8.0",
     "uuid": "^8.1.0"
   },
   "devDependencies": {
